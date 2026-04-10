@@ -79,6 +79,7 @@ forge init --force
 ```
 Initialized forge/ directory at /Users/dev/my-project/forge
 Created forge.yaml
+Created team.md
 Created project-docs/project-brief.md
 Created project-docs/roadmap.md
 Created features/backlog.md
@@ -93,6 +94,7 @@ Created reviews/architecture/REVIEW.md
   "template": "built-in",
   "files_created": [
     "forge.yaml",
+    "team.md",
     "project-docs/project-brief.md",
     "project-docs/roadmap.md",
     "features/backlog.md",
@@ -132,7 +134,7 @@ Creates a new directory under `forge/features/` with a `FEATURE.md` file. The di
 | Flag               | Type    | Default  | Description                                          |
 |--------------------|---------|----------|------------------------------------------------------|
 | `--status`         | string  | `draft`  | Initial workflow state.                               |
-| `--assignee`       | string  |          | Assign to a team member.                              |
+| `--assignee`       | string  |          | Assign to a team member (should match a `name` in `team.md`). |
 | `--points`         | int     |          | Story points or effort estimate.                      |
 | `--body`           | string  |          | Markdown body content (inline).                       |
 | `--body-file`      | string  |          | Path to a file containing the markdown body.          |
@@ -355,7 +357,7 @@ Updates the specified fields in the feature's `FEATURE.md` frontmatter and/or bo
 |---------------|--------|------------------------------------------------------|
 | `--name`      | string | Update the feature name in frontmatter.              |
 | `--status`    | string | Update the workflow state.                           |
-| `--assignee`  | string | Update the assignee. Use `""` to clear.              |
+| `--assignee`  | string | Update the assignee (should match a `name` in `team.md`). Use `""` to clear. |
 | `--points`    | int    | Update the story points.                             |
 | `--body`      | string | Replace the markdown body (inline).                  |
 | `--body-file` | string | Replace the markdown body from a file.               |
@@ -476,14 +478,14 @@ forge feature assign <slug> <assignee>
 
 #### Description
 
-A shorthand for updating just the assignee field. Use an empty string to unassign.
+A shorthand for updating just the assignee field. Use an empty string to unassign. The assignee value should correspond to a `name` defined in `forge/team.md`. `forge doctor` will warn if an assignee does not match any team member.
 
 #### Arguments
 
 | Argument   | Required | Description                     |
 |------------|----------|---------------------------------|
 | `slug`     | Yes      | Feature directory name.         |
-| `assignee` | Yes      | Team member name. Use `""` to clear. |
+| `assignee` | Yes      | Team member name (should match a `name` in `team.md`). Use `""` to clear. |
 
 #### Examples
 
@@ -1308,7 +1310,7 @@ forge issue create <name> [--status <state>] [--assignee <name>] [--labels <labe
 | Flag         | Type   | Default | Description                                          |
 |--------------|--------|---------|------------------------------------------------------|
 | `--status`   | string | `open`  | Initial status.                                       |
-| `--assignee` | string |         | Assign to a team member.                              |
+| `--assignee` | string |         | Assign to a team member (should match a `name` in `team.md`). |
 | `--labels`   | string |         | Comma-separated labels (e.g., `"bug,critical"`).     |
 | `--feature`  | string |         | Link to a feature by slug.                            |
 | `--sprint`   | string |         | Add this issue to a sprint by slug.                   |
@@ -1476,7 +1478,7 @@ Updates the specified fields in the issue's `ISSUE.md` frontmatter and/or body. 
 |---------------|--------|--------------------------------------------------------|
 | `--name`      | string | Update the issue name in frontmatter.                  |
 | `--status`    | string | Update the status.                                     |
-| `--assignee`  | string | Update the assignee. Use `""` to clear.                |
+| `--assignee`  | string | Update the assignee (should match a `name` in `team.md`). Use `""` to clear.                |
 | `--labels`    | string | Replace all labels (comma-separated). Use `""` to clear. |
 | `--feature`   | string | Update the linked feature. Use `""` to unlink.         |
 | `--body`      | string | Replace the markdown body (inline).                    |
@@ -1879,6 +1881,8 @@ Validates the integrity and completeness of the `forge/` directory structure. Ru
 | `sprint-integrity`     | All sprint directories contain a `SPRINT.md` with valid frontmatter.  |
 | `sprint-consistency`   | Sprints reference only existing features/issues, dates are valid, at most one sprint is active. |
 | `workflow-states`       | Feature statuses match the states defined in `forge.yaml`.           |
+| `broken-links`          | Internal markdown links within `forge/` resolve to existing files.   |
+| `team-consistency`      | All `assignee` values in features and issues match a `name` in `team.md`. Warns if `team.md` is missing. |
 
 ### Examples
 
@@ -1905,8 +1909,10 @@ Forge Health Check
 ✓ sprint-integrity       All 4 sprints have valid SPRINT.md files
 ✓ sprint-consistency     Sprint references and dates are valid
 ✓ workflow-states        All feature statuses match configured workflow
+✓ broken-links           All internal markdown links resolve to existing files
+⚠ team-consistency       Assignee "Unknown Person" in feature "oauth-integration" not found in team.md
 
-Results: 6 passed, 1 warning, 1 failed
+Results: 7 passed, 2 warnings, 1 failed
 ```
 
 ### JSON Output (`--json`)
@@ -1943,11 +1949,21 @@ Results: 6 passed, 1 warning, 1 failed
       "name": "sprint-consistency",
       "status": "pass",
       "message": "Sprint references and dates are valid"
+    },
+    {
+      "name": "broken-links",
+      "status": "pass",
+      "message": "All internal markdown links resolve to existing files"
+    },
+    {
+      "name": "team-consistency",
+      "status": "warn",
+      "message": "Assignee \"Unknown Person\" in feature \"oauth-integration\" not found in team.md"
     }
   ],
   "summary": {
-    "passed": 6,
-    "warnings": 1,
+    "passed": 7,
+    "warnings": 2,
     "failed": 1
   }
 }

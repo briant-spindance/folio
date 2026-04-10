@@ -671,6 +671,8 @@ The health check validates:
 - Sprint `SPRINT.md` files reference only existing features and issues.
 - Sprint dates are valid (end date after start date).
 - At most one sprint has status "active".
+- Internal markdown links within `forge/` resolve to existing files (broken link detection).
+- All `assignee` values in features and issues match a `name` defined in `team.md`.
 
 #### Actions
 

@@ -41,6 +41,7 @@ All Forge-managed content lives under a `forge/` directory in the project root:
 ```
 forge/
 ├── forge.yaml                  # Project configuration (workflow states, templates, etc.)
+├── team.md                     # Team members (names, roles, handles) for assignment
 ├── project-docs/               # Evergreen project documentation (flat)
 │   ├── project-brief.md
 │   ├── use-cases.md
@@ -77,6 +78,10 @@ forge/
 ### Project Docs
 
 Flat markdown files in `project-docs/`. These are intentionally kept short and consumable so agents can quickly ingest project context. They represent the big picture: goals, personas, architecture, design direction, and roadmap.
+
+### Team
+
+`team.md` lives at the root of `forge/` (alongside `forge.yaml`) and defines the team members who participate in the project. Each member has a `name` (used as the canonical identifier for assignment), an optional `role`, and optional external handles (e.g., GitHub username). Forge uses this file for assignee validation (`forge doctor`), autocomplete in the CLI and web UI, and general team visibility.
 
 ### Features
 
