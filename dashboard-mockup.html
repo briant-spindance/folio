@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge — Dashboard</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons (CDN) -->
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    /* ================================================================
+       DESIGN TOKENS — Light Mode
+       ================================================================ */
+    :root {
+      /* Surfaces */
+      --background: hsl(0 0% 100%);
+      --surface: hsl(220 14% 96%);
+      --surface-raised: hsl(0 0% 100%);
+      --surface-overlay: hsl(0 0% 100%);
+      --surface-inset: hsl(220 14% 93%);
+
+      /* Borders */
+      --border: hsl(220 13% 91%);
+      --border-strong: hsl(220 9% 80%);
+
+      /* Text */
+      --foreground: hsl(220 14% 10%);
+      --foreground-muted: hsl(220 8% 46%);
+      --foreground-subtle: hsl(220 8% 65%);
+
+      /* Interactive */
+      --primary: hsl(221 83% 53%);
+      --primary-foreground: hsl(0 0% 100%);
+      --primary-hover: hsl(221 83% 47%);
+      --accent: hsl(220 14% 96%);
+      --accent-foreground: hsl(220 14% 10%);
+
+      /* Status */
+      --status-success: hsl(142 71% 45%);
+      --status-warning: hsl(38 92% 50%);
+      --status-error: hsl(0 84% 60%);
+      --status-info: hsl(199 89% 48%);
+
+      /* Workflow States */
+      --state-draft: hsl(220 8% 65%);
+      --state-ready: hsl(199 89% 48%);
+      --state-in-progress: hsl(38 92% 50%);
+      --state-review: hsl(271 76% 53%);
+      --state-done: hsl(142 71% 45%);
+
+      /* Layout */
+      --sidebar-width: 240px;
+      --content-max-width: 1200px;
+      --content-padding: 24px;
+      --card-radius: 8px;
+      --input-radius: 6px;
+      --button-radius: 6px;
+      --badge-radius: 9999px;
+    }
+
+    /* ================================================================
+       RESET & BASE
+       ================================================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 0.875rem; /* 14px base */
+      line-height: 1.6;
+      color: var(--foreground);
+      background: var(--background);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ================================================================
+       TYPOGRAPHY
+       ================================================================ */
+    .text-xs   { font-size: 0.6875rem; line-height: 1.45; } /* 11px */
+    .text-sm   { font-size: 0.75rem;   line-height: 1.5;  } /* 12px */
+    .text-base { font-size: 0.875rem;  line-height: 1.6;  } /* 14px */
+    .text-lg   { font-size: 1rem;      line-height: 1.5;  } /* 16px */
+    .text-xl   { font-size: 1.25rem;   line-height: 1.4;  } /* 20px */
+    .text-2xl  { font-size: 1.5625rem; line-height: 1.3;  } /* 25px */
+
+    .font-normal  { font-weight: 400; }
+    .font-medium  { font-weight: 500; }
+    .font-semibold{ font-weight: 600; }
+    .font-bold    { font-weight: 700; }
+
+    .mono {
+      font-family: 'JetBrains Mono', "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    .text-muted  { color: var(--foreground-muted); }
+    .text-subtle { color: var(--foreground-subtle); }
+
+    /* ================================================================
+       SIDEBAR
+       ================================================================ */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      padding: 0 16px 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-brand-icon {
+      color: var(--primary);
+    }
+
+    .sidebar-brand-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--foreground);
+    }
+
+    .sidebar-project {
+      font-size: 0.75rem;
+      color: var(--foreground-muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-vcs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.6875rem;
+      color: var(--foreground-subtle);
+    }
+
+    .sidebar-vcs .dirty-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-warning);
+      display: inline-block;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      color: var(--foreground-muted);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 100ms, color 100ms;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+      background: var(--accent);
+      border-left-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .nav-item i {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .nav-item.footer-item {
+      padding: 8px 0;
+      border-left: none;
+    }
+
+    /* ================================================================
+       MAIN CONTENT
+       ================================================================ */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      padding: 24px var(--content-padding) 0;
+      max-width: var(--content-max-width);
+      margin: 0 auto;
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 0.75rem;
+      color: var(--foreground-muted);
+    }
+
+    .content {
+      padding: var(--content-padding);
+      max-width: var(--content-max-width);
+      margin: 0 auto;
+    }
+
+    /* ================================================================
+       GRID LAYOUT
+       ================================================================ */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card-full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* ================================================================
+       CARDS
+       ================================================================ */
+    .card {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      padding: 16px;
+      transition: border-color 100ms;
+    }
+
+    .card-clickable:hover {
+      border-color: var(--border-strong);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      cursor: pointer;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--foreground-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title i {
+      width: 16px;
+      height: 16px;
+    }
+
+    .card-action {
+      font-size: 0.75rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-action:hover {
+      color: var(--primary-hover);
+    }
+
+    /* ================================================================
+       BADGES
+       ================================================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--badge-radius);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* State badges — bg at 15% opacity */
+    .badge-draft {
+      background: hsla(220, 8%, 65%, 0.15);
+      color: var(--state-draft);
+    }
+    .badge-ready {
+      background: hsla(199, 89%, 48%, 0.15);
+      color: var(--state-ready);
+    }
+    .badge-in-progress {
+      background: hsla(38, 92%, 50%, 0.15);
+      color: hsl(38, 80%, 40%); /* slightly darker for readability on light bg */
+    }
+    .badge-review {
+      background: hsla(271, 76%, 53%, 0.15);
+      color: var(--state-review);
+    }
+    .badge-done {
+      background: hsla(142, 71%, 45%, 0.15);
+      color: hsl(142, 71%, 35%); /* slightly darker for readability */
+    }
+
+    /* Status badges */
+    .badge-success {
+      background: hsla(142, 71%, 45%, 0.15);
+      color: hsl(142, 71%, 35%);
+    }
+    .badge-warning {
+      background: hsla(38, 92%, 50%, 0.15);
+      color: hsl(38, 80%, 40%);
+    }
+    .badge-error {
+      background: hsla(0, 84%, 60%, 0.15);
+      color: var(--status-error);
+    }
+    .badge-info {
+      background: hsla(199, 89%, 48%, 0.15);
+      color: var(--state-ready);
+    }
+
+    /* Count badge */
+    .badge-count {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      padding: 1px 7px;
+      font-size: 0.625rem;
+      font-weight: 600;
+    }
+
+    /* Label badge */
+    .badge-label {
+      background: var(--surface);
+      color: var(--foreground);
+      border: 1px solid var(--border);
+    }
+
+    /* Open / Closed issue badges */
+    .badge-open {
+      background: hsla(199, 89%, 48%, 0.15);
+      color: var(--state-ready);
+    }
+    .badge-closed {
+      background: hsla(220, 8%, 65%, 0.15);
+      color: var(--state-draft);
+    }
+
+    /* ================================================================
+       PROJECT SUMMARY CARD
+       ================================================================ */
+    .project-summary-name {
+      font-size: 1.5625rem;
+      font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 4px;
+    }
+
+    .project-summary-desc {
+      font-size: 0.875rem;
+      color: var(--foreground-muted);
+      margin-bottom: 16px;
+    }
+
+    .summary-stats {
+      display: flex;
+      gap: 24px;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--foreground);
+    }
+
+    .stat-label {
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ================================================================
+       BACKLOG LIST
+       ================================================================ */
+    .backlog-list {
+      list-style: none;
+    }
+
+    .backlog-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .backlog-item:last-child {
+      border-bottom: none;
+    }
+
+    .backlog-position {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--foreground-muted);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .backlog-name {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--foreground);
+      font-weight: 500;
+    }
+
+    .backlog-assignee {
+      font-size: 0.6875rem;
+      color: var(--foreground-subtle);
+    }
+
+    /* ================================================================
+       FEATURE STATUS DISTRIBUTION
+       ================================================================ */
+    .status-bar-container {
+      margin-bottom: 12px;
+    }
+
+    .status-bar {
+      display: flex;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .status-bar-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: opacity 100ms;
+      min-width: 28px;
+    }
+
+    .status-bar-segment:hover {
+      opacity: 0.85;
+    }
+
+    .status-bar-segment.seg-draft      { background: var(--state-draft); }
+    .status-bar-segment.seg-ready      { background: var(--state-ready); }
+    .status-bar-segment.seg-in-progress{ background: var(--state-in-progress); }
+    .status-bar-segment.seg-review     { background: var(--state-review); }
+    .status-bar-segment.seg-done       { background: var(--state-done); }
+
+    .status-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+      cursor: pointer;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.dot-draft       { background: var(--state-draft); }
+    .legend-dot.dot-ready       { background: var(--state-ready); }
+    .legend-dot.dot-in-progress { background: var(--state-in-progress); }
+    .legend-dot.dot-review      { background: var(--state-review); }
+    .legend-dot.dot-done        { background: var(--state-done); }
+
+    .legend-count {
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    /* ================================================================
+       ACTIVE SPRINT CARD
+       ================================================================ */
+    .sprint-header-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .sprint-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    .sprint-dates {
+      font-size: 0.6875rem;
+      color: var(--foreground-subtle);
+    }
+
+    .sprint-goal {
+      font-size: 0.875rem;
+      color: var(--foreground-muted);
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+
+    .progress-bar-wrapper {
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .progress-label {
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+      font-weight: 500;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: var(--surface);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 300ms ease;
+    }
+
+    .sprint-status-breakdown {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sprint-status-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sprint-remaining {
+      font-size: 0.6875rem;
+      color: var(--foreground-subtle);
+      font-weight: 500;
+    }
+
+    /* ================================================================
+       RECENT ISSUES TABLE
+       ================================================================ */
+    .issues-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .issues-table thead th {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: left;
+      padding: 6px 12px 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .issues-table tbody td {
+      font-size: 0.875rem;
+      color: var(--foreground);
+      padding: 8px 12px 8px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .issues-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .issues-table tbody tr:hover {
+      background: var(--accent);
+    }
+
+    .issue-name {
+      font-weight: 500;
+    }
+
+    .issue-labels {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    /* ================================================================
+       HEALTH CARD
+       ================================================================ */
+    .health-summary {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .health-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .health-stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .health-stat-value.pass    { color: hsl(142, 71%, 35%); }
+    .health-stat-value.warn    { color: hsl(38, 80%, 40%); }
+    .health-stat-value.fail    { color: var(--status-error); }
+
+    .health-stat-label {
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+      font-weight: 500;
+    }
+
+    .health-timestamp {
+      font-size: 0.6875rem;
+      color: var(--foreground-subtle);
+    }
+
+    .health-checks-list {
+      margin-top: 8px;
+      list-style: none;
+    }
+
+    .health-check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 0.75rem;
+      color: var(--foreground);
+    }
+
+    .health-check-item i {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .health-check-item.check-pass i    { color: var(--status-success); }
+    .health-check-item.check-warn i    { color: var(--status-warning); }
+    .health-check-item.check-fail i    { color: var(--status-error); }
+
+    /* ================================================================
+       VCS CARD
+       ================================================================ */
+    .vcs-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .vcs-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .vcs-branch {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--foreground);
+    }
+
+    .vcs-dirty-badge {
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: hsl(38, 80%, 40%);
+      background: hsla(38, 92%, 50%, 0.15);
+      padding: 1px 6px;
+      border-radius: var(--badge-radius);
+    }
+
+    .vcs-commit {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--foreground-muted);
+    }
+
+    .vcs-hash {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .vcs-message {
+      color: var(--foreground);
+    }
+
+    .vcs-meta {
+      color: var(--foreground-subtle);
+      font-size: 0.6875rem;
+    }
+
+    /* ================================================================
+       UTILITIES
+       ================================================================ */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .ml-auto { margin-left: auto; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <svg class="sidebar-brand-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"/>
+          <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"/>
+          <path d="m2.3 2.3 7.286 7.286"/>
+          <circle cx="11" cy="11" r="2"/>
+        </svg>
+        <span class="sidebar-brand-name">Forge</span>
+      </div>
+      <div class="sidebar-project">forge-project</div>
+      <div class="sidebar-vcs">
+        <i data-lucide="git-branch" style="width:12px;height:12px;"></i>
+        <span class="mono" style="font-size:0.6875rem;">feature/oauth</span>
+        <span class="dirty-dot" title="Uncommitted changes"></span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active">
+        <i data-lucide="layout-dashboard"></i>
+        Dashboard
+      </a>
+      <a class="nav-item">
+        <i data-lucide="file-text"></i>
+        Project Docs
+      </a>
+      <a class="nav-item">
+        <i data-lucide="puzzle"></i>
+        Features
+      </a>
+      <a class="nav-item">
+        <i data-lucide="timer"></i>
+        Sprints
+      </a>
+      <a class="nav-item">
+        <i data-lucide="circle-dot"></i>
+        Issues
+      </a>
+      <a class="nav-item">
+        <i data-lucide="clipboard-check"></i>
+        Reviews
+      </a>
+      <a class="nav-item">
+        <i data-lucide="settings"></i>
+        Configuration
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a class="nav-item footer-item">
+        <i data-lucide="settings" style="width:16px;height:16px;"></i>
+        Settings
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Project overview and current status</p>
+    </div>
+
+    <div class="content">
+      <div class="dashboard-grid">
+
+        <!-- ========================================================
+             1. PROJECT SUMMARY
+             ======================================================== -->
+        <div class="card card-full-width">
+          <div class="project-summary-name">Forge</div>
+          <div class="project-summary-desc">AI-native project management that lives in your codebase</div>
+          <div class="summary-stats">
+            <div class="stat-item">
+              <span class="stat-value">6</span>
+              <span class="stat-label">Docs</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">11</span>
+              <span class="stat-label">Features</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">7</span>
+              <span class="stat-label">Issues</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">4</span>
+              <span class="stat-label">Sprints</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             2. ACTIVE SPRINT
+             ======================================================== -->
+        <div class="card card-clickable">
+          <div class="card-header">
+            <span class="card-title">
+              <i data-lucide="timer"></i>
+              Active Sprint
+            </span>
+            <span class="sprint-remaining">4 days remaining</span>
+          </div>
+
+          <div class="sprint-header-row">
+            <span class="sprint-name">Sprint 3 — Ship OAuth & Fix Upload Bugs</span>
+          </div>
+          <div class="sprint-dates">Apr 14 – Apr 25, 2026</div>
+          <div class="sprint-goal">Complete OAuth integration, resolve critical upload bugs, and ship payment page foundation.</div>
+
+          <div class="progress-bar-wrapper mt-3">
+            <div class="progress-bar-labels">
+              <span class="progress-label">Progress</span>
+              <span class="progress-label">21 / 40 pts (53%)</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: 52.5%;"></div>
+            </div>
+          </div>
+
+          <div class="sprint-status-breakdown">
+            <div class="sprint-status-item">
+              <span class="badge badge-draft">Draft 0</span>
+            </div>
+            <div class="sprint-status-item">
+              <span class="badge badge-ready">Ready 1</span>
+            </div>
+            <div class="sprint-status-item">
+              <span class="badge badge-in-progress">In Progress 2</span>
+            </div>
+            <div class="sprint-status-item">
+              <span class="badge badge-review">Review 1</span>
+            </div>
+            <div class="sprint-status-item">
+              <span class="badge badge-done">Done 1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             3. FEATURE STATUS DISTRIBUTION
+             ======================================================== -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <i data-lucide="puzzle"></i>
+              Feature Status
+            </span>
+            <a class="card-action">
+              View all
+              <i data-lucide="external-link" style="width:12px;height:12px;"></i>
+            </a>
+          </div>
+
+          <div class="status-bar-container">
+            <div class="status-bar">
+              <!-- Total: 11 features. Draft:3, Ready:2, InProgress:2, Review:1, Done:3 -->
+              <div class="status-bar-segment seg-draft" style="width: 27.27%;" title="Draft: 3">3</div>
+              <div class="status-bar-segment seg-ready" style="width: 18.18%;" title="Ready: 2">2</div>
+              <div class="status-bar-segment seg-in-progress" style="width: 18.18%;" title="In Progress: 2">2</div>
+              <div class="status-bar-segment seg-review" style="width: 9.09%;" title="Review: 1">1</div>
+              <div class="status-bar-segment seg-done" style="width: 27.27%;" title="Done: 3">3</div>
+            </div>
+          </div>
+
+          <div class="status-legend">
+            <span class="legend-item">
+              <span class="legend-dot dot-draft"></span>
+              Draft <span class="legend-count">3</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot dot-ready"></span>
+              Ready <span class="legend-count">2</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot dot-in-progress"></span>
+              In Progress <span class="legend-count">2</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot dot-review"></span>
+              Review <span class="legend-count">1</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot dot-done"></span>
+              Done <span class="legend-count">3</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             4. BACKLOG SNAPSHOT
+             ======================================================== -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <i data-lucide="list-ordered"></i>
+              Backlog
+            </span>
+            <a class="card-action">
+              View full backlog
+              <i data-lucide="external-link" style="width:12px;height:12px;"></i>
+            </a>
+          </div>
+
+          <ul class="backlog-list">
+            <li class="backlog-item">
+              <span class="backlog-position">1</span>
+              <span class="backlog-name">User Authentication</span>
+              <span class="badge badge-in-progress">in-progress</span>
+              <span class="backlog-assignee">Alice</span>
+            </li>
+            <li class="backlog-item">
+              <span class="backlog-position">2</span>
+              <span class="backlog-name">OAuth Integration</span>
+              <span class="badge badge-ready">ready</span>
+              <span class="backlog-assignee">Alice</span>
+            </li>
+            <li class="backlog-item">
+              <span class="backlog-position">3</span>
+              <span class="backlog-name">Payment Processing</span>
+              <span class="badge badge-draft">draft</span>
+              <span class="backlog-assignee">Bob</span>
+            </li>
+            <li class="backlog-item">
+              <span class="backlog-position">4</span>
+              <span class="backlog-name">Email Notifications</span>
+              <span class="badge badge-draft">draft</span>
+              <span class="backlog-assignee">—</span>
+            </li>
+            <li class="backlog-item">
+              <span class="backlog-position">5</span>
+              <span class="backlog-name">File Upload v2</span>
+              <span class="badge badge-review">review</span>
+              <span class="backlog-assignee">Charlie</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- ========================================================
+             5. RECENT ISSUES
+             ======================================================== -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <i data-lucide="circle-dot"></i>
+              Recent Issues
+            </span>
+            <a class="card-action">
+              View all issues
+              <i data-lucide="external-link" style="width:12px;height:12px;"></i>
+            </a>
+          </div>
+
+          <table class="issues-table">
+            <thead>
+              <tr>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Labels</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="issue-name">Login Timeout on Slow Connections</td>
+                <td><span class="badge badge-open">open</span></td>
+                <td class="issue-labels">
+                  <span class="badge badge-label">bug</span>
+                  <span class="badge badge-label">security</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="issue-name">Upload Progress Bar Stalls at 99%</td>
+                <td><span class="badge badge-open">open</span></td>
+                <td class="issue-labels">
+                  <span class="badge badge-label">bug</span>
+                  <span class="badge badge-label">ux</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="issue-name">Dashboard Layout Shift on Load</td>
+                <td><span class="badge badge-open">open</span></td>
+                <td class="issue-labels">
+                  <span class="badge badge-label">bug</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="issue-name">Add Rate Limiting to API</td>
+                <td><span class="badge badge-open">open</span></td>
+                <td class="issue-labels">
+                  <span class="badge badge-label">enhancement</span>
+                  <span class="badge badge-label">security</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="issue-name">Fix Broken Markdown Table Rendering</td>
+                <td><span class="badge badge-closed">closed</span></td>
+                <td class="issue-labels">
+                  <span class="badge badge-label">bug</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ========================================================
+             6. FORGE HEALTH
+             ======================================================== -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <i data-lucide="clipboard-check"></i>
+              Forge Health
+            </span>
+            <a class="card-action">
+              View details
+              <i data-lucide="external-link" style="width:12px;height:12px;"></i>
+            </a>
+          </div>
+
+          <div class="health-summary">
+            <div class="health-stat">
+              <span class="health-stat-value pass">7</span>
+              <span class="health-stat-label">passed</span>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-value warn">2</span>
+              <span class="health-stat-label">warnings</span>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-value fail">1</span>
+              <span class="health-stat-label">failed</span>
+            </div>
+          </div>
+
+          <ul class="health-checks-list">
+            <li class="health-check-item check-pass">
+              <i data-lucide="check-circle-2"></i>
+              Directory structure is valid
+            </li>
+            <li class="health-check-item check-pass">
+              <i data-lucide="check-circle-2"></i>
+              forge.yaml schema is valid
+            </li>
+            <li class="health-check-item check-pass">
+              <i data-lucide="check-circle-2"></i>
+              All features have valid frontmatter
+            </li>
+            <li class="health-check-item check-warn">
+              <i data-lucide="alert-triangle"></i>
+              2 features missing assignees
+            </li>
+            <li class="health-check-item check-warn">
+              <i data-lucide="alert-triangle"></i>
+              Sprint 2 has unresolved items
+            </li>
+            <li class="health-check-item check-fail">
+              <i data-lucide="x-circle"></i>
+              Backlog contains orphaned reference: "deleted-feature"
+            </li>
+          </ul>
+
+          <div class="health-timestamp mt-2">Last run: Apr 10, 2026 at 2:32 PM</div>
+        </div>
+
+        <!-- ========================================================
+             7. VCS STATUS
+             ======================================================== -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <i data-lucide="git-branch"></i>
+              Version Control
+            </span>
+          </div>
+
+          <div class="vcs-info">
+            <div class="vcs-row">
+              <i data-lucide="git-branch" style="width:16px;height:16px;color:var(--foreground-muted);"></i>
+              <span class="vcs-branch">feature/oauth</span>
+              <span class="vcs-dirty-badge">uncommitted changes</span>
+            </div>
+
+            <div class="vcs-commit">
+              <span class="vcs-hash">abc1234</span>
+              <span class="vcs-message">Fix upload validation</span>
+            </div>
+
+            <div class="vcs-meta">
+              Alice &middot; 2 hours ago
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end .dashboard-grid -->
+    </div><!-- end .content -->
+  </main>
+
+  <!-- Initialize Lucide Icons -->
+  <script>
+    lucide.createIcons();
+  </script>
+
+</body>
+</html>

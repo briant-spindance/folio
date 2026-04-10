@@ -205,7 +205,7 @@ forge feature list [--status <state>] [--assignee <name>] [--sprint <slug>] [--s
 | `--status`   | string |          | Filter by workflow state. Can be specified multiple times. |
 | `--assignee` | string |          | Filter by assignee.                                    |
 | `--sprint`   | string |          | Filter by sprint slug. Use `none` for unassigned features. |
-| `--sort`     | string | `name`   | Sort field: `name`, `status`, `priority`, `modified`.  |
+| `--sort`     | string | `name`   | Sort field: `name`, `status`, `priority`, `modified`. `priority` sorts by backlog position (`backlog_position` in JSON output). |
 
 #### Examples
 
@@ -1752,7 +1752,7 @@ Deleted document: API Guidelines
 
 ## `forge review`
 
-Browse review guidance under `forge/reviews/`.
+Manage review guidance under `forge/reviews/`.
 
 ### `forge review list`
 
@@ -1845,6 +1845,350 @@ Ensure the application meets security standards before release.
 - [ ] Secrets management reviewed
 - [ ] Dependency vulnerability scan completed
 ```
+
+---
+
+### `forge review create`
+
+Create a new review type.
+
+#### Synopsis
+
+```
+forge review create <type> [--body <markdown>] [--body-file <path>]
+```
+
+#### Description
+
+Creates a new review type directory under `forge/reviews/` with a `REVIEW.md` file. If a review type with the same name already exists, exits with a validation error.
+
+#### Arguments
+
+| Argument | Required | Description                                      |
+|----------|----------|--------------------------------------------------|
+| `type`   | Yes      | Review type name (used as directory slug).        |
+
+#### Flags
+
+| Flag          | Type   | Default | Description                                       |
+|---------------|--------|---------|---------------------------------------------------|
+| `--body`      | string |         | Markdown body content (inline).                   |
+| `--body-file` | string |         | Path to a file containing the markdown body.      |
+
+If neither `--body` nor `--body-file` is provided, `REVIEW.md` is populated with a minimal template containing a Purpose section and an empty Checklist.
+
+#### Examples
+
+```bash
+# Create with default template
+forge review create performance
+
+# Create with inline body
+forge review create accessibility --body "## Purpose\nEnsure WCAG 2.1 AA compliance.\n\n## Checklist\n- [ ] Color contrast verified"
+
+# Create from a file
+forge review create compliance --body-file /tmp/compliance-review.md
+```
+
+#### Output
+
+```
+Created review: Performance
+  Path: forge/reviews/performance/REVIEW.md
+```
+
+#### JSON Output (`--json`)
+
+```json
+{
+  "type": "performance",
+  "path": "forge/reviews/performance/REVIEW.md"
+}
+```
+
+---
+
+### `forge review edit`
+
+Edit a review's guidance document.
+
+#### Synopsis
+
+```
+forge review edit <type> [--body <markdown>] [--body-file <path>]
+```
+
+#### Description
+
+Updates the `REVIEW.md` for the specified review type. If no flags are provided and the session is a TTY, opens the file in `$EDITOR`. Otherwise, replaces the body content with the provided value.
+
+#### Arguments
+
+| Argument | Required | Description                        |
+|----------|----------|------------------------------------|
+| `type`   | Yes      | Review type (directory name).      |
+
+#### Flags
+
+| Flag          | Type   | Description                                          |
+|---------------|--------|------------------------------------------------------|
+| `--body`      | string | Replace the markdown body (inline).                  |
+| `--body-file` | string | Replace the markdown body from a file.               |
+
+#### Examples
+
+```bash
+# Open in $EDITOR
+forge review edit security
+
+# Replace body from a file
+forge review edit security --body-file /tmp/updated-security-review.md
+```
+
+#### Output
+
+```
+Updated review: Security
+  Path: forge/reviews/security/REVIEW.md
+```
+
+---
+
+### `forge review delete`
+
+Delete a review type.
+
+#### Synopsis
+
+```
+forge review delete <type> [--force]
+```
+
+#### Description
+
+Removes the review type directory and its contents. Prompts for confirmation in TTY mode unless `--force` is specified.
+
+#### Arguments
+
+| Argument | Required | Description                        |
+|----------|----------|------------------------------------|
+| `type`   | Yes      | Review type (directory name).      |
+
+#### Flags
+
+| Flag      | Type | Default | Description                                |
+|-----------|------|---------|--------------------------------------------|
+| `--force` | bool | false   | Skip confirmation prompt.                  |
+
+#### Examples
+
+```bash
+# Delete with confirmation
+forge review delete performance
+
+# Force delete
+forge review delete performance --force
+```
+
+#### Output
+
+```
+Deleted review: Performance
+  Removed: forge/reviews/performance/
+```
+
+#### JSON Output (`--json`)
+
+```json
+{
+  "type": "performance",
+  "path": "forge/reviews/performance/",
+  "deleted": true
+}
+```
+
+---
+
+## `forge team`
+
+Manage team members defined in `forge/team.md`.
+
+### `forge team list`
+
+List all team members.
+
+#### Synopsis
+
+```
+forge team list
+```
+
+#### Description
+
+Reads `forge/team.md` and displays all team members. If `team.md` does not exist, exits with an error and suggests running `forge init` or creating the file manually.
+
+#### Output
+
+```
+NAME              ROLE          GITHUB
+Alice Johnson     engineer      alicej
+Bob Smith         designer      bobs
+Carol Davis       product       carold
+Dan Lee           pumpking      danl
+```
+
+#### JSON Output (`--json`)
+
+```json
+[
+  {
+    "name": "Alice Johnson",
+    "role": "engineer",
+    "github": "alicej"
+  },
+  {
+    "name": "Bob Smith",
+    "role": "designer",
+    "github": "bobs"
+  },
+  {
+    "name": "Carol Davis",
+    "role": "product",
+    "github": "carold"
+  },
+  {
+    "name": "Dan Lee",
+    "role": "pumpking",
+    "github": "danl"
+  }
+]
+```
+
+---
+
+### `forge team add`
+
+Add a team member.
+
+#### Synopsis
+
+```
+forge team add <name> [--role <role>] [--github <handle>]
+```
+
+#### Description
+
+Adds a new member to `forge/team.md`. If a member with the same name already exists, exits with a validation error. If `team.md` does not exist, creates it.
+
+#### Arguments
+
+| Argument | Required | Description                              |
+|----------|----------|------------------------------------------|
+| `name`   | Yes      | Team member display name. Must be unique.|
+
+#### Flags
+
+| Flag       | Type   | Default | Description                             |
+|------------|--------|---------|-----------------------------------------|
+| `--role`   | string |         | Team role (e.g., `engineer`, `designer`, `product`, `pumpking`). |
+| `--github` | string |         | GitHub username.                        |
+
+#### Examples
+
+```bash
+# Add a team member with all fields
+forge team add "Alice Johnson" --role engineer --github alicej
+
+# Add with just a name
+forge team add "Eve Martinez"
+```
+
+#### Output
+
+```
+Added team member: Alice Johnson
+  Role: engineer
+  GitHub: alicej
+```
+
+#### JSON Output (`--json`)
+
+```json
+{
+  "name": "Alice Johnson",
+  "role": "engineer",
+  "github": "alicej"
+}
+```
+
+---
+
+### `forge team remove`
+
+Remove a team member.
+
+#### Synopsis
+
+```
+forge team remove <name> [--force]
+```
+
+#### Description
+
+Removes a member from `forge/team.md`. If the member is currently assigned to any features or issues, prints a warning listing the affected entities and exits unless `--force` is specified. In TTY mode, prompts for confirmation before removal.
+
+#### Arguments
+
+| Argument | Required | Description                  |
+|----------|----------|------------------------------|
+| `name`   | Yes      | Team member name to remove.  |
+
+#### Flags
+
+| Flag      | Type | Default | Description                                        |
+|-----------|------|---------|----------------------------------------------------|
+| `--force` | bool | false   | Skip confirmation and remove even if member is assigned to entities. |
+
+#### Examples
+
+```bash
+# Remove a team member
+forge team remove "Eve Martinez"
+
+# Force removal (even if assigned to features/issues)
+forge team remove "Bob Smith" --force
+```
+
+#### Output
+
+```
+Removed team member: Eve Martinez
+```
+
+If the member is assigned to entities:
+
+```
+⚠ Bob Smith is currently assigned to:
+  - Feature: oauth-integration
+  - Issue: login-timeout-on-slow-connections
+
+Remove anyway? [y/N]
+```
+
+#### JSON Output (`--json`)
+
+```json
+{
+  "name": "Eve Martinez",
+  "removed": true
+}
+```
+
+#### Exit Codes
+
+- `0` — Member removed successfully.
+- `2` — Member not found.
+- `3` — Member is assigned to entities and `--force` was not specified (non-TTY mode).
 
 ---
 
@@ -1973,6 +2317,20 @@ Results: 7 passed, 2 warnings, 1 failed
 
 - `0` — All checks passed (warnings are acceptable).
 - `1` — One or more checks failed.
+
+### Result Persistence
+
+After each run, `forge doctor` writes the results to `forge/.doctor-cache.json`. This file is intended for machine consumption by the web UI and should be added to `.gitignore`. The cached results include:
+
+```json
+{
+  "timestamp": "2026-04-10T14:32:00Z",
+  "checks": [ ... ],
+  "summary": { ... }
+}
+```
+
+The web UI reads this file to display the "Forge Health" card on the dashboard and the full results at `/reviews/health`. If the cache file does not exist (e.g., `forge doctor` has never been run), the UI displays a prompt to run it. The web UI can also trigger a health check run via the API, which executes the same logic and updates the cache.
 
 ---
 

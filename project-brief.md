@@ -63,6 +63,11 @@ forge/
 │   │   └── ...                 # Supporting artifacts
 │   └── missing-validation-on-upload/
 │       └── ISSUE.md
+├── sprints/                    # Sprint iterations (directory-per-sprint)
+│   ├── sprint-1/
+│   │   └── SPRINT.md           # Sprint metadata, assigned features/issues
+│   └── sprint-2/
+│       └── SPRINT.md
 └── reviews/                    # Periodic review guidance (directory-per-review-type)
     ├── architecture/
     │   ├── REVIEW.md           # Review instructions and checklist
@@ -100,6 +105,103 @@ Reviews fall into two categories:
 - **Project reviews** — Domain-specific reviews defined by the team (architecture, security, usability, design, etc.).
 - **Forge health reviews** — Built-in reviews shipped with Forge that check the health of the `forge/` directory itself. For example: Is the directory structure valid? Are core project documents present and up to date? Are there features missing required metadata? These act as a self-diagnostic for the project's Forge setup.
 
+### Sprints
+
+Time-boxed iterations stored under `sprints/`. Each sprint gets a directory containing a `SPRINT.md` with YAML frontmatter for metadata and a markdown body for notes or retrospective content. Sprint membership (which features and issues belong to a sprint) is stored in the sprint's frontmatter — not in the individual feature or issue files. This keeps the sprint as the single source of truth for its contents.
+
+## Entity Schemas
+
+All Forge entities use markdown files with YAML frontmatter for structured metadata. The frontmatter is the machine-readable portion; the markdown body below it is free-form content.
+
+### FEATURE.md
+
+```yaml
+---
+name: "OAuth Integration"          # Required. Human-readable feature name.
+status: draft                      # Required. Current workflow state (default: draft).
+assignee: "Alice Johnson"          # Optional. Team member name (should match a name in team.md).
+points: 5                          # Optional. Story points or effort estimate.
+---
+
+## Summary
+
+Feature description and details in markdown...
+```
+
+**Derived fields** (not stored in frontmatter, computed at read time):
+
+- `slug` — The feature's directory name (e.g., `oauth-integration`).
+- `path` — Filesystem path to `FEATURE.md`.
+- `backlog_position` — Position in `features/backlog.md`, or `null` if not in the backlog.
+- `sprint` — Slug of the sprint that contains this feature (found by scanning sprint files), or `null`.
+- `artifacts` — Other files in the feature directory.
+- `created`, `last_modified` — Filesystem timestamps.
+
+### ISSUE.md
+
+```yaml
+---
+name: "Login Timeout on Slow Connections"  # Required. Human-readable issue name.
+status: open                               # Required. Current status (default: open).
+assignee: "Bob Smith"                      # Optional. Team member name (should match a name in team.md).
+labels:                                    # Optional. Categorization labels.
+  - bug
+  - security
+feature: user-authentication               # Optional. Linked feature slug.
+---
+
+## Description
+
+Issue description and details in markdown...
+```
+
+**Derived fields** (not stored in frontmatter, computed at read time):
+
+- `slug` — The issue's directory name.
+- `path` — Filesystem path to `ISSUE.md`.
+- `sprint` — Slug of the sprint that contains this issue (found by scanning sprint files), or `null`.
+- `artifacts` — Other files in the issue directory.
+- `created`, `last_modified` — Filesystem timestamps.
+
+**Note on `feature` vs `linked_feature`:** The frontmatter key is `feature`. In JSON API responses, this is serialized as `linked_feature` for clarity.
+
+### SPRINT.md
+
+```yaml
+---
+name: "Sprint 3"                   # Required. Human-readable sprint name.
+status: planning                   # Required. Lifecycle state: planning | active | completed.
+start_date: 2026-04-14             # Required. Sprint start date (YYYY-MM-DD).
+end_date: 2026-04-25               # Required. Sprint end date (YYYY-MM-DD).
+goal: "Complete OAuth and fix critical bugs"  # Optional. Sprint goal.
+capacity: 40                       # Optional. Team capacity in points for this sprint.
+features:                          # Optional. Slugs of features assigned to this sprint.
+  - oauth-integration
+  - user-authentication
+issues:                            # Optional. Slugs of issues assigned to this sprint.
+  - login-timeout-on-slow-connections
+---
+
+## Sprint Notes
+
+Retrospective notes, observations, or other sprint-level content...
+```
+
+**Derived fields** (not stored in frontmatter, computed at read time):
+
+- `slug` — The sprint's directory name.
+- `path` — Filesystem path to `SPRINT.md`.
+- `days_remaining` — Computed from `end_date` vs. today.
+- `points_committed` — Sum of points from all assigned features.
+- `points_completed` — Sum of points from assigned features in "done" status.
+- `feature_count`, `issue_count` — Counts of assigned items.
+
+### Sprint Membership
+
+The sprint's `features` and `issues` arrays in `SPRINT.md` frontmatter are the **canonical source** for sprint membership. Individual feature and issue files do not store a sprint reference.
+
+When a feature or issue is viewed (via CLI or API), its `sprint` field is computed by scanning all sprint files to find which sprint (if any) contains that entity's slug. CLI convenience flags like `forge feature create --sprint <slug>` write to the target sprint's `SPRINT.md`, not to the feature's frontmatter.
+
 ## Feature Lifecycle
 
 Features move through a configurable workflow. The default states are:
@@ -109,6 +211,19 @@ draft → ready → in-progress → review → done
 ```
 
 Status is tracked as metadata in `FEATURE.md` (e.g., frontmatter). Teams can modify the workflow states via configuration to reflect their evolving process — consistent with the agile principle of inspect-and-adapt.
+
+## Issue Lifecycle
+
+Issues have two default statuses: `open` and `closed`. These are sufficient for standalone issue tracking outside of sprints.
+
+When an issue is assigned to a sprint, it participates in the sprint board alongside features. On the sprint board, issues are organized into the same workflow state columns as features (e.g., Draft | Ready | In Progress | Review | Done). An issue's `status` field in its frontmatter is updated to reflect its board position — meaning an issue on a sprint board can have any of the configured workflow states as its status, not just `open`/`closed`.
+
+The mapping works as follows:
+
+- When an issue is **added to a sprint**, its status remains unchanged. If the status is `open`, it appears in the first workflow column (e.g., Draft).
+- **Dragging an issue between board columns** updates its `status` in `ISSUE.md` frontmatter to the target workflow state.
+- When a sprint is **completed**, issues not in "done" status retain their current status. They can be reassigned to a new sprint or managed independently.
+- `open` and `closed` remain valid statuses for issues not on a sprint board. `closed` is treated equivalently to `done` for sprint board purposes.
 
 ## Roles
 
