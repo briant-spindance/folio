@@ -4,8 +4,18 @@ export type IssuePriority = "critical" | "high" | "medium" | "low"
 export interface DocSummary {
   slug: string
   title: string
-  description?: string
-  updatedAt?: string
+  description?: string | null
+  icon?: string | null
+  updatedAt?: string | null
+}
+
+export interface WikiDocDetail {
+  slug: string
+  title: string
+  description: string | null
+  icon: string | null
+  updatedAt: string | null
+  body: string
 }
 
 export interface FeatureSummary {

@@ -7,6 +7,7 @@ export interface WikiDoc {
   slug: string
   title: string
   description: string | null
+  icon: string | null
   updatedAt: string | null
   body: string
 }
@@ -24,6 +25,7 @@ export function listWikiDocs(): WikiDoc[] {
         slug,
         title: String(data.title ?? slug),
         description: data.description ? String(data.description) : null,
+        icon: data.icon ? String(data.icon) : null,
         updatedAt: data.modified ? String(data.modified) : null,
         body: content,
       } satisfies WikiDoc
@@ -40,6 +42,7 @@ export function getWikiDoc(slug: string): WikiDoc | null {
     slug,
     title: String(data.title ?? slug),
     description: data.description ? String(data.description) : null,
+    icon: data.icon ? String(data.icon) : null,
     updatedAt: data.modified ? String(data.modified) : null,
     body: content,
   }

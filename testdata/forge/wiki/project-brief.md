@@ -1,6 +1,7 @@
 ---
 title: Project Brief
 modified: "2026-04-09"
+icon: book-open
 ---
 
 # Project Brief

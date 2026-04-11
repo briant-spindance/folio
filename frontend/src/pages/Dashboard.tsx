@@ -1,6 +1,8 @@
+import { Link } from "react-router-dom"
 import { useStatus } from "@/hooks/useData"
 import { StatusBadge, LabelBadge } from "@/components/Badges"
 import { Card, CardHeader } from "@/components/Card"
+import { docIcon } from "@/lib/docIcons"
 
 // ── Icon helpers (inline SVGs matching lucide icons used in mockup) ──────────
 
@@ -92,23 +94,7 @@ function IconXCircle() {
   )
 }
 
-// Doc tile icons — selected to match mockup icons per document
-const DOC_ICONS: Record<string, React.ReactNode> = {
-  "project-brief": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
-  "architecture": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9 12 2l10 7v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-  "design-system": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg>,
-  "api-specification": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8" /><path d="m2 2 20 4-4 4 4 4Z" /></svg>,
-  "cli-reference": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" x2="20" y1="19" y2="19" /></svg>,
-  "contributing-guide": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 0 1 2 2v7" /><line x1="6" x2="6" y1="9" y2="21" /></svg>,
-}
-
-const DEFAULT_DOC_ICON = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" />
-  </svg>
-)
-
-function formatRelativeDate(dateStr?: string): string {
+function formatRelativeDate(dateStr?: string | null): string {
   if (!dateStr) return ""
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return dateStr
@@ -122,7 +108,7 @@ function formatRelativeDate(dateStr?: string): string {
   return `Updated ${Math.floor(diffDays / 7)} weeks ago`
 }
 
-function formatModified(dateStr?: string): string {
+function formatModified(dateStr?: string | null): string {
   if (!dateStr) return ""
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return dateStr
@@ -155,22 +141,22 @@ export function Dashboard() {
         <CardHeader
           title={<><IconBookOpen />Project Docs</>}
           action={
-            <a className="card-action" href="/docs">
+            <Link className="card-action" to="/docs">
               View all <IconChevronRight />
-            </a>
+            </Link>
           }
         />
         <div className="docs-grid">
           {data.recentDocs.map((doc) => (
-            <a key={doc.slug} className="doc-tile" href={`/docs/${doc.slug}`}>
+            <Link key={doc.slug} className="doc-tile" to={`/docs/${doc.slug}`}>
               <div className="doc-tile-icon">
-                {DOC_ICONS[doc.slug] ?? DEFAULT_DOC_ICON}
+                {docIcon(doc.icon)}
               </div>
               <div className="doc-tile-text">
                 <span className="doc-tile-name">{doc.title}</span>
                 <span className="doc-tile-meta">{formatRelativeDate(doc.updatedAt)}</span>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </Card>
@@ -180,9 +166,9 @@ export function Dashboard() {
         <CardHeader
           title={<><IconPuzzle />Features</>}
           action={
-            <a className="card-action" href="/features">
+            <Link className="card-action" to="/features">
               View all features <IconChevronRight />
-            </a>
+            </Link>
           }
         />
         <table className="features-table">
@@ -217,9 +203,9 @@ export function Dashboard() {
         <CardHeader
           title={<><IconCircleDot />Open Issues</>}
           action={
-            <a className="card-action" href="/issues">
+            <Link className="card-action" to="/issues">
               View all issues <IconChevronRight />
-            </a>
+            </Link>
           }
         />
         <table className="issues-table">
@@ -253,9 +239,9 @@ export function Dashboard() {
         <CardHeader
           title={<><IconFileText />Recent Wiki Changes</>}
           action={
-            <a className="card-action" href="/wiki">
+            <Link className="card-action" to="/wiki">
               View wiki <IconChevronRight />
-            </a>
+            </Link>
           }
         />
         <table className="wiki-table">
@@ -268,7 +254,7 @@ export function Dashboard() {
           </thead>
           <tbody>
             {data.recentDocs.slice(0, 5).map((doc) => (
-              <tr key={doc.slug}>
+              <tr key={doc.slug} onClick={() => {}} style={{ cursor: "pointer" }}>
                 <td className="wiki-page-name">{doc.title}</td>
                 <td className="wiki-author">{doc.description ?? "—"}</td>
                 <td className="wiki-modified">{formatModified(doc.updatedAt)}</td>

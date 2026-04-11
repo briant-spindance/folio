@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AppShell } from "@/components/AppShell"
 import { Dashboard } from "@/pages/Dashboard"
+import { DocsList } from "@/pages/DocsList"
+import { DocsDetail } from "@/pages/DocsDetail"
 import { StubPage } from "@/pages/StubPage"
 
 const queryClient = new QueryClient()
@@ -13,7 +15,8 @@ export default function App() {
         <AppShell>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/docs" element={<StubPage title="Project Docs" />} />
+            <Route path="/docs" element={<DocsList />} />
+            <Route path="/docs/:slug" element={<DocsDetail />} />
             <Route path="/features" element={<StubPage title="Features" />} />
             <Route path="/sprints" element={<StubPage title="Sprints" />} />
             <Route path="/issues" element={<StubPage title="Issues" />} />

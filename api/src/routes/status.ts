@@ -37,7 +37,7 @@ router.get("/", (c) => {
     featureCount: features.length,
     byStatus,
     activeSprint,
-    recentDocs: docs.slice(0, 6).map(({ slug, title, description, updatedAt }) => ({ slug, title, description, updatedAt })),
+    recentDocs: docs.slice(0, 6).map(({ slug, title, description, icon, updatedAt }) => ({ slug, title, description, icon, updatedAt })),
     topFeatures: features.slice(0, 10).map(({ slug, title, status, priority, assignee, points, tags }) => ({ slug, title, status, priority, assignee, points, tags })),
     openIssues: issues.filter(i => i.status === "open").map(({ slug, title, status, labels }) => ({ slug, title, status, labels })),
     team: team.map(({ name, role }) => ({

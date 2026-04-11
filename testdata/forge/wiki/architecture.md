@@ -1,6 +1,7 @@
 ---
 title: Architecture
 modified: "2026-04-05"
+icon: boxes
 ---
 
 # Architecture

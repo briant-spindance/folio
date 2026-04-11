@@ -1,6 +1,7 @@
 ---
 title: Design System
 modified: "2026-04-10"
+icon: palette
 ---
 
 # Design System

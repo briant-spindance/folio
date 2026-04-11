@@ -1,6 +1,7 @@
 ---
 title: CLI Reference
 modified: "2026-04-07"
+icon: terminal
 ---
 
 # CLI Reference

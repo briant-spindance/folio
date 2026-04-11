@@ -1,6 +1,7 @@
 ---
 title: Contributing Guide
 modified: "2026-04-03"
+icon: git-pull-request
 ---
 
 # Contributing Guide

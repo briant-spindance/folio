@@ -1,6 +1,7 @@
 ---
 title: API Specification
 modified: "2026-04-09"
+icon: plug
 ---
 
 # API Specification
