@@ -31,16 +31,19 @@ export function DocsList() {
         <span className="docs-list-title">Project Docs</span>
         <span className="docs-list-count">{data.length} document{data.length !== 1 ? "s" : ""}</span>
       </div>
-      <div className="docs-grid">
+      <div className="docs-list">
         {data.map((doc) => (
-          <Link key={doc.slug} className="doc-tile" to={`/docs/${doc.slug}`}>
-            <div className="doc-tile-icon">
-              {docIcon(doc.icon)}
+          <Link key={doc.slug} className="docs-list-row" to={`/docs/${doc.slug}`}>
+            <div className="docs-list-row-icon">
+              {docIcon(doc.icon, 18)}
             </div>
-            <div className="doc-tile-text">
-              <span className="doc-tile-name">{doc.title}</span>
-              <span className="doc-tile-meta">{formatRelativeDate(doc.updatedAt)}</span>
+            <div className="docs-list-row-body">
+              <span className="docs-list-row-title">{doc.title}</span>
+              {doc.description && (
+                <span className="docs-list-row-desc">{doc.description}</span>
+              )}
             </div>
+            <span className="docs-list-row-date">{formatRelativeDate(doc.updatedAt)}</span>
           </Link>
         ))}
       </div>
