@@ -2,6 +2,7 @@ import { readdirSync, existsSync, writeFileSync, unlinkSync } from "node:fs"
 import path from "node:path"
 import { parseFrontmatter } from "../lib/frontmatter.js"
 import { paths } from "../lib/paths.js"
+import { getGitRoot, getDirtyFiles } from "../lib/git.js"
 
 export interface WikiDoc {
   slug: string
@@ -10,6 +11,7 @@ export interface WikiDoc {
   icon: string | null
   updatedAt: string | null
   body: string
+  dirty?: boolean
 }
 
 export interface SaveWikiDocInput {
@@ -72,13 +74,21 @@ function buildDoc(slug: string, data: Record<string, unknown>, content: string):
 export function listWikiDocs(): WikiDoc[] {
   if (!existsSync(paths.wiki)) return []
 
+  const gitRoot = getGitRoot(paths.wiki)
+  const dirtyFiles = getDirtyFiles(gitRoot)
+
   return readdirSync(paths.wiki)
     .filter((f) => f.endsWith(".md"))
     .map((f) => {
       const slug = f.replace(/\.md$/, "")
       const filePath = path.join(paths.wiki, f)
       const { data, content } = parseFrontmatter(filePath)
-      return buildDoc(slug, data, content)
+      const doc = buildDoc(slug, data, content)
+      if (gitRoot) {
+        const repoRelative = path.relative(gitRoot, filePath).split(path.sep).join("/")
+        doc.dirty = dirtyFiles.has(repoRelative)
+      }
+      return doc
     })
     .sort((a, b) => a.title.localeCompare(b.title))
 }

@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -23,6 +23,10 @@ async function apiMutate<T>(path: string, method: string, body?: unknown): Promi
 
 export function fetchStatus(): Promise<StatusResponse> {
   return apiFetch<StatusResponse>("/api/status")
+}
+
+export function fetchGitStatus(): Promise<GitStatus> {
+  return apiFetch<GitStatus>("/api/git")
 }
 
 export function fetchWikiDocs(): Promise<WikiDocDetail[]> {

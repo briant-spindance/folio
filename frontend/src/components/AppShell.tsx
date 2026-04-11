@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react"
 import { Header } from "./Header"
 import { Sidebar } from "./Sidebar"
+import { useGitStatus } from "@/hooks/useData"
 
 const STORAGE_KEY = "sidebar-collapsed"
 
@@ -14,6 +15,8 @@ export function AppShell({ children, projectName = "forge-project" }: AppShellPr
     () => localStorage.getItem(STORAGE_KEY) === "true"
   )
 
+  const { data: git } = useGitStatus()
+
   function handleToggle() {
     setCollapsed((c) => {
       const next = !c
@@ -26,9 +29,9 @@ export function AppShell({ children, projectName = "forge-project" }: AppShellPr
     <div className={collapsed ? "sidebar-collapsed" : ""}>
       <Header
         projectName={projectName}
-        branch="feature/oauth"
-        commit="abc1234"
-        dirty={true}
+        branch={git?.branch ?? undefined}
+        commit={git?.commit ?? undefined}
+        dirty={git?.dirty ?? false}
       />
       <Sidebar collapsed={collapsed} onToggle={handleToggle} />
       <main className="main">

@@ -6,15 +6,17 @@ import { logger } from "hono/logger"
 import statusRouter from "./routes/status.js"
 import featuresRouter from "./routes/features.js"
 import wikiRouter from "./routes/wiki.js"
+import gitRouter from "./routes/git.js"
 
 const app = new Hono()
 
 app.use("*", logger())
-app.use("*", cors({ origin: "http://localhost:5173" }))
+app.use("*", cors({ origin: "*" }))
 
 app.route("/api/status", statusRouter)
 app.route("/api/features", featuresRouter)
 app.route("/api/wiki", wikiRouter)
+app.route("/api/git", gitRouter)
 
 // Catch-all 501 for unimplemented routes
 app.all("/api/*", (c) => {

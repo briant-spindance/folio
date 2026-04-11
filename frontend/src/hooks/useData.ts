@@ -2,19 +2,29 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import {
   fetchStatus,
+  fetchGitStatus,
   fetchWikiDocs,
   fetchWikiDoc,
   saveWikiDoc as apiSaveWikiDoc,
   createWikiDoc as apiCreateWikiDoc,
   deleteWikiDoc as apiDeleteWikiDoc,
 } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload } from "@/lib/types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
     queryKey: ["status"],
     queryFn: fetchStatus,
     staleTime: 30_000,
+  })
+}
+
+export function useGitStatus() {
+  return useQuery<GitStatus>({
+    queryKey: ["git"],
+    queryFn: fetchGitStatus,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   })
 }
 

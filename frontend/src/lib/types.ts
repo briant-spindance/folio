@@ -1,3 +1,9 @@
+export interface GitStatus {
+  branch: string | null
+  commit: string | null
+  dirty: boolean
+}
+
 export interface SaveDocPayload {
   title: string
   icon: string | null
@@ -13,6 +19,7 @@ export interface DocSummary {
   description?: string | null
   icon?: string | null
   updatedAt?: string | null
+  dirty?: boolean
 }
 
 export interface WikiDocDetail {
@@ -22,6 +29,7 @@ export interface WikiDocDetail {
   icon: string | null
   updatedAt: string | null
   body: string
+  dirty?: boolean
 }
 
 export interface FeatureSummary {
