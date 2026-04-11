@@ -2,6 +2,7 @@
 title: Design System
 modified: "2026-04-11"
 icon: palette
+order: 2
 ---
 
 Forge uses a custom design token system built on Tailwind CSS v4 and shadcn/ui components.
@@ -176,3 +177,5 @@ All color combinations meet WCAG 2.1 AA standards for contrast ratios:
 - UI components: Minimum 3:1
 
 Interactive elements include visible focus states and support keyboard navigation.
+
+

@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { listWikiDocs, getWikiDoc, saveWikiDoc, deleteWikiDoc, slugifyTitle, uniqueSlug } from "../store/wiki.js"
+import { listWikiDocs, getWikiDoc, saveWikiDoc, deleteWikiDoc, slugifyTitle, uniqueSlug, reorderWikiDocs } from "../store/wiki.js"
 
 const router = new Hono()
 
@@ -7,6 +7,16 @@ const router = new Hono()
 router.get("/", (c) => {
   const docs = listWikiDocs()
   return c.json(docs)
+})
+
+// PATCH /api/wiki/reorder — reorder docs
+router.patch("/reorder", async (c) => {
+  const body = await c.req.json<{ slugs?: string[] }>()
+  if (!Array.isArray(body.slugs)) {
+    return c.json({ error: "slugs array is required" }, 400)
+  }
+  reorderWikiDocs(body.slugs)
+  return c.json({ ok: true })
 })
 
 // GET /api/wiki/:slug

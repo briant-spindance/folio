@@ -1,7 +1,8 @@
 ---
 title: Architecture
-modified: "2026-04-05"
+modified: "2026-04-11"
 icon: boxes
+order: 1
 ---
 
 # Architecture
@@ -49,3 +50,5 @@ forge/
 └── wiki/
     └── {slug}.md
 ```
+
+

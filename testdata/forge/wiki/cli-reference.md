@@ -1,7 +1,8 @@
 ---
 title: CLI Reference
-modified: "2026-04-07"
+modified: "2026-04-11"
 icon: terminal
+order: 4
 ---
 
 # CLI Reference
@@ -78,3 +79,5 @@ Run health checks on the project structure.
 ```bash
 forge doctor
 ```
+
+

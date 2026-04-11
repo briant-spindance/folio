@@ -21,6 +21,7 @@ export interface DocSummary {
   description?: string | null
   icon?: string | null
   updatedAt?: string | null
+  order?: number
   dirty?: boolean
 }
 
@@ -31,6 +32,7 @@ export interface WikiDocDetail {
   icon: string | null
   updatedAt: string | null
   body: string
+  order?: number
   dirty?: boolean
 }
 

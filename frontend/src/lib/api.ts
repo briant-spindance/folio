@@ -54,3 +54,7 @@ export function fetchSearch(q: string, type?: string): Promise<SearchResponse> {
   if (type) params.set("type", type)
   return apiFetch<SearchResponse>(`/api/search?${params.toString()}`)
 }
+
+export function reorderWikiDocs(slugs: string[]): Promise<{ ok: boolean }> {
+  return apiMutate<{ ok: boolean }>("/api/wiki/reorder", "PATCH", { slugs })
+}

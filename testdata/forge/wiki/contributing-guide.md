@@ -1,7 +1,8 @@
 ---
 title: Contributing Guide
-modified: "2026-04-03"
+modified: "2026-04-11"
 icon: git-pull-request
+order: 5
 ---
 
 # Contributing Guide
@@ -42,3 +43,5 @@ forge/
 2. Write tests for new behavior
 3. Ensure `pnpm build` passes
 4. Open a PR with a description matching the feature spec
+
+

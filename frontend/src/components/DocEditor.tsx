@@ -288,6 +288,22 @@ export function DocEditor({
   const [mode, setMode] = useState<EditorMode>("wysiwyg")
   const [rawValue, setRawValue] = useState(initialBody)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const metaBarRef = useRef<HTMLDivElement>(null)
+  const layoutRef = useRef<HTMLDivElement>(null)
+
+  // Measure meta-bar height so toolbar sticks right below it
+  useEffect(() => {
+    const el = metaBarRef.current
+    const layout = layoutRef.current
+    if (!el || !layout) return
+    const update = () => {
+      layout.style.setProperty("--editor-meta-height", `${el.offsetHeight}px`)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const editor = useEditor({
     extensions: [
@@ -374,9 +390,9 @@ export function DocEditor({
   }
 
   return (
-    <div className="doc-editor-layout">
+    <div className="doc-editor-layout" ref={layoutRef}>
       {/* ── Meta bar ── */}
-      <div className="doc-editor-meta-bar">
+      <div className="doc-editor-meta-bar" ref={metaBarRef}>
         <IconPicker
           value={icon}
           onChange={(name) => {
@@ -394,6 +410,35 @@ export function DocEditor({
             setUnsaved(true)
           }}
         />
+
+        <div className="doc-editor-meta-actions">
+          {!isNew && lastSavedAt && (
+            <span className="doc-editor-save-meta">{formatLastSaved(lastSavedAt)}</span>
+          )}
+          {unsaved && <span className="doc-editor-unsaved-dot" title="Unsaved changes" />}
+          {viewHref && (
+            <Link
+              to={viewHref}
+              className="doc-editor-view-btn"
+              title="View document"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              View
+            </Link>
+          )}
+          <button
+            type="button"
+            className="doc-editor-save-btn"
+            disabled={isSaving || !unsaved}
+            onClick={handleExplicitSave}
+          >
+            {isSaving ? <IcSpinner /> : null}
+            {isSaving ? "Saving…" : "Save"}
+          </button>
+        </div>
       </div>
 
       {/* ── Toolbar (sticky) ── */}
@@ -468,36 +513,6 @@ export function DocEditor({
             Markdown
           </button>
         </div>
-
-        {/* Push save controls to the right */}
-        <div className="doc-editor-toolbar-spacer" />
-
-        {!isNew && lastSavedAt && (
-          <span className="doc-editor-save-meta">{formatLastSaved(lastSavedAt)}</span>
-        )}
-        {unsaved && <span className="doc-editor-unsaved-dot" title="Unsaved changes" />}
-        {viewHref && (
-          <Link
-            to={viewHref}
-            className="doc-editor-view-btn"
-            title="View document"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            View
-          </Link>
-        )}
-        <button
-          type="button"
-          className="doc-editor-save-btn"
-          disabled={isSaving || !unsaved}
-          onClick={handleExplicitSave}
-        >
-          {isSaving ? <IcSpinner /> : null}
-          {isSaving ? "Saving…" : "Save"}
-        </button>
       </div>
 
       {/* ── Editor body ── */}

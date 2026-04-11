@@ -8,6 +8,7 @@ import {
   saveWikiDoc as apiSaveWikiDoc,
   createWikiDoc as apiCreateWikiDoc,
   deleteWikiDoc as apiDeleteWikiDoc,
+  reorderWikiDocs as apiReorderWikiDocs,
   fetchSearch,
 } from "@/lib/api"
 import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse } from "@/lib/types"
@@ -81,6 +82,17 @@ export function useDeleteWikiDoc() {
       qc.invalidateQueries({ queryKey: ["wiki"] })
       qc.invalidateQueries({ queryKey: ["status"] })
       navigate("/docs")
+    },
+  })
+}
+
+export function useReorderWikiDocs() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (slugs: string[]) => apiReorderWikiDocs(slugs),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wiki"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
     },
   })
 }

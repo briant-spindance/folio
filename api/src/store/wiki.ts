@@ -11,6 +11,7 @@ export interface WikiDoc {
   icon: string | null
   updatedAt: string | null
   body: string
+  order?: number
   dirty?: boolean
 }
 
@@ -18,6 +19,7 @@ export interface SaveWikiDocInput {
   title: string
   icon: string | null
   body: string
+  order?: number
 }
 
 /**
@@ -67,6 +69,7 @@ function buildDoc(slug: string, data: Record<string, unknown>, content: string):
     description: data.description ? String(data.description) : getExcerpt(content),
     icon: data.icon ? String(data.icon) : null,
     updatedAt: data.modified ? String(data.modified) : null,
+    order: typeof data.order === "number" ? data.order : undefined,
     body: content,
   }
 }
@@ -90,7 +93,12 @@ export function listWikiDocs(): WikiDoc[] {
       }
       return doc
     })
-    .sort((a, b) => a.title.localeCompare(b.title))
+    .sort((a, b) => {
+      const oa = a.order ?? Infinity
+      const ob = b.order ?? Infinity
+      if (oa !== ob) return oa - ob
+      return a.title.localeCompare(b.title)
+    })
 }
 
 export function getWikiDoc(slug: string): WikiDoc | null {
@@ -137,9 +145,10 @@ export function uniqueSlug(base: string, excludeSlug?: string): string {
 export function saveWikiDoc(slug: string, input: SaveWikiDocInput): WikiDoc {
   const today = new Date().toISOString().slice(0, 10)
   const icon = input.icon ? `\nicon: ${input.icon}` : ""
-  const fileContent = `---\ntitle: ${input.title}\nmodified: "${today}"${icon}\n---\n\n${input.body.trimStart()}\n`
+  const order = typeof input.order === "number" ? `\norder: ${input.order}` : ""
+  const fileContent = `---\ntitle: ${input.title}\nmodified: "${today}"${icon}${order}\n---\n\n${input.body.trimStart()}\n`
   writeFileSync(path.join(paths.wiki, `${slug}.md`), fileContent, "utf-8")
-  return buildDoc(slug, { title: input.title, modified: today, icon: input.icon ?? undefined }, input.body)
+  return buildDoc(slug, { title: input.title, modified: today, icon: input.icon ?? undefined, order: input.order }, input.body)
 }
 
 /** Delete a wiki doc. Returns false if it didn't exist. */
@@ -148,4 +157,23 @@ export function deleteWikiDoc(slug: string): boolean {
   if (!existsSync(filePath)) return false
   unlinkSync(filePath)
   return true
+}
+
+/**
+ * Reorder wiki docs by assigning `order` values based on the provided slug array.
+ * Each doc gets order = its index in the array. Docs not in the array keep their
+ * existing order (or get no order field).
+ */
+export function reorderWikiDocs(slugs: string[]): void {
+  for (let i = 0; i < slugs.length; i++) {
+    const slug = slugs[i]
+    const doc = getWikiDoc(slug)
+    if (!doc) continue
+    saveWikiDoc(slug, {
+      title: doc.title,
+      icon: doc.icon,
+      body: doc.body,
+      order: i,
+    })
+  }
 }

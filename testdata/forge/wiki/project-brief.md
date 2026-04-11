@@ -2,6 +2,7 @@
 title: Project Brief
 modified: "2026-04-11"
 icon: book-open
+order: 0
 ---
 
 # Project Brief
@@ -73,4 +74,6 @@ ADRs, review-to-feature linking, enhanced git integration, cloud deployment.
 
 ### Phase 3 — AI Integration
 Chat interface with project context, AI-assisted feature writing, smart sprint planning.
+
+
 

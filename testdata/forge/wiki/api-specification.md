@@ -2,6 +2,7 @@
 title: API Specification 3
 modified: "2026-04-11"
 icon: plug
+order: 3
 ---
 
 The Forge API is a JSON REST API served at /api by the Go binary. 2 3
@@ -89,3 +90,5 @@ GET /api/status
 ```
 
 Returns aggregated project health for the dashboard.
+
+
