@@ -1,101 +1,42 @@
 @import "tailwindcss";
 
-@theme inline {
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-
-  /* Surfaces */
-  --color-background: hsl(0 0% 100%);
-  --color-surface: hsl(220 14% 96%);
-  --color-surface-raised: hsl(0 0% 100%);
-  --color-surface-inset: hsl(220 14% 93%);
-
-  /* Borders */
-  --color-border: hsl(220 13% 91%);
-  --color-border-strong: hsl(220 9% 80%);
-
-  /* Text */
-  --color-foreground: hsl(220 14% 10%);
-  --color-foreground-muted: hsl(220 8% 46%);
-  --color-foreground-subtle: hsl(220 8% 65%);
-
-  /* Interactive */
-  --color-primary: hsl(221 83% 53%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-primary-hover: hsl(221 83% 47%);
-  --color-accent: hsl(220 14% 96%);
-  --color-accent-foreground: hsl(220 14% 10%);
-
-  /* Status */
-  --color-status-success: hsl(142 71% 45%);
-  --color-status-warning: hsl(38 92% 50%);
-  --color-status-error: hsl(0 84% 60%);
-
-  /* Workflow States */
-  --color-state-draft: hsl(220 8% 65%);
-  --color-state-ready: hsl(199 89% 48%);
-  --color-state-in-progress: hsl(38 92% 50%);
-  --color-state-review: hsl(271 76% 53%);
-  --color-state-done: hsl(142 71% 45%);
-
-  /* shadcn/ui OKLCH palette (zinc base) */
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(220 14% 10%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(220 14% 10%);
-  --color-secondary: hsl(220 14% 96%);
-  --color-secondary-foreground: hsl(220 14% 10%);
-  --color-muted: hsl(220 14% 96%);
-  --color-muted-foreground: hsl(220 8% 46%);
-  --color-destructive: hsl(0 84% 60%);
-  --color-destructive-foreground: hsl(0 0% 100%);
-  --color-input: hsl(220 13% 91%);
-  --color-ring: hsl(221 83% 53%);
-
-  /* Radius */
-  --radius: 0.5rem;
-}
-
 /* ================================================================
-   CSS CUSTOM PROPERTIES (referenced in components as var(--...))
+   DESIGN TOKENS — copied verbatim from dashboard-mockup.html
    ================================================================ */
 :root {
   --background: hsl(0 0% 100%);
   --surface: hsl(220 14% 96%);
   --surface-raised: hsl(0 0% 100%);
   --surface-inset: hsl(220 14% 93%);
-
   --border: hsl(220 13% 91%);
   --border-strong: hsl(220 9% 80%);
-
   --foreground: hsl(220 14% 10%);
   --foreground-muted: hsl(220 8% 46%);
   --foreground-subtle: hsl(220 8% 65%);
-
   --primary: hsl(221 83% 53%);
   --primary-foreground: hsl(0 0% 100%);
   --primary-hover: hsl(221 83% 47%);
-
+  --accent: hsl(220 14% 96%);
+  --accent-foreground: hsl(220 14% 10%);
   --status-success: hsl(142 71% 45%);
   --status-warning: hsl(38 92% 50%);
   --status-error: hsl(0 84% 60%);
-
   --state-draft: hsl(220 8% 65%);
   --state-ready: hsl(199 89% 48%);
   --state-in-progress: hsl(38 92% 50%);
   --state-review: hsl(271 76% 53%);
   --state-done: hsl(142 71% 45%);
-
   --header-height: 48px;
   --sidebar-width: 220px;
   --sidebar-collapsed-width: 56px;
+  --content-max-width: 1120px;
+  --content-padding: 24px;
   --card-radius: 8px;
   --badge-radius: 9999px;
 }
 
 /* ================================================================
-   RESET & BASE
+   RESET & BASE — copied verbatim from dashboard-mockup.html
    ================================================================ */
 *, *::before, *::after {
   margin: 0;
@@ -110,9 +51,686 @@ html {
 }
 
 body {
-  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--foreground);
   background: var(--background);
+}
+
+/* ================================================================
+   LAYOUT — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.top-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+}
+
+.top-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-brand-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.header-brand-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-strong);
+}
+
+.header-project-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.top-header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-vcs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6875rem;
+  color: var(--foreground-muted);
+}
+
+.header-vcs-branch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: var(--surface);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.header-vcs-branch svg {
+  width: 12px;
+  height: 12px;
+  color: var(--foreground-muted);
+}
+
+.header-vcs-dirty {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-warning);
+  flex-shrink: 0;
+}
+
+.header-vcs-commit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--foreground-subtle);
+}
+
+.header-vcs-commit a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+/* ================================================================
+   SIDEBAR — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.sidebar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  z-index: 50;
+  transition: width 200ms ease;
+  overflow: hidden;
+}
+
+.sidebar-collapsed .sidebar {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-nav {
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  font-size: 0.8125rem;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.nav-item:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.nav-item.active {
+  color: var(--primary);
+  background: var(--accent);
+  border-left-color: var(--primary);
+  font-weight: 500;
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-footer {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  font-size: 0.75rem;
+  color: var(--foreground-subtle);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  font-family: inherit;
+  transition: color 100ms;
+  white-space: nowrap;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-toggle:hover {
+  color: var(--foreground-muted);
+  background: var(--accent);
+}
+
+.sidebar-toggle svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Collapsed state */
+.sidebar-collapsed .sidebar {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-collapsed .main {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+.sidebar-collapsed .nav-item {
+  padding: 7px 0;
+  justify-content: center;
+}
+
+.sidebar-collapsed .nav-item.active {
+  border-left-color: var(--primary);
+}
+
+.sidebar-collapsed .nav-item-label {
+  display: none;
+}
+
+.sidebar-collapsed .sidebar-toggle {
+  padding: 7px 0;
+  justify-content: center;
+}
+
+.sidebar-collapsed .sidebar-toggle-label {
+  display: none;
+}
+
+/* ================================================================
+   MAIN CONTENT — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.main {
+  margin-left: var(--sidebar-width);
+  padding-top: var(--header-height);
+  min-height: 100vh;
+  transition: margin-left 200ms ease;
+}
+
+.content {
+  padding: var(--content-padding);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ================================================================
+   CARDS — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-title svg {
+  width: 14px;
+  height: 14px;
+}
+
+.card-action {
+  font-size: 0.6875rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-action:hover {
+  color: var(--primary-hover);
+}
+
+.card-action svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* ================================================================
+   BADGES — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--badge-radius);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-draft       { background: hsla(220, 8%, 65%, 0.15);  color: var(--state-draft); }
+.badge-ready       { background: hsla(199, 89%, 48%, 0.15); color: var(--state-ready); }
+.badge-in-progress { background: hsla(38, 92%, 50%, 0.15);  color: hsl(38, 80%, 40%); }
+.badge-review      { background: hsla(271, 76%, 53%, 0.15); color: var(--state-review); }
+.badge-done        { background: hsla(142, 71%, 45%, 0.15); color: hsl(142, 71%, 35%); }
+.badge-open        { background: hsla(199, 89%, 48%, 0.15); color: var(--state-ready); }
+.badge-closed      { background: hsla(220, 8%, 65%, 0.15);  color: var(--state-draft); }
+.badge-label {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+/* ================================================================
+   DOCS GRID — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.doc-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 100ms, box-shadow 100ms;
+  text-decoration: none;
+  color: var(--foreground);
+}
+
+.doc-tile:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.doc-tile-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--foreground-muted);
+}
+
+.doc-tile-icon svg { width: 16px; height: 16px; }
+
+.doc-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.doc-tile-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-tile-meta {
+  font-size: 0.625rem;
+  color: var(--foreground-subtle);
+}
+
+/* ================================================================
+   FEATURES TABLE — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.features-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.features-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.features-table thead th:last-child {
+  text-align: right;
+  padding-right: 12px;
+}
+
+.features-table tbody td {
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.features-table tbody td:last-child {
+  text-align: right;
+  padding-right: 12px;
+}
+
+.features-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.features-table tbody tr:hover {
+  background: var(--accent);
+}
+
+.feature-position {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--foreground-subtle);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.feature-name-cell {
+  display: flex;
+  align-items: center;
+}
+
+.feature-name {
+  font-weight: 500;
+}
+
+.feature-assignee {
+  color: var(--foreground-muted);
+  font-size: 0.75rem;
+}
+
+.feature-points {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--foreground-subtle);
+  font-weight: 500;
+}
+
+/* ================================================================
+   ISSUES TABLE — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.issues-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.issues-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.issues-table tbody td {
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.issues-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.issues-table tbody tr:hover {
+  background: var(--accent);
+}
+
+.issue-name { font-weight: 500; }
+
+.issue-labels {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ================================================================
+   WIKI TABLE — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.wiki-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wiki-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.wiki-table tbody td {
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.wiki-table tbody tr:last-child td { border-bottom: none; }
+.wiki-table tbody tr:hover { background: var(--accent); }
+.wiki-table tbody tr { cursor: pointer; }
+.wiki-page-name { font-weight: 500; }
+.wiki-author { color: var(--foreground-muted); }
+.wiki-modified { text-align: right; font-size: 0.75rem; color: var(--foreground-subtle); }
+
+/* ================================================================
+   TEAM CARD — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.team-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+  flex-shrink: 0;
+}
+
+.team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.team-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.team-role {
+  font-size: 0.625rem;
+  color: var(--foreground-subtle);
+}
+
+/* ================================================================
+   HEALTH CARD — copied verbatim from dashboard-mockup.html
+   ================================================================ */
+.health-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.health-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.health-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.health-stat-value.pass { color: hsl(142, 71%, 35%); }
+.health-stat-value.warn { color: hsl(38, 80%, 40%); }
+.health-stat-value.fail { color: var(--status-error); }
+
+.health-stat-label {
+  font-size: 0.6875rem;
+  color: var(--foreground-muted);
+  font-weight: 500;
+}
+
+.health-timestamp {
+  font-size: 0.6875rem;
+  color: var(--foreground-subtle);
+  margin-left: auto;
+}
+
+.health-checks-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.health-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 0.75rem;
+  color: var(--foreground);
+  border-radius: 4px;
+}
+
+.health-check-item:hover { background: var(--accent); }
+.health-check-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+.health-check-item.check-pass svg { color: var(--status-success); }
+.health-check-item.check-warn svg { color: var(--status-warning); }
+.health-check-item.check-fail svg { color: var(--status-error); }
+.health-check-msg { flex: 1; }
+.health-check-item.check-warn .health-check-msg { color: hsl(38, 80%, 40%); }
+.health-check-item.check-fail .health-check-msg { color: var(--status-error); }
+
+/* ================================================================
+   STUB PAGE
+   ================================================================ */
+.stub-page {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.stub-page h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.stub-page p {
+  font-size: 0.875rem;
+  color: var(--foreground-muted);
 }

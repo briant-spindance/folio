@@ -1,34 +1,10 @@
-// API response types matching api.md spec
+export type FeatureStatus = "draft" | "ready" | "in-progress" | "review" | "done"
+export type IssuePriority = "critical" | "high" | "medium" | "low"
 
-export interface WikiDoc {
+export interface DocSummary {
   slug: string
   title: string
   description?: string
-  body: string
-  updatedAt?: string
-}
-
-export interface WikiDocSummary {
-  slug: string
-  title: string
-  description?: string
-  updatedAt?: string
-}
-
-export type FeatureStatus = 'draft' | 'ready' | 'in-progress' | 'review' | 'done'
-export type Priority = 'critical' | 'high' | 'medium' | 'low'
-
-export interface Feature {
-  slug: string
-  title: string
-  status: FeatureStatus
-  priority: Priority
-  assignee?: string
-  points?: number
-  body: string
-  tags?: string[]
-  sprint?: string
-  createdAt?: string
   updatedAt?: string
 }
 
@@ -36,19 +12,48 @@ export interface FeatureSummary {
   slug: string
   title: string
   status: FeatureStatus
-  priority: Priority
+  priority?: IssuePriority
   assignee?: string
   points?: number
   tags?: string[]
+}
+
+export interface IssueSummary {
+  slug: string
+  title: string
+  status: "open" | "closed"
+  labels?: string[]
+}
+
+export interface TeamMember {
+  name: string
+  role: string
+  initials: string
+}
+
+export type HealthLevel = "pass" | "warn" | "fail"
+
+export interface HealthCheck {
+  level: HealthLevel
+  message: string
+}
+
+export interface HealthSummary {
+  passed: number
+  warnings: number
+  failed: number
+  lastRun: string
+  checks: HealthCheck[]
 }
 
 export interface StatusResponse {
   project: string
   featureCount: number
   byStatus: Record<string, number>
-  teamSize: number
-  openIssues: number
   activeSprint?: string
-  recentDocs: WikiDocSummary[]
+  recentDocs: DocSummary[]
   topFeatures: FeatureSummary[]
+  openIssues: IssueSummary[]
+  team: TeamMember[]
+  health: HealthSummary
 }

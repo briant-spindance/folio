@@ -1,29 +1,67 @@
-import { Crosshair, GitBranch } from 'lucide-react'
+interface HeaderProps {
+  projectName: string
+  branch?: string
+  commit?: string
+  dirty?: boolean
+}
 
-export function Header() {
+export function Header({ projectName, branch, commit, dirty }: HeaderProps) {
   return (
-    <header
-      className="fixed top-0 left-0 right-0 h-[var(--header-height)] bg-[var(--surface-raised)] border-b border-[var(--border)] flex items-center justify-between px-5 z-[100]"
-    >
-      <div className="flex items-center gap-[10px]">
-        <Crosshair size={20} className="text-[var(--primary)] shrink-0" />
-        <div className="w-px h-5 bg-[var(--border-strong)]" />
-        <span className="text-[0.9375rem] font-semibold text-[var(--foreground)]">
-          forge-project
-        </span>
+    <header className="top-header">
+      <div className="top-header-left">
+        {/* Forge brand icon — same SVG as mockup */}
+        <svg
+          className="header-brand-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z" />
+          <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18" />
+          <path d="m2.3 2.3 7.286 7.286" />
+          <circle cx="11" cy="11" r="2" />
+        </svg>
+        <div className="header-brand-divider" />
+        <span className="header-project-name">{projectName}</span>
       </div>
 
-      <div className="flex items-center gap-[14px]">
-        <div className="flex items-center gap-2 text-[0.6875rem] text-[var(--foreground-muted)]">
-          <span className="flex items-center gap-1 font-mono text-[0.6875rem] font-medium text-[var(--foreground)] bg-[var(--surface)] px-2 py-0.5 rounded">
-            <GitBranch size={12} className="text-[var(--foreground-muted)]" />
-            feature/oauth
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-warning)] shrink-0" title="Uncommitted changes" />
-          </span>
-          <span className="font-mono text-[0.625rem] text-[var(--foreground-subtle)]">
-            <a href="#" className="text-[var(--primary)] no-underline">abc1234</a>
-          </span>
-        </div>
+      <div className="top-header-right">
+        {(branch || commit) && (
+          <div className="header-vcs">
+            {branch && (
+              <span className="header-vcs-branch">
+                {/* git-branch icon inline */}
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="6" y1="3" x2="6" y2="15" />
+                  <circle cx="18" cy="6" r="3" />
+                  <circle cx="6" cy="18" r="3" />
+                  <path d="M18 9a9 9 0 0 1-9 9" />
+                </svg>
+                {branch}
+                {dirty && <span className="header-vcs-dirty" title="Uncommitted changes" />}
+              </span>
+            )}
+            {commit && (
+              <span className="header-vcs-commit">
+                <a href="#">{commit}</a>
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </header>
   )

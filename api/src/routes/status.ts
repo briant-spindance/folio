@@ -1,13 +1,29 @@
 import { Hono } from "hono"
 import { listFeatures } from "../store/features.js"
 import { listWikiDocs } from "../store/wiki.js"
+import { listIssues } from "../store/issues.js"
+import { listTeam } from "../store/team.js"
 
 const router = new Hono()
 
-// GET /api/status — dashboard summary
+const HEALTH_CHECKS = [
+  { level: "pass", message: "Directory structure is valid" },
+  { level: "pass", message: "forge.yaml schema is valid" },
+  { level: "pass", message: "All features have valid frontmatter" },
+  { level: "pass", message: "All issues have valid frontmatter" },
+  { level: "pass", message: "Backlog order is valid" },
+  { level: "pass", message: "Sprint references are valid" },
+  { level: "pass", message: "No duplicate slugs found" },
+  { level: "warn", message: "2 features missing assignees" },
+  { level: "warn", message: "Sprint 2 has unresolved items" },
+  { level: "fail", message: 'Backlog contains orphaned reference: "deleted-feature"' },
+] as const
+
 router.get("/", (c) => {
   const features = listFeatures()
   const docs = listWikiDocs()
+  const issues = listIssues()
+  const team = listTeam()
 
   const byStatus = features.reduce<Record<string, number>>((acc, f) => {
     acc[f.status] = (acc[f.status] ?? 0) + 1
@@ -16,23 +32,30 @@ router.get("/", (c) => {
 
   const activeSprint = features.find((f) => f.sprint)?.sprint ?? undefined
 
-  const recentDocs = docs.slice(0, 6).map(({ slug, title, description, updatedAt }) => ({
-    slug, title, description, updatedAt,
-  }))
-
-  const topFeatures = features.slice(0, 10).map(({ slug, title, status, priority, assignee, points, tags }) => ({
-    slug, title, status, priority, assignee, points, tags,
-  }))
-
   return c.json({
     project: "forge-project",
     featureCount: features.length,
     byStatus,
-    teamSize: 4,
-    openIssues: 2,
     activeSprint,
-    recentDocs,
-    topFeatures,
+    recentDocs: docs.slice(0, 6).map(({ slug, title, description, updatedAt }) => ({ slug, title, description, updatedAt })),
+    topFeatures: features.slice(0, 10).map(({ slug, title, status, priority, assignee, points, tags }) => ({ slug, title, status, priority, assignee, points, tags })),
+    openIssues: issues.filter(i => i.status === "open").map(({ slug, title, status, labels }) => ({ slug, title, status, labels })),
+    team: team.map(({ name, role }) => ({
+      name,
+      role,
+      initials: (() => {
+        const words = name.trim().split(/\s+/)
+        if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
+        return name.slice(0, 2).toUpperCase()
+      })(),
+    })),
+    health: {
+      passed: HEALTH_CHECKS.filter(c => c.level === "pass").length,
+      warnings: HEALTH_CHECKS.filter(c => c.level === "warn").length,
+      failed: HEALTH_CHECKS.filter(c => c.level === "fail").length,
+      lastRun: "Last run: Apr 10, 2026 at 2:32 PM",
+      checks: HEALTH_CHECKS,
+    },
   })
 })
 

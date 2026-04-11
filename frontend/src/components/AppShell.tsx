@@ -1,25 +1,26 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Header } from './Header'
-import { Sidebar } from './Sidebar'
+import { useState, type ReactNode } from "react"
+import { Header } from "./Header"
+import { Sidebar } from "./Sidebar"
 
-export function AppShell() {
+interface AppShellProps {
+  children: ReactNode
+  projectName?: string
+}
+
+export function AppShell({ children, projectName = "forge-project" }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <Header />
+    <div className={collapsed ? "sidebar-collapsed" : ""}>
+      <Header
+        projectName={projectName}
+        branch="feature/oauth"
+        commit="abc1234"
+        dirty={true}
+      />
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <main
-        style={{
-          marginLeft: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
-          paddingTop: 'var(--header-height)',
-        }}
-        className="transition-[margin-left] duration-200 min-h-screen"
-      >
-        <div className="p-6 max-w-[1120px] mx-auto flex flex-col gap-5">
-          <Outlet />
-        </div>
+      <main className="main">
+        <div className="content">{children}</div>
       </main>
     </div>
   )
