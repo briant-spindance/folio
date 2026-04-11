@@ -2,13 +2,13 @@
 
 ## Overview
 
-Forge's web UI is a single-page application embedded in the Go binary and served locally via `forge serve`. It provides the entire team — product owners, designers, engineers — with a visual interface for managing project documentation, features, issues, and reviews.
+Forge's web UI is a single-page application embedded in the Go binary and served locally via `forge serve`. It provides the entire team — product owners, designers, engineers — with a visual interface for managing the project wiki, features, issues, and reviews.
 
 The UI reads and writes the same filesystem structure as the CLI. There is no database; the filesystem under `forge/` is the source of truth.
 
 ### Design Goals
 
-- **Accessible to non-technical team members.** Product owners and designers should be able to manage features, write project docs, and review backlogs without touching the terminal.
+- **Accessible to non-technical team members.** Product owners and designers should be able to manage features, write wiki pages, and review backlogs without touching the terminal.
 - **Real-time filesystem reflection.** Changes made via the CLI or direct file edits should be reflected in the UI on next navigation or refresh. The UI does not cache aggressively.
 - **Markdown-native.** All content is authored and stored as markdown. The UI provides rich editing and rendering, but never abstracts away the underlying format.
 - **Framework-agnostic implementation.** This spec describes screens, components, and behaviors without prescribing a frontend framework. The implementation may use React, Svelte, or another SPA framework.
@@ -26,7 +26,7 @@ The sidebar is persistent across all views and provides top-level navigation:
 | Nav Item        | Route            | Description                          |
 |-----------------|------------------|--------------------------------------|
 | Dashboard       | `/`              | Project overview and health summary  |
-| Project Docs    | `/docs`          | Evergreen project documentation      |
+| Wiki            | `/wiki`          | Project knowledge base (wikilinked)  |
 | Features        | `/features`      | Feature management and backlog       |
 | Sprints         | `/sprints`       | Sprint planning and board views      |
 | Issues          | `/issues`        | Issue tracking                       |
@@ -113,7 +113,7 @@ The dashboard is the landing page after launching `forge serve`. It provides a h
 #### Project Summary
 
 - Project name and a one-line description (from `forge.yaml` or `project-brief.md` if present).
-- Count of project docs, features, and issues.
+- Count of wiki pages, features, and issues.
 
 #### Backlog Snapshot
 
@@ -155,48 +155,79 @@ Clicking anywhere on the card navigates to the sprint board view (`/sprints/:slu
 
 ---
 
-## Project Docs
+## Wiki
 
-**Route:** `/docs`
+**Route:** `/wiki`
 
-### List View (`/docs`)
+### List View (`/wiki`)
 
-Displays all markdown files in `forge/project-docs/` as a flat list.
+Displays all markdown files in `forge/wiki/` as a flat list.
 
 | Column       | Description                                      |
 |--------------|--------------------------------------------------|
-| Document     | Filename rendered as a human-readable title (e.g., `project-brief.md` → "Project Brief") |
+| Page         | Page title (from frontmatter `title` field, or filename rendered as title case) |
+| Aliases      | Alternate slugs (from frontmatter), or "—" if none |
 | Last Modified| Filesystem modification timestamp                |
 
-- Sorted alphabetically by default, with an option to sort by last modified.
-- **Primary action:** "New Document" button opens the create flow.
-- Clicking a document name navigates to the detail view.
+- Sorted alphabetically by title by default, with an option to sort by last modified.
+- **Primary action:** "New Page" button opens the create flow.
+- Clicking a page title navigates to the detail view.
 
-### Detail View (`/docs/:slug`)
+### Detail View (`/wiki/:slug`)
 
-Renders the markdown file with full formatting (headings, lists, tables, code blocks, links).
+Renders the wiki page markdown with full formatting (headings, lists, tables, code blocks, links).
 
-- **Header actions:**
-  - "Edit" — Opens the editor view.
-  - "Delete" — Opens a confirmation dialog. On confirm, deletes the file from `project-docs/`.
+#### Wikilink Rendering
 
-### Create / Edit View (`/docs/:slug/edit` or `/docs/new`)
+`[[wikilinks]]` in the page body are rendered as clickable internal links:
 
-A split-pane editor:
+- **Existing pages:** Styled as standard internal links. Clicking navigates to `/wiki/:target-slug`. The link text is either the custom display text (for `[[slug|display text]]`) or the target page's title (for `[[slug]]`).
+- **Non-existing pages:** Styled distinctly (red text, dashed underline) to indicate the target page does not exist yet. Clicking navigates to `/wiki/new?slug=<target-slug>&title=<Target Title>`, pre-filling the create form with the slug and a title derived from the slug.
 
-- **Left pane:** Raw markdown editor with syntax highlighting, line numbers, and basic keyboard shortcuts (bold, italic, headings, lists).
-- **Right pane:** Live-rendered markdown preview, updating on each keystroke (debounced).
+#### Backlinks Section
 
-#### Fields
+Below the rendered page content, a **"Linked from"** section displays all wiki pages that contain a `[[wikilink]]` pointing to the current page (by slug or alias):
+
+- Each backlink is shown as the linking page's title, rendered as a link to that page's detail view.
+- If no pages link to the current page, this section is hidden.
+
+#### Page Metadata
+
+If the page has frontmatter metadata, display it as subtle metadata below the page title:
+
+- **Aliases:** Shown as small tag-style badges (e.g., "Also known as: `oauth`, `oauth-notes`").
+
+#### Header Actions
+
+- "Edit" — Opens the editor view.
+- "Delete" — Opens a confirmation dialog. If other pages link to this page, the dialog warns: "N pages link to this page. Deleting it will create broken links." On confirm, deletes the file from `wiki/`.
+
+### Create / Edit View (`/wiki/:slug/edit` or `/wiki/new`)
+
+A split-pane editor with metadata fields above:
+
+#### Metadata Fields
 
 | Field        | Type       | Required | Description                                |
 |--------------|------------|----------|--------------------------------------------|
-| Filename     | Text input | Yes      | Slug-format filename (auto-generated from title, editable). Only shown on create. |
-| Content      | Markdown   | Yes      | The document body.                         |
+| Slug         | Text input | Yes      | Slug-format filename (auto-generated from title, editable). Only shown on create. |
+| Title        | Text input | No       | Display title. If left blank, the slug-derived title is used. |
+| Aliases      | Tag input  | No       | Alternate slugs for wikilink resolution. Comma-separated or tag-style input. |
 
-- **Save** writes the file to `forge/project-docs/{filename}.md`.
+#### Content Editor
+
+- **Left pane:** Raw markdown editor with syntax highlighting, line numbers, and basic keyboard shortcuts (bold, italic, headings, lists).
+- **Right pane:** Live-rendered markdown preview, updating on each keystroke (debounced). `[[wikilinks]]` in the preview are rendered with their target page's title and styled as internal links (or as broken links if the target doesn't exist).
+
+#### Auto-Stub Pre-fill
+
+When navigating to `/wiki/new?slug=<slug>&title=<title>` (e.g., from clicking a broken wikilink), the create form pre-fills the slug and title fields with the provided query parameters.
+
+#### Save Behavior
+
+- **Save** writes the file to `forge/wiki/{slug}.md`. If `title` or `aliases` are provided, they are serialized as YAML frontmatter prepended to the markdown body. If neither is set, the file is written as plain markdown.
 - **Cancel** discards changes and returns to the list or detail view.
-- On create, if a file with the same name already exists, display an inline error and prevent save.
+- On create, if a file with the same slug already exists, or if any alias conflicts with an existing page slug or alias, display an inline error and prevent save.
 
 ---
 
@@ -288,7 +319,7 @@ Below the main content, list any additional files in the feature directory (wire
 
 #### Content Editor
 
-Same split-pane markdown editor as Project Docs (raw editor + live preview).
+Same split-pane markdown editor as Wiki pages (raw editor + live preview).
 
 The editor pre-populates with a feature template if one is defined in the project's template source or `forge.yaml`.
 
@@ -662,7 +693,7 @@ The health check validates:
 
 - `forge/` directory exists and has the expected structure.
 - `forge.yaml` is present and parseable.
-- Core project docs are present (e.g., `project-brief.md`).
+- Core wiki pages are present (e.g., `project-brief.md`).
 - All feature directories contain a `FEATURE.md`.
 - All issue directories contain an `ISSUE.md`.
 - All sprint directories contain a `SPRINT.md` with valid frontmatter.
@@ -863,13 +894,13 @@ A scrollable message thread displaying the conversation:
 
 The chat assistant automatically has access to the Forge project context:
 
-- **System prompt** includes a summary of the project structure: project name, list of project docs, features (with status), issues, and configured workflow states.
+- **System prompt** includes a summary of the project structure: project name, list of wiki pages, features (with status), issues, and configured workflow states.
 - The system prompt is assembled on each conversation start (or on "Clear conversation") by reading the current state of the `forge/` directory.
 - The system prompt does **not** include full document bodies — only names, statuses, and metadata. The user can ask the assistant to read specific documents, which triggers a backend lookup.
 
 #### Context Injection
 
-When the user asks about a specific feature, issue, or document, the backend:
+When the user asks about a specific feature, issue, or wiki page, the backend:
 
 1. Identifies the referenced entity from the user's message.
 2. Reads the relevant file(s) from the filesystem.
@@ -879,7 +910,7 @@ This keeps the base context small while allowing deep dives into specific conten
 
 ### Limitations
 
-- Chat does **not** perform write operations. It cannot create, edit, or delete features, issues, or documents. It is read-only and advisory. Write capabilities may be added in a future phase with explicit user confirmation flows.
+- Chat does **not** perform write operations. It cannot create, edit, or delete features, issues, or wiki pages. It is read-only and advisory. Write capabilities may be added in a future phase with explicit user confirmation flows.
 - Chat conversations are **not persisted** to the filesystem. They exist only in the browser session.
 - Chat is **local only** — requests go from the browser to the local `forge serve` backend, which proxies to the LLM provider. No conversation data is stored or transmitted beyond the LLM API call.
 
@@ -919,7 +950,7 @@ On save, the form field values are serialized back to YAML frontmatter and prepe
 
 ### Confirmation Dialogs
 
-All destructive actions (delete feature, delete issue, delete document, remove from backlog) require a confirmation dialog:
+All destructive actions (delete feature, delete issue, delete wiki page, remove from backlog) require a confirmation dialog:
 
 - Dialog title: "Delete {entity type}?"
 - Dialog body: "This will permanently delete {name} and all supporting artifacts. This action cannot be undone."
@@ -959,7 +990,7 @@ All routes use clean URLs that map to the filesystem structure:
 
 | Route                     | Filesystem Path                              |
 |---------------------------|----------------------------------------------|
-| `/docs/project-brief`     | `forge/project-docs/project-brief.md`        |
+| `/wiki/project-brief`     | `forge/wiki/project-brief.md`            |
 | `/features/feature-alpha` | `forge/features/feature-alpha/FEATURE.md`    |
 | `/issues/login-timeout`   | `forge/issues/login-timeout/ISSUE.md`        |
 | `/reviews/architecture`   | `forge/reviews/architecture/REVIEW.md`       |

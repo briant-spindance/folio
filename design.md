@@ -78,7 +78,7 @@ Based on a 1.25 modular scale with a 14px base. All sizes use `rem` units.
 
 ### Rendered Markdown
 
-Markdown content (feature descriptions, project docs, issue bodies) uses a slightly different scale optimized for readability:
+Markdown content (feature descriptions, wiki pages, issue bodies) uses a slightly different scale optimized for readability:
 
 | Element    | Size   | Weight | Line Height |
 |------------|--------|--------|-------------|
@@ -265,7 +265,7 @@ Used for feature lists, issue lists, document lists, sprint items.
 │  ⎇ main (dirty)  │
 │                   │
 │  ● Dashboard      │
-│  ○ Project Docs   │
+│  ○ Wiki            │
 │  ○ Features       │
 │  ○ Sprints        │
 │  ○ Issues         │
@@ -340,6 +340,60 @@ Used for feature lists, issue lists, document lists, sprint items.
 - Preview pane background: `--background`
 - Divider: 1px `--border`, draggable to resize panes (50/50 default split)
 
+### Wikilinks
+
+Wiki pages use `[[wikilinks]]` to reference other pages. These are rendered differently depending on whether the target page exists.
+
+#### Existing Page Link
+
+- Text color: `--primary`
+- Underline: solid 1px `--primary` (at 40% opacity)
+- Hover: underline opacity increases to 100%, background `--primary` at 5%
+- Cursor: pointer
+- The link text is the target page's title (or custom display text for `[[slug|text]]`)
+
+#### Broken / Stub Link (target page does not exist)
+
+- Text color: `--status-error`
+- Underline: dashed 1px `--status-error` (at 50% opacity)
+- Hover: underline opacity increases to 100%, background `--status-error` at 5%
+- Cursor: pointer
+- A small `Plus` icon (12px, `--status-error`) appears to the right of the link text on hover, indicating "create this page"
+- Tooltip on hover: "Create page: {slug}"
+
+#### Backlinks Section
+
+Displayed at the bottom of wiki page detail views, below the rendered markdown content.
+
+```
+──────────────────────────────────────────
+
+Linked from
+
+  ┌─────────────────────────────────┐
+  │  Project Brief                  │
+  │  Roadmap                        │
+  │  OAuth Integration Notes        │
+  └─────────────────────────────────┘
+```
+
+- **Divider:** 1px `--border`, full width, with `24px` vertical spacing above
+- **Heading:** "Linked from" in `text-sm`, `font-medium`, `--foreground-muted`, uppercase tracking (same style as table headers)
+- **List items:** Each backlink is a row with:
+  - Page title as a link (styled with `--primary`, navigates to the page detail view)
+  - `text-base` font size
+  - `8px` vertical padding between items
+- **Container:** `--surface` background, `--border` border, 8px border-radius, 12px padding
+- **Empty state:** Section is hidden entirely when no backlinks exist
+
+#### Alias Badges
+
+Displayed below the page title on wiki detail views when the page has aliases.
+
+- Use the same styling as label badges: `--surface` background, `--foreground` text, `--border` border
+- Prefix text: "Also known as:" in `text-xs`, `--foreground-muted`
+- Each alias is rendered in `text-xs`, `font-mono` (JetBrains Mono), inside a pill badge
+
 ### Chat Panel
 
 ```
@@ -394,13 +448,13 @@ All screens from the UI spec, with their primary components and layout patterns.
 
 Layout: 2-column grid on `lg+`, single column below. Cards stack vertically.
 
-### Project Docs (`/docs`)
+### Wiki (`/wiki`)
 
 | View                     | Components Used                              |
 |--------------------------|----------------------------------------------|
-| List                     | Table, sort controls, "New" button           |
-| Detail                   | Rendered markdown, header actions            |
-| Create / Edit            | Split-pane editor, filename input, save/cancel |
+| List                     | Table (title, aliases, modified), sort controls, "New Page" button |
+| Detail                   | Rendered markdown with wikilinks, backlinks section, alias badges, header actions |
+| Create / Edit            | Title input, alias tag input, split-pane editor with wikilink preview, save/cancel |
 
 Layout: Single column, content max-width.
 
@@ -497,7 +551,8 @@ Use **Lucide React** exclusively. Lucide ships with shadcn/ui and provides a con
 | Concept          | Icon              | Notes                                    |
 |------------------|-------------------|------------------------------------------|
 | Dashboard        | `LayoutDashboard` |                                          |
-| Project Docs     | `FileText`        |                                          |
+| Project Docs     | `FileText`        | Used for non-wiki documents           |
+| Wiki             | `BookOpen`        | Wiki pages and knowledge base         |
 | Features         | `Puzzle`          |                                          |
 | Sprints          | `Timer`           |                                          |
 | Issues           | `CircleDot`       |                                          |

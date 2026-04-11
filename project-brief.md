@@ -20,7 +20,7 @@ Today this is managed manually — creating directories, editing markdown files,
 
 A single Go binary that:
 
-1. **Web UI** — A modern SPA (React or Svelte, embedded in the binary) that the entire team — product owners, designers, engineers — uses to manage project docs, features, issues, and reviews.
+1. **Web UI** — A modern SPA (React or Svelte, embedded in the binary) that the entire team — product owners, designers, engineers — uses to manage wiki pages, features, issues, and reviews.
 2. **CLI** — An agent-first (but human-friendly) command-line interface that AI agents and terminal-preferring engineers use to interact with the same content.
 
 Both interfaces read and write the same filesystem structure. The files are the source of truth.
@@ -42,7 +42,7 @@ All Forge-managed content lives under a `forge/` directory in the project root:
 forge/
 ├── forge.yaml                  # Project configuration (workflow states, templates, etc.)
 ├── team.md                     # Team members (names, roles, handles) for assignment
-├── project-docs/               # Evergreen project documentation (flat)
+├── wiki/                       # Project knowledge base (flat, wikilinked)
 │   ├── project-brief.md
 │   ├── use-cases.md
 │   ├── personas.md
@@ -80,9 +80,11 @@ forge/
         └── REVIEW.md
 ```
 
-### Project Docs
+### Wiki
 
-Flat markdown files in `project-docs/`. These are intentionally kept short and consumable so agents can quickly ingest project context. They represent the big picture: goals, personas, architecture, design direction, and roadmap.
+Flat markdown files in `wiki/`. Wiki pages support optional YAML frontmatter for titles and aliases, and `[[wikilinks]]` for interconnecting knowledge. Pages are intentionally kept short and consumable so agents can quickly ingest project context. They represent the big picture: goals, personas, architecture, design direction, and roadmap.
+
+Wiki pages can link to each other using `[[slug]]` or `[[slug|display text]]` syntax. When a wikilink references a page that doesn't exist yet, Forge shows a "create this page" prompt, enabling organic growth of the knowledge base. Each page displays a backlinks section listing all pages that reference it, making it easy to discover related knowledge.
 
 ### Team
 
@@ -103,7 +105,7 @@ Guidance documents for periodic reviews. Each review type gets a directory under
 Reviews fall into two categories:
 
 - **Project reviews** — Domain-specific reviews defined by the team (architecture, security, usability, design, etc.).
-- **Forge health reviews** — Built-in reviews shipped with Forge that check the health of the `forge/` directory itself. For example: Is the directory structure valid? Are core project documents present and up to date? Are there features missing required metadata? These act as a self-diagnostic for the project's Forge setup.
+- **Forge health reviews** — Built-in reviews shipped with Forge that check the health of the `forge/` directory itself. For example: Is the directory structure valid? Are core wiki pages present and up to date? Are there features missing required metadata? These act as a self-diagnostic for the project's Forge setup.
 
 ### Sprints
 
@@ -202,6 +204,47 @@ The sprint's `features` and `issues` arrays in `SPRINT.md` frontmatter are the *
 
 When a feature or issue is viewed (via CLI or API), its `sprint` field is computed by scanning all sprint files to find which sprint (if any) contains that entity's slug. CLI convenience flags like `forge feature create --sprint <slug>` write to the target sprint's `SPRINT.md`, not to the feature's frontmatter.
 
+### Wiki Pages
+
+```yaml
+---
+title: "OAuth Integration Notes"       # Optional. Display name; if omitted, derived from filename slug.
+aliases:                                # Optional. Alternate slugs that [[alias]] will resolve to this page.
+  - oauth
+  - oauth-notes
+---
+
+## Overview
+
+Page content in markdown, with support for [[wikilinks]]...
+
+See [[technical-docs]] for implementation details and [[personas|our target users]] for context.
+```
+
+**Frontmatter fields** (all optional):
+
+- `title` — Display name for the page. If omitted, the title is derived from the filename slug by converting to title case (e.g., `oauth-notes.md` → "OAuth Notes"). This preserves backward compatibility with existing plain markdown files.
+- `aliases` — A list of alternate slugs that `[[alias]]` links will resolve to this page. Useful for abbreviations or alternate names.
+
+**Wikilinks:**
+
+- `[[slug]]` — Links to the wiki page with the matching slug or alias. Rendered as the target page's title.
+- `[[slug|display text]]` — Links to the target page but renders the custom display text instead of the page title.
+- If the target page does not exist, the link is rendered distinctly (e.g., red/dashed) and clicking it navigates to a pre-filled create form for that page.
+
+**Backlinks** (computed at read time):
+
+- When a page is viewed, Forge scans all wiki pages for `[[slug]]` or `[[alias]]` references pointing to the current page.
+- Backlinks are displayed as a list at the bottom of the page, showing the title and slug of each linking page.
+
+**Derived fields** (not stored, computed at read time):
+
+- `slug` — The filename without the `.md` extension.
+- `path` — Filesystem path to the wiki page.
+- `outgoing_links` — List of `[[wikilinks]]` found in the page body.
+- `backlinks` — List of pages that link to this page (by slug or alias).
+- `last_modified` — Filesystem timestamp.
+
 ## Feature Lifecycle
 
 Features move through a configurable workflow. The default states are:
@@ -249,16 +292,18 @@ The mapping works as follows:
 - Create, list, view, edit, and delete issues
 - Track issue metadata (status, assignee, labels, linked feature)
 
-### Project Docs
+### Wiki
 
-- Create, list, view, and edit project documents
+- Create, list, view, and edit wiki pages
+- Link pages together with `[[wikilinks]]`
+- Browse backlinks to discover related knowledge
 - Browse project context quickly
 
 ### Reviews
 
 - List available review types
 - View review guidance and checklists
-- Run built-in Forge health checks (`forge doctor` or similar) to validate directory structure and project doc completeness
+- Run built-in Forge health checks (`forge doctor` or similar) to validate directory structure and wiki page completeness
 
 ## Technical Approach
 
@@ -277,7 +322,7 @@ The mapping works as follows:
 - `forge init` with template support
 - Features: CRUD, backlog management, workflow status
 - Issues: CRUD, basic metadata
-- Project docs: CRUD
+- Wiki: CRUD, wikilinks, backlinks
 - Reviews: browse guidance docs
 - Web UI: browse and manage all of the above
 - CLI: full parity with web UI operations

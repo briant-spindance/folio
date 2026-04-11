@@ -49,7 +49,7 @@ forge init [--template <source>] [--force]
 
 ### Description
 
-Creates the `forge/` directory structure with default configuration, project docs templates, and example content. If `forge/` already exists, the command exits with an error unless `--force` is specified.
+Creates the `forge/` directory structure with default configuration, wiki page templates, and example content. If `forge/` already exists, the command exits with an error unless `--force` is specified.
 
 ### Flags
 
@@ -80,8 +80,8 @@ forge init --force
 Initialized forge/ directory at /Users/dev/my-project/forge
 Created forge.yaml
 Created team.md
-Created project-docs/project-brief.md
-Created project-docs/roadmap.md
+Created wiki/project-brief.md
+Created wiki/roadmap.md
 Created features/backlog.md
 Created reviews/architecture/REVIEW.md
 ```
@@ -95,8 +95,8 @@ Created reviews/architecture/REVIEW.md
   "files_created": [
     "forge.yaml",
     "team.md",
-    "project-docs/project-brief.md",
-    "project-docs/roadmap.md",
+    "wiki/project-brief.md",
+    "wiki/roadmap.md",
     "features/backlog.md",
     "reviews/architecture/REVIEW.md"
   ]
@@ -1544,110 +1544,156 @@ Deleted issue: Broken CSS on Settings Page
 
 ---
 
-## `forge docs`
+## `forge wiki`
 
-Manage project documents under `forge/project-docs/`.
+Manage wiki pages under `forge/wiki/`. Wiki pages are flat markdown files with optional YAML frontmatter for `title` and `aliases`. Pages can reference each other using `[[wikilinks]]`.
 
-### `forge docs create`
+### `forge wiki create`
 
-Create a new project document.
+Create a new wiki page.
 
 #### Synopsis
 
 ```
-forge docs create <name> [--body <markdown>] [--body-file <path>]
+forge wiki create <name> [--title <title>] [--alias <alias>]... [--body <markdown>] [--body-file <path>]
 ```
 
 #### Arguments
 
 | Argument | Required | Description                         |
 |----------|----------|-------------------------------------|
-| `name`   | Yes      | Document name (used to generate filename). |
+| `name`   | Yes      | Page name (used to generate filename slug). |
 
 #### Flags
 
 | Flag          | Type   | Description                                          |
 |---------------|--------|------------------------------------------------------|
-| `--body`      | string | Markdown content (inline).                           |
+| `--title`     | string | Display title (stored in frontmatter). If omitted, title is derived from filename slug. |
+| `--alias`     | string | Alternate slug for wikilink resolution. Can be specified multiple times. |
+| `--body`      | string | Markdown content (inline). May include `[[wikilinks]]`. |
 | `--body-file` | string | Path to a file containing the markdown content.      |
 
 If neither `--body` nor `--body-file` is provided and the session is a TTY, opens `$EDITOR` with an empty file.
 
+If `--title` or `--alias` is provided, YAML frontmatter is written. Otherwise, the file is created as plain markdown.
+
 #### Examples
 
 ```bash
-# Create a document with inline content
-forge docs create "API Guidelines" --body "## REST Conventions\n\nAll endpoints follow REST naming conventions."
+# Create a page with inline content
+forge wiki create "API Guidelines" --body "## REST Conventions\n\nAll endpoints follow REST naming conventions."
+
+# Create with a custom title and alias
+forge wiki create "OAuth Integration Notes" \
+  --title "OAuth Notes" \
+  --alias oauth \
+  --body "## Overview\n\nSee [[technical-docs]] for implementation details."
 
 # Create from a file
-forge docs create "Architecture Overview" --body-file /tmp/architecture.md
+forge wiki create "Architecture Overview" --body-file /tmp/architecture.md
 ```
 
 #### Output
 
 ```
-Created document: API Guidelines
-  Path: forge/project-docs/api-guidelines.md
+Created wiki page: API Guidelines
+  Path: forge/wiki/api-guidelines.md
+```
+
+#### JSON Output (`--json`)
+
+```json
+{
+  "title": "API Guidelines",
+  "slug": "api-guidelines",
+  "path": "forge/wiki/api-guidelines.md",
+  "aliases": []
+}
 ```
 
 ---
 
-### `forge docs list`
+### `forge wiki list`
 
-List all project documents.
+List all wiki pages.
 
 #### Synopsis
 
 ```
-forge docs list [--sort <field>]
+forge wiki list [--sort <field>]
 ```
 
 #### Flags
 
 | Flag     | Type   | Default | Description                           |
 |----------|--------|---------|---------------------------------------|
-| `--sort` | string | `name`  | Sort field: `name`, `modified`.       |
+| `--sort` | string | `title` | Sort field: `title`, `modified`.      |
 
 #### Examples
 
 ```bash
-forge docs list
+forge wiki list
 ```
 
 #### Output
 
 ```
-NAME                  LAST MODIFIED
-API Guidelines        2025-01-15 14:32
-Architecture Overview 2025-01-14 09:15
-Design Docs           2025-01-10 11:00
-Personas              2025-01-08 16:45
-Project Brief         2025-01-05 10:30
-Roadmap               2025-01-12 13:20
+TITLE                 ALIASES       LAST MODIFIED
+API Guidelines        —             2025-01-15 14:32
+Architecture Overview —             2025-01-14 09:15
+Design Docs           —             2025-01-10 11:00
+OAuth Notes           oauth         2025-01-13 10:00
+Personas              —             2025-01-08 16:45
+Project Brief         —             2025-01-05 10:30
+Roadmap               —             2025-01-12 13:20
+```
+
+#### JSON Output (`--json`)
+
+```json
+[
+  {
+    "title": "API Guidelines",
+    "slug": "api-guidelines",
+    "path": "forge/wiki/api-guidelines.md",
+    "aliases": [],
+    "last_modified": "2025-01-15T14:32:00Z"
+  },
+  {
+    "title": "OAuth Notes",
+    "slug": "oauth-notes",
+    "path": "forge/wiki/oauth-notes.md",
+    "aliases": ["oauth"],
+    "last_modified": "2025-01-13T10:00:00Z"
+  }
+]
 ```
 
 ---
 
-### `forge docs view`
+### `forge wiki view`
 
-View a project document.
+View a wiki page.
 
 #### Synopsis
 
 ```
-forge docs view <slug>
+forge wiki view <slug>
 ```
 
 #### Arguments
 
 | Argument | Required | Description                         |
 |----------|----------|-------------------------------------|
-| `slug`   | Yes      | Document filename without extension. |
+| `slug`   | Yes      | Page filename without extension, or an alias. |
 
 #### Examples
 
 ```bash
-forge docs view api-guidelines
+forge wiki view api-guidelines
+
+# View by alias
+forge wiki view oauth
 ```
 
 #### Output
@@ -1656,7 +1702,7 @@ forge docs view api-guidelines
 API Guidelines
 ══════════════
 
-Path: forge/project-docs/api-guidelines.md
+Path: forge/wiki/api-guidelines.md
 
 ──────────────────────────────────────────
 
@@ -1664,70 +1710,100 @@ Path: forge/project-docs/api-guidelines.md
 
 All endpoints follow REST naming conventions.
 
-## Authentication
+See [[technical-docs]] for implementation details.
 
-All requests must include a Bearer token in the Authorization header.
+──────────────────────────────────────────
+
+Backlinks:
+  OAuth Notes (oauth-notes)
+  Project Brief (project-brief)
+```
+
+#### JSON Output (`--json`)
+
+```json
+{
+  "title": "API Guidelines",
+  "slug": "api-guidelines",
+  "path": "forge/wiki/api-guidelines.md",
+  "aliases": [],
+  "body": "## REST Conventions\n\nAll endpoints follow REST naming conventions.\n\nSee [[technical-docs]] for implementation details.",
+  "outgoing_links": [
+    { "slug": "technical-docs", "title": "Technical Docs", "exists": true }
+  ],
+  "backlinks": [
+    { "slug": "oauth-notes", "title": "OAuth Notes" },
+    { "slug": "project-brief", "title": "Project Brief" }
+  ],
+  "last_modified": "2025-01-15T14:32:00Z"
+}
 ```
 
 ---
 
-### `forge docs edit`
+### `forge wiki edit`
 
-Edit a project document.
+Edit a wiki page.
 
 #### Synopsis
 
 ```
-forge docs edit <slug> [--body <markdown>] [--body-file <path>]
+forge wiki edit <slug> [--title <title>] [--alias <alias>]... [--body <markdown>] [--body-file <path>]
 ```
 
 #### Description
 
-Replaces the document content. If no flags are provided and the session is a TTY, opens the file in `$EDITOR`.
+Updates the page's frontmatter and/or body. Only the provided flags are updated; all other fields are preserved. If no flags are provided and the session is a TTY, opens the file in `$EDITOR`.
 
 #### Arguments
 
 | Argument | Required | Description                         |
 |----------|----------|-------------------------------------|
-| `slug`   | Yes      | Document filename without extension. |
+| `slug`   | Yes      | Page filename without extension.    |
 
 #### Flags
 
 | Flag          | Type   | Description                                     |
 |---------------|--------|-------------------------------------------------|
+| `--title`     | string | Update the display title. Use `""` to revert to slug-derived title. |
+| `--alias`     | string | Set aliases (replaces all existing). Can be specified multiple times. Use with no value to clear. |
 | `--body`      | string | New markdown content (inline).                  |
 | `--body-file` | string | Path to a file containing the new content.      |
 
 #### Examples
 
 ```bash
-forge docs edit api-guidelines --body-file /tmp/updated-api-guidelines.md
+# Update body from a file
+forge wiki edit api-guidelines --body-file /tmp/updated-api-guidelines.md
+
+# Add an alias
+forge wiki edit oauth-notes --alias oauth --alias oauth-integration
 ```
 
 #### Output
 
 ```
-Updated document: API Guidelines
-  Path: forge/project-docs/api-guidelines.md
+Updated wiki page: API Guidelines
+  Path: forge/wiki/api-guidelines.md
 ```
 
 ---
 
-### `forge docs delete`
+### `forge wiki delete`
 
-Delete a project document.
+Delete a wiki page.
 
 #### Synopsis
 
 ```
-forge docs delete <slug> [--force]
+forge wiki delete <slug> [--force]
 ```
 
 #### Arguments
 
 | Argument | Required | Description                         |
 |----------|----------|-------------------------------------|
-| `slug`   | Yes      | Document filename without extension. |
+| `slug`   | Yes      | Page filename without extension.    |
 
 #### Flags
 
@@ -1735,17 +1811,77 @@ forge docs delete <slug> [--force]
 |-----------|------|---------|----------------------------------|
 | `--force` | bool | false   | Skip confirmation prompt.         |
 
+#### Description
+
+Removes the wiki page file. If other pages contain `[[wikilinks]]` pointing to this page, prints a warning listing the affected pages before confirming.
+
 #### Examples
 
 ```bash
-forge docs delete api-guidelines --force
+forge wiki delete api-guidelines --force
 ```
 
 #### Output
 
 ```
-Deleted document: API Guidelines
-  Removed: forge/project-docs/api-guidelines.md
+Deleted wiki page: API Guidelines
+  Removed: forge/wiki/api-guidelines.md
+  ⚠ 2 pages have broken links to this page:
+    - OAuth Notes (oauth-notes)
+    - Project Brief (project-brief)
+```
+
+---
+
+### `forge wiki backlinks`
+
+List all pages that link to a specific wiki page.
+
+#### Synopsis
+
+```
+forge wiki backlinks <slug>
+```
+
+#### Arguments
+
+| Argument | Required | Description                         |
+|----------|----------|-------------------------------------|
+| `slug`   | Yes      | Page filename without extension, or an alias. |
+
+#### Examples
+
+```bash
+forge wiki backlinks technical-docs
+```
+
+#### Output
+
+```
+Pages linking to "Technical Docs":
+
+TITLE                 SLUG                  LINK TEXT
+API Guidelines        api-guidelines        [[technical-docs]]
+OAuth Notes           oauth-notes           [[technical-docs|tech docs]]
+```
+
+#### JSON Output (`--json`)
+
+```json
+[
+  {
+    "slug": "api-guidelines",
+    "title": "API Guidelines",
+    "path": "forge/wiki/api-guidelines.md",
+    "last_modified": "2025-01-15T14:32:00Z"
+  },
+  {
+    "slug": "oauth-notes",
+    "title": "OAuth Notes",
+    "path": "forge/wiki/oauth-notes.md",
+    "last_modified": "2025-01-13T10:00:00Z"
+  }
+]
 ```
 
 ---
@@ -2218,7 +2354,7 @@ Validates the integrity and completeness of the `forge/` directory structure. Ru
 |--------------------------|----------------------------------------------------------------------|
 | `directory-structure`    | `forge/` directory exists with expected subdirectories.              |
 | `config`                 | `forge.yaml` exists and is valid YAML.                                |
-| `project-docs`           | Core project documents are present (e.g., `project-brief.md`).      |
+| `wiki`                   | Core wiki pages are present (e.g., `project-brief.md`).            |
 | `feature-integrity`     | All feature directories contain a `FEATURE.md` with valid frontmatter. |
 | `issue-integrity`       | All issue directories contain an `ISSUE.md` with valid frontmatter.  |
 | `backlog-consistency`   | `backlog.md` references only existing features, no duplicates.       |
@@ -2246,7 +2382,7 @@ Forge Health Check
 
 ✓ directory-structure    forge/ directory structure is valid
 ✓ config                 forge.yaml is valid
-⚠ project-docs           Missing recommended document: personas.md
+⚠ wiki                   Missing recommended wiki page: personas.md
 ✓ feature-integrity      All 5 features have valid FEATURE.md files
 ✓ issue-integrity        All 3 issues have valid ISSUE.md files
 ✗ backlog-consistency    backlog.md references non-existent feature: "removed-feature"
@@ -2275,9 +2411,9 @@ Results: 7 passed, 2 warnings, 1 failed
       "message": "forge.yaml is valid"
     },
     {
-      "name": "project-docs",
+      "name": "wiki",
       "status": "warn",
-      "message": "Missing recommended document: personas.md"
+      "message": "Missing recommended wiki page: personas.md"
     },
     {
       "name": "backlog-consistency",
@@ -2572,7 +2708,7 @@ forge search <query> [--type <entity-type>] [--limit <n>]
 
 ### Description
 
-Performs a full-text search across all project docs, features, issues, sprints, and reviews. Searches both frontmatter metadata and markdown body content. Returns matching entities with context snippets showing where the match occurred.
+Performs a full-text search across all wiki pages, features, issues, sprints, and reviews. Searches both frontmatter metadata and markdown body content. Returns matching entities with context snippets showing where the match occurred.
 
 ### Arguments
 
@@ -2584,7 +2720,7 @@ Performs a full-text search across all project docs, features, issues, sprints, 
 
 | Flag      | Type   | Default | Description                                                 |
 |-----------|--------|---------|-------------------------------------------------------------|
-| `--type`  | string |         | Restrict to entity type: `feature`, `issue`, `doc`, `sprint`, `review`. Can be specified multiple times. |
+| `--type`  | string |         | Restrict to entity type: `feature`, `issue`, `wiki`, `sprint`, `review`. Can be specified multiple times. |
 | `--limit` | int    | 20      | Maximum number of results.                                  |
 
 ### Examples
@@ -2613,7 +2749,7 @@ Search results for "OAuth" (4 matches)
   Status: review | Assignee: Alice
   ...consider OAuth as an alternative to password-based auth...
 
-[doc] Technical Docs (forge/project-docs/technical-docs.md)
+[wiki] Technical Docs (forge/wiki/technical-docs.md)
   ...OAuth 2.0 flow diagram and token refresh strategy...
 
 [issue] Missing Validation on File Upload (forge/issues/missing-validation-on-file-upload/ISSUE.md)
@@ -2649,10 +2785,10 @@ Search results for "OAuth" (4 matches)
       "line": 23
     },
     {
-      "type": "doc",
+      "type": "wiki",
       "name": "Technical Docs",
       "slug": "technical-docs",
-      "path": "forge/project-docs/technical-docs.md",
+      "path": "forge/wiki/technical-docs.md",
       "snippet": "OAuth 2.0 flow diagram and token refresh strategy",
       "line": 47
     },

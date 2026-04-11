@@ -744,117 +744,179 @@ Transition the sprint from `active` to `completed`.
 
 ---
 
-### Project Docs
+### Wiki
 
-#### `GET /api/docs`
+Wiki pages support optional YAML frontmatter for `title` and `aliases` fields. If a page has no frontmatter, it is treated as a plain markdown file and its title is derived from the filename slug. The body may contain `[[wikilinks]]` that reference other wiki pages by slug or alias.
 
-List all project documents.
+#### `GET /api/wiki`
+
+List all wiki pages.
 
 **Query Parameters:**
 
 | Parameter | Type   | Description                                            |
 |-----------|--------|--------------------------------------------------------|
-| `sort`    | string | Sort field: `name`, `modified` (default: `name`).      |
+| `sort`    | string | Sort field: `title`, `modified` (default: `title`).   |
 
 **Response:** `200 OK`
 
 ```json
 [
   {
-    "name": "Project Brief",
+    "title": "Project Brief",
     "slug": "project-brief",
-    "path": "forge/project-docs/project-brief.md",
+    "path": "forge/wiki/project-brief.md",
+    "aliases": [],
     "last_modified": "2026-04-01T09:00:00Z"
   },
   {
-    "name": "Roadmap",
-    "slug": "roadmap",
-    "path": "forge/project-docs/roadmap.md",
+    "title": "OAuth Integration Notes",
+    "slug": "oauth-notes",
+    "path": "forge/wiki/oauth-notes.md",
+    "aliases": ["oauth"],
     "last_modified": "2026-04-05T14:00:00Z"
   }
 ]
 ```
 
-The `name` field is derived from the filename, converting slugs to title case (e.g., `project-brief.md` → "Project Brief").
+The `title` field is the frontmatter `title` if present, otherwise derived from the filename by converting slugs to title case (e.g., `project-brief.md` → "Project Brief").
 
 ---
 
-#### `GET /api/docs/:slug`
+#### `GET /api/wiki/:slug`
 
-Get a single document.
+Get a single wiki page. The `:slug` parameter can match either a page's filename slug or any of its aliases.
 
 **Response:** `200 OK`
 
 ```json
 {
-  "name": "Project Brief",
-  "slug": "project-brief",
-  "path": "forge/project-docs/project-brief.md",
-  "body": "# Project Brief\n\n## Overview\n...",
-  "last_modified": "2026-04-01T09:00:00Z"
+  "title": "OAuth Integration Notes",
+  "slug": "oauth-notes",
+  "path": "forge/wiki/oauth-notes.md",
+  "aliases": ["oauth"],
+  "body": "## Overview\n\nOAuth integration details...\n\nSee [[technical-docs]] for implementation.",
+  "outgoing_links": [
+    { "slug": "technical-docs", "title": "Technical Docs", "exists": true }
+  ],
+  "backlinks": [
+    { "slug": "project-brief", "title": "Project Brief" },
+    { "slug": "roadmap", "title": "Roadmap" }
+  ],
+  "last_modified": "2026-04-05T14:00:00Z"
 }
 ```
 
-**Errors:** `404` if document does not exist.
+The `outgoing_links` array lists all `[[wikilinks]]` found in the page body, with each entry indicating whether the target page exists. The `backlinks` array lists all wiki pages that contain a `[[wikilink]]` pointing to this page (by slug or alias).
+
+**Errors:** `404` if page does not exist (no page matches the slug or alias).
 
 ---
 
-#### `POST /api/docs`
+#### `POST /api/wiki`
 
-Create a new project document.
+Create a new wiki page.
 
 **Request Body:**
 
 ```json
 {
-  "slug": "personas",
-  "body": "# Personas\n\n## Primary Persona\n..."
+  "slug": "api-guidelines",
+  "title": "API Guidelines",
+  "aliases": ["api-guide"],
+  "body": "## REST Conventions\n\nAll endpoints follow REST naming conventions.\n\nSee [[technical-docs]] for details."
 }
 ```
 
-| Field  | Type   | Required | Description                                  |
-|--------|--------|----------|----------------------------------------------|
-| `slug` | string | Yes      | Filename slug (without `.md` extension).     |
-| `body` | string | No       | Markdown body content.                       |
+| Field     | Type     | Required | Description                                          |
+|-----------|----------|----------|------------------------------------------------------|
+| `slug`    | string   | Yes      | Filename slug (without `.md` extension).             |
+| `title`   | string   | No       | Display title. If omitted, derived from slug.        |
+| `aliases` | string[] | No       | Alternate slugs for wikilink resolution.             |
+| `body`    | string   | No       | Markdown body content (may include `[[wikilinks]]`). |
 
-**Response:** `201 Created` — Returns the created document.
+If `title` or `aliases` are provided, they are written as YAML frontmatter. If neither is provided, the file is created as plain markdown (no frontmatter), preserving backward compatibility.
 
-**Errors:** `409` if file already exists.
+**Response:** `201 Created` — Returns the created page (same shape as GET).
+
+**Errors:** `409` if a page with the same slug or alias already exists.
 
 ---
 
-#### `PUT /api/docs/:slug`
+#### `PUT /api/wiki/:slug`
 
-Update a document's content.
+Update a wiki page's content and/or metadata. Partial update — only include fields to change.
 
 **Request Body:**
 
 ```json
 {
-  "body": "Updated document content..."
+  "title": "Updated Title",
+  "aliases": ["api-guide", "rest-guide"],
+  "body": "Updated page content with [[wikilinks]]..."
 }
 ```
 
-**Response:** `200 OK` — Returns the updated document.
+| Field     | Type     | Description                                          |
+|-----------|----------|------------------------------------------------------|
+| `title`   | string   | Update the display title. Use `null` to revert to slug-derived title. |
+| `aliases` | string[] | Replace all aliases. Use `[]` to clear.              |
+| `body`    | string   | Replace the markdown body.                           |
 
-**Errors:** `404` if document does not exist.
+**Response:** `200 OK` — Returns the updated page.
+
+**Errors:** `404` if page does not exist. `409` if a new alias conflicts with an existing page slug or alias.
 
 ---
 
-#### `DELETE /api/docs/:slug`
+#### `DELETE /api/wiki/:slug`
 
-Delete a project document.
+Delete a wiki page.
 
 **Response:** `200 OK`
 
 ```json
 {
-  "slug": "personas",
-  "deleted": true
+  "slug": "api-guidelines",
+  "deleted": true,
+  "broken_links": [
+    { "slug": "technical-docs", "title": "Technical Docs" }
+  ]
 }
 ```
 
-**Errors:** `404` if document does not exist.
+The `broken_links` array lists pages that contained `[[wikilinks]]` pointing to the deleted page. These links will now render as broken/stub links. The linking pages are **not** modified — the broken links serve as a prompt to update or create a replacement page.
+
+**Errors:** `404` if page does not exist.
+
+---
+
+#### `GET /api/wiki/:slug/backlinks`
+
+Get all pages that link to a specific wiki page.
+
+**Response:** `200 OK`
+
+```json
+[
+  {
+    "slug": "project-brief",
+    "title": "Project Brief",
+    "path": "forge/wiki/project-brief.md",
+    "last_modified": "2026-04-01T09:00:00Z"
+  },
+  {
+    "slug": "roadmap",
+    "title": "Roadmap",
+    "path": "forge/wiki/roadmap.md",
+    "last_modified": "2026-04-03T11:00:00Z"
+  }
+]
+```
+
+The `:slug` parameter can match a page's filename slug or any of its aliases.
+
+**Errors:** `404` if the target page does not exist.
 
 ---
 
@@ -1109,9 +1171,9 @@ If `checks` is omitted or empty, all checks are run. Results are written to `for
       "message": "forge.yaml is valid"
     },
     {
-      "name": "project-docs",
+      "name": "wiki",
       "status": "warn",
-      "message": "Missing recommended document: personas.md"
+      "message": "Missing recommended wiki page: personas.md"
     },
     {
       "name": "backlog-consistency",
@@ -1199,7 +1261,7 @@ Get a project summary. This is the data source for the dashboard.
     "issue_count": 2
   },
   "backlog_count": 3,
-  "doc_count": 6
+  "wiki_count": 6
 }
 ```
 
@@ -1306,7 +1368,7 @@ Full-text search across all project content.
 | Parameter | Type   | Required | Description                                               |
 |-----------|--------|----------|-----------------------------------------------------------|
 | `q`       | string | Yes      | Search query.                                              |
-| `type`    | string | No       | Filter by type: `feature`, `issue`, `doc`, `sprint`, `review`. Comma-separated. |
+| `type`    | string | No       | Filter by type: `feature`, `issue`, `wiki`, `sprint`, `review`. Comma-separated. |
 | `limit`   | integer| No       | Max results (default: 20).                                 |
 
 **Response:** `200 OK`

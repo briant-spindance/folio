@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge — Features</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons (CDN) -->
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    /* ================================================================
+       DESIGN TOKENS — Light Mode
+       ================================================================ */
+    :root {
+      --background: hsl(0 0% 100%);
+      --surface: hsl(220 14% 96%);
+      --surface-raised: hsl(0 0% 100%);
+      --surface-inset: hsl(220 14% 93%);
+
+      --border: hsl(220 13% 91%);
+      --border-strong: hsl(220 9% 80%);
+
+      --foreground: hsl(220 14% 10%);
+      --foreground-muted: hsl(220 8% 46%);
+      --foreground-subtle: hsl(220 8% 65%);
+
+      --primary: hsl(221 83% 53%);
+      --primary-foreground: hsl(0 0% 100%);
+      --primary-hover: hsl(221 83% 47%);
+      --accent: hsl(220 14% 96%);
+      --accent-foreground: hsl(220 14% 10%);
+
+      --state-draft: hsl(220 8% 65%);
+      --state-ready: hsl(199 89% 48%);
+      --state-in-progress: hsl(38 92% 50%);
+      --state-review: hsl(271 76% 53%);
+      --state-done: hsl(142 71% 45%);
+
+      --header-height: 48px;
+      --sidebar-width: 220px;
+      --content-max-width: 1120px;
+      --content-padding: 24px;
+      --card-radius: 8px;
+      --badge-radius: 9999px;
+      --button-radius: 6px;
+    }
+
+    /* ================================================================
+       RESET & BASE
+       ================================================================ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--foreground);
+      background: var(--background);
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    /* ================================================================
+       TOP HEADER BAR
+       ================================================================ */
+    .top-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      background: var(--surface-raised);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+    }
+
+    .top-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-brand-icon { color: var(--primary); flex-shrink: 0; }
+
+    .header-brand-divider {
+      width: 1px; height: 20px;
+      background: var(--border-strong);
+    }
+
+    .header-project-name {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    .top-header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-vcs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+    }
+
+    .header-vcs-branch {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground);
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .header-vcs-branch i { width: 12px; height: 12px; color: var(--foreground-muted); }
+
+    .header-vcs-dirty {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: hsl(38 92% 50%);
+      flex-shrink: 0;
+    }
+
+    .header-vcs-commit {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.625rem;
+      color: var(--foreground-subtle);
+    }
+
+    .header-vcs-commit a { color: var(--primary); text-decoration: none; }
+
+    /* ================================================================
+       SIDEBAR
+       ================================================================ */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 8px 0;
+      z-index: 50;
+    }
+
+    .sidebar-nav { flex: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 0.8125rem;
+      color: var(--foreground-muted);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 100ms, color 100ms;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover { background: var(--accent); color: var(--accent-foreground); }
+
+    .nav-item.active {
+      color: var(--primary);
+      background: var(--accent);
+      border-left-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .nav-item i { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .sidebar-footer { padding: 8px 0; border-top: 1px solid var(--border); }
+
+    /* ================================================================
+       MAIN CONTENT
+       ================================================================ */
+    .main {
+      margin-left: var(--sidebar-width);
+      padding-top: var(--header-height);
+      min-height: 100vh;
+    }
+
+    .content {
+      padding: var(--content-padding);
+      max-width: var(--content-max-width);
+      margin: 0 auto;
+    }
+
+    /* ================================================================
+       BREADCRUMBS
+       ================================================================ */
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--foreground-subtle);
+      margin-bottom: 16px;
+    }
+
+    .breadcrumbs a { color: var(--foreground-muted); text-decoration: none; }
+    .breadcrumbs a:hover { color: var(--primary); }
+    .breadcrumbs .separator { color: var(--foreground-subtle); }
+    .breadcrumbs .current { color: var(--foreground); font-weight: 500; }
+
+    /* ================================================================
+       PAGE HEADER
+       ================================================================ */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    .page-desc {
+      font-size: 0.75rem;
+      color: var(--foreground-muted);
+      margin-top: 2px;
+    }
+
+    .page-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ================================================================
+       BUTTONS
+       ================================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: var(--button-radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 100ms, border-color 100ms;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn i { width: 15px; height: 15px; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    /* ================================================================
+       BADGES
+       ================================================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--badge-radius);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .badge-draft      { background: hsla(220, 8%, 65%, 0.15); color: var(--state-draft); }
+    .badge-ready      { background: hsla(199, 89%, 48%, 0.15); color: var(--state-ready); }
+    .badge-in-progress{ background: hsla(38, 92%, 50%, 0.15); color: hsl(38, 80%, 40%); }
+    .badge-review     { background: hsla(271, 76%, 53%, 0.15); color: var(--state-review); }
+    .badge-done       { background: hsla(142, 71%, 45%, 0.15); color: hsl(142, 71%, 35%); }
+
+    /* ================================================================
+       FILTER BAR
+       ================================================================ */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 16px;
+    }
+
+    .filter-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 0.6875rem;
+      color: var(--foreground-subtle);
+      font-weight: 500;
+    }
+
+    /* ================================================================
+       DROPDOWN FILTER BUTTONS
+       ================================================================ */
+    .dropdown-wrap {
+      position: relative;
+    }
+
+    .dropdown-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--button-radius);
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 100ms, background 100ms;
+      white-space: nowrap;
+    }
+
+    .dropdown-btn:hover {
+      border-color: var(--border-strong);
+      background: var(--accent);
+    }
+
+    .dropdown-btn.open {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .dropdown-btn i { width: 12px; height: 12px; }
+
+    .dropdown-btn .active-count {
+      font-size: 0.5625rem;
+      font-weight: 700;
+      background: var(--primary);
+      color: var(--primary-foreground);
+      padding: 0 5px;
+      border-radius: var(--badge-radius);
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Dropdown popover */
+    .dropdown-popover {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 200px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+      z-index: 200;
+      padding: 4px 0;
+      display: none;
+    }
+
+    .dropdown-popover.show {
+      display: block;
+    }
+
+    .dropdown-popover-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+
+    .dropdown-popover-title {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--foreground-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .dropdown-toggle-all {
+      font-size: 0.625rem;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    .dropdown-toggle-all:hover {
+      text-decoration: underline;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      color: var(--foreground);
+      cursor: pointer;
+      transition: background 100ms;
+    }
+
+    .dropdown-item:hover {
+      background: var(--accent);
+    }
+
+    .dropdown-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-label {
+      flex: 1;
+    }
+
+    .dropdown-item-count {
+      font-size: 0.625rem;
+      color: var(--foreground-subtle);
+      font-weight: 600;
+    }
+
+    /* Sort dropdown */
+    .sort-select {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--button-radius);
+      padding: 5px 8px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .sort-select:hover { border-color: var(--border-strong); }
+
+    /* ================================================================
+       FEATURES TABLE
+       ================================================================ */
+    .features-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .features-table thead th {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: left;
+      padding: 8px 12px 8px 0;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .features-table thead th.col-drag { width: 28px; padding: 0; }
+    .features-table thead th.col-priority { width: 36px; text-align: center; padding-right: 8px; }
+    .features-table thead th.col-points,
+    .features-table thead th.col-sprint { text-align: right; }
+    .features-table thead th.col-sprint { padding-right: 16px; }
+
+    .features-table tbody td {
+      font-size: 0.8125rem;
+      color: var(--foreground);
+      padding: 10px 12px 10px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .features-table tbody td.col-drag {
+      width: 28px;
+      padding: 0 4px 0 0;
+      vertical-align: middle;
+    }
+
+    .features-table tbody td.col-priority { text-align: center; padding-right: 8px; }
+    .features-table tbody td.col-points,
+    .features-table tbody td.col-sprint { text-align: right; }
+    .features-table tbody td.col-sprint { padding-right: 16px; }
+
+    .features-table tbody tr:last-child td { border-bottom: none; }
+
+    .features-table tbody tr { cursor: pointer; }
+    .features-table tbody tr:hover { background: var(--accent); }
+
+    /* Drag handle — hidden by default, visible on row hover */
+    .drag-handle {
+      opacity: 0;
+      color: var(--foreground-subtle);
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 100ms;
+    }
+
+    .drag-handle i { width: 14px; height: 14px; }
+
+    .features-table tbody tr:hover .drag-handle {
+      opacity: 1;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+      color: var(--foreground-muted);
+    }
+
+    /* Priority position badge */
+    .priority-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--foreground-muted);
+      font-size: 0.5625rem;
+      font-weight: 600;
+    }
+
+    .priority-none {
+      color: var(--foreground-subtle);
+      font-size: 0.75rem;
+    }
+
+    /* Feature name cell */
+    .feature-name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .feature-name {
+      font-weight: 500;
+      color: var(--foreground);
+    }
+
+    .feature-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.625rem;
+      color: var(--foreground-subtle);
+    }
+
+    .feature-assignee { color: var(--foreground-muted); }
+    .feature-assignee.unassigned { color: var(--foreground-subtle); }
+
+    .feature-points {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+      font-weight: 500;
+    }
+    .feature-points.no-points { color: var(--foreground-subtle); }
+
+    .sprint-link {
+      font-size: 0.6875rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .sprint-link:hover { text-decoration: underline; }
+
+    .no-sprint { color: var(--foreground-subtle); font-size: 0.75rem; }
+
+    /* Unprioritized separator */
+    .table-separator td { padding: 6px 0; border-bottom: none; }
+
+    .separator-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--foreground-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .separator-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ================================================================
+       PAGINATION BAR
+       ================================================================ */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 4px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+      gap: 16px;
+    }
+
+    .pagination-info {
+      font-size: 0.75rem;
+      color: var(--foreground-muted);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pagination-hidden {
+      color: var(--foreground-subtle);
+      font-style: italic;
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pagination-per-page {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.6875rem;
+      color: var(--foreground-muted);
+    }
+
+    .per-page-select {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .per-page-select:hover { border-color: var(--border-strong); }
+
+    .pagination-pages {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
+      padding: 0 6px;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 100ms, border-color 100ms;
+    }
+
+    .page-btn:hover {
+      background: var(--accent);
+      border-color: var(--border);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border-color: var(--primary);
+    }
+
+    .page-btn:disabled {
+      color: var(--foreground-subtle);
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .page-btn:disabled:hover {
+      background: none;
+      border-color: transparent;
+    }
+
+    .page-btn i { width: 14px; height: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP HEADER BAR
+       ============================================================ -->
+  <header class="top-header">
+    <div class="top-header-left">
+      <svg class="header-brand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"/>
+        <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"/>
+        <path d="m2.3 2.3 7.286 7.286"/>
+        <circle cx="11" cy="11" r="2"/>
+      </svg>
+      <div class="header-brand-divider"></div>
+      <span class="header-project-name">forge-project</span>
+    </div>
+    <div class="top-header-right">
+      <div class="header-vcs">
+        <span class="header-vcs-branch">
+          <i data-lucide="git-branch"></i>
+          feature/oauth
+          <span class="header-vcs-dirty" title="Uncommitted changes"></span>
+        </span>
+        <span class="header-vcs-commit"><a href="#">abc1234</a></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <aside class="sidebar">
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard-mockup.html">
+        <i data-lucide="layout-dashboard"></i>
+        Dashboard
+      </a>
+      <a class="nav-item" href="docs-list-mockup.html">
+        <i data-lucide="file-text"></i>
+        Wiki
+      </a>
+      <a class="nav-item active">
+        <i data-lucide="puzzle"></i>
+        Features
+      </a>
+      <a class="nav-item">
+        <i data-lucide="timer"></i>
+        Sprints
+      </a>
+      <a class="nav-item">
+        <i data-lucide="circle-dot"></i>
+        Issues
+      </a>
+      <a class="nav-item">
+        <i data-lucide="clipboard-check"></i>
+        Reviews
+      </a>
+      <a class="nav-item">
+        <i data-lucide="settings"></i>
+        Configuration
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a class="nav-item">
+        <i data-lucide="sun" style="width:16px;height:16px;"></i>
+        Light
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN CONTENT — Features List / Backlog View
+       ============================================================ -->
+  <main class="main">
+    <div class="content">
+
+      <!-- Breadcrumbs -->
+      <div class="breadcrumbs">
+        <a href="dashboard-mockup.html">Dashboard</a>
+        <span class="separator">/</span>
+        <span class="current">Features</span>
+      </div>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Features</h1>
+          <p class="page-desc">Product backlog ordered by priority. Each feature is a directory containing a FEATURE.md and supporting artifacts.</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary">
+            <i data-lucide="plus"></i>
+            New Feature
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-bar-left">
+          <!-- Status dropdown -->
+          <div class="dropdown-wrap" id="status-dropdown">
+            <button class="dropdown-btn" onclick="toggleDropdown('status-dropdown')">
+              <i data-lucide="filter"></i>
+              Status: All active
+              <span class="active-count">4</span>
+              <i data-lucide="chevron-down"></i>
+            </button>
+            <div class="dropdown-popover" id="status-popover">
+              <div class="dropdown-popover-header">
+                <span class="dropdown-popover-title">Filter by status</span>
+                <button class="dropdown-toggle-all" onclick="toggleAllStatus()">Toggle all</button>
+              </div>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-dot" style="background: var(--state-draft)"></span>
+                <span class="dropdown-item-label">Draft</span>
+                <span class="dropdown-item-count">4</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-dot" style="background: var(--state-ready)"></span>
+                <span class="dropdown-item-label">Ready</span>
+                <span class="dropdown-item-count">2</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-dot" style="background: var(--state-in-progress)"></span>
+                <span class="dropdown-item-label">In Progress</span>
+                <span class="dropdown-item-count">2</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-dot" style="background: var(--state-review)"></span>
+                <span class="dropdown-item-label">Review</span>
+                <span class="dropdown-item-count">1</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox">
+                <span class="dropdown-item-dot" style="background: var(--state-done)"></span>
+                <span class="dropdown-item-label">Done</span>
+                <span class="dropdown-item-count">3</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Assignee dropdown -->
+          <div class="dropdown-wrap" id="assignee-dropdown">
+            <button class="dropdown-btn" onclick="toggleDropdown('assignee-dropdown')">
+              Assignee: All
+              <i data-lucide="chevron-down"></i>
+            </button>
+            <div class="dropdown-popover" id="assignee-popover">
+              <div class="dropdown-popover-header">
+                <span class="dropdown-popover-title">Filter by assignee</span>
+              </div>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-label">Alice</span>
+                <span class="dropdown-item-count">3</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-label">Bob</span>
+                <span class="dropdown-item-count">2</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-label">Charlie</span>
+                <span class="dropdown-item-count">2</span>
+              </label>
+              <label class="dropdown-item">
+                <input type="checkbox" checked>
+                <span class="dropdown-item-label">Unassigned</span>
+                <span class="dropdown-item-count">4</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar-right">
+          <span class="filter-label">Sort:</span>
+          <select class="sort-select">
+            <option selected>Priority</option>
+            <option>Name</option>
+            <option>Status</option>
+            <option>Last Modified</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Features Table -->
+      <table class="features-table">
+        <thead>
+          <tr>
+            <th class="col-drag"></th>
+            <th class="col-priority">#</th>
+            <th>Feature</th>
+            <th>Status</th>
+            <th>Assignee</th>
+            <th class="col-points">Points</th>
+            <th class="col-sprint">Sprint</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">1</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">User Authentication</span>
+                <span class="feature-path">forge/features/user-authentication/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-in-progress">in-progress</span></td>
+            <td class="feature-assignee">Alice</td>
+            <td class="col-points"><span class="feature-points">8</span></td>
+            <td class="col-sprint"><a class="sprint-link" href="#">Sprint 3</a></td>
+          </tr>
+          <tr onclick="window.location='feature-detail-mockup.html'">
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">2</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <a class="feature-name" href="feature-detail-mockup.html" style="text-decoration:none;color:inherit;">OAuth Integration</a>
+                <span class="feature-path">forge/features/oauth-integration/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-ready">ready</span></td>
+            <td class="feature-assignee">Alice</td>
+            <td class="col-points"><span class="feature-points">5</span></td>
+            <td class="col-sprint"><a class="sprint-link" href="#">Sprint 3</a></td>
+          </tr>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">3</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">Payment Processing</span>
+                <span class="feature-path">forge/features/payment-processing/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-draft">draft</span></td>
+            <td class="feature-assignee">Bob</td>
+            <td class="col-points"><span class="feature-points">13</span></td>
+            <td class="col-sprint"><span class="no-sprint">&mdash;</span></td>
+          </tr>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">4</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">Email Notifications</span>
+                <span class="feature-path">forge/features/email-notifications/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-draft">draft</span></td>
+            <td class="feature-assignee unassigned">&mdash;</td>
+            <td class="col-points"><span class="feature-points no-points">&mdash;</span></td>
+            <td class="col-sprint"><span class="no-sprint">&mdash;</span></td>
+          </tr>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">5</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">File Upload v2</span>
+                <span class="feature-path">forge/features/file-upload-v2/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-review">review</span></td>
+            <td class="feature-assignee">Charlie</td>
+            <td class="col-points"><span class="feature-points">3</span></td>
+            <td class="col-sprint"><a class="sprint-link" href="#">Sprint 3</a></td>
+          </tr>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">6</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">Dashboard Analytics</span>
+                <span class="feature-path">forge/features/dashboard-analytics/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-in-progress">in-progress</span></td>
+            <td class="feature-assignee">Bob</td>
+            <td class="col-points"><span class="feature-points">5</span></td>
+            <td class="col-sprint"><a class="sprint-link" href="#">Sprint 3</a></td>
+          </tr>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">7</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">Webhook Integrations</span>
+                <span class="feature-path">forge/features/webhook-integrations/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-draft">draft</span></td>
+            <td class="feature-assignee unassigned">&mdash;</td>
+            <td class="col-points"><span class="feature-points no-points">&mdash;</span></td>
+            <td class="col-sprint"><span class="no-sprint">&mdash;</span></td>
+          </tr>
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-num">8</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">Real-Time Notifications</span>
+                <span class="feature-path">forge/features/real-time-notifications/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-ready">ready</span></td>
+            <td class="feature-assignee">Charlie</td>
+            <td class="col-points"><span class="feature-points">5</span></td>
+            <td class="col-sprint"><span class="no-sprint">&mdash;</span></td>
+          </tr>
+
+          <!-- Separator: unprioritized features -->
+          <tr class="table-separator">
+            <td colspan="7">
+              <div class="separator-line">Unprioritized</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="col-drag"><span class="drag-handle"><i data-lucide="grip-vertical"></i></span></td>
+            <td class="col-priority"><span class="priority-none">&mdash;</span></td>
+            <td>
+              <div class="feature-name-cell">
+                <span class="feature-name">API Rate Limiting</span>
+                <span class="feature-path">forge/features/api-rate-limiting/</span>
+              </div>
+            </td>
+            <td><span class="badge badge-draft">draft</span></td>
+            <td class="feature-assignee unassigned">&mdash;</td>
+            <td class="col-points"><span class="feature-points no-points">&mdash;</span></td>
+            <td class="col-sprint"><span class="no-sprint">&mdash;</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination Bar -->
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          <span>Showing 1&ndash;9 of 9 features</span>
+          <span class="pagination-hidden">&middot; 3 completed hidden</span>
+        </div>
+        <div class="pagination-controls">
+          <div class="pagination-per-page">
+            <select class="per-page-select">
+              <option>10</option>
+              <option selected>25</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+            <span>per page</span>
+          </div>
+          <div class="pagination-pages">
+            <button class="page-btn" disabled>
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn" disabled>
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Toggle dropdown open/close
+    function toggleDropdown(id) {
+      var wrap = document.getElementById(id);
+      var btn = wrap.querySelector('.dropdown-btn');
+      var popover = wrap.querySelector('.dropdown-popover');
+      var isOpen = popover.classList.contains('show');
+
+      // Close all dropdowns first
+      closeAllDropdowns();
+
+      if (!isOpen) {
+        popover.classList.add('show');
+        btn.classList.add('open');
+      }
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-popover').forEach(function(p) {
+        p.classList.remove('show');
+      });
+      document.querySelectorAll('.dropdown-btn').forEach(function(b) {
+        b.classList.remove('open');
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.dropdown-wrap')) {
+        closeAllDropdowns();
+      }
+    });
+
+    // Toggle all checkboxes in status dropdown
+    function toggleAllStatus() {
+      var items = document.querySelectorAll('#status-popover .dropdown-item input[type="checkbox"]');
+      var allChecked = Array.from(items).every(function(cb) { return cb.checked; });
+      items.forEach(function(cb) { cb.checked = !allChecked; });
+    }
+  </script>
+</body>
+</html>
