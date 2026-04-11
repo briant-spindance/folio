@@ -146,8 +146,6 @@ export function DocsDetail() {
       </Link>
 
       <div className="docs-detail-layout">
-        <TableOfContents entries={toc} />
-
         <div className="docs-prose" ref={contentRef}>
           <div className="docs-prose-meta">
             <div className="docs-prose-icon">
@@ -237,6 +235,8 @@ export function DocsDetail() {
             </ReactMarkdown>
           </div>
         </div>
+
+        <TableOfContents entries={toc} />
       </div>
     </>
   )

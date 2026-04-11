@@ -836,6 +836,17 @@ body {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--foreground);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.docs-list-row-dirty {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-warning);
+  flex-shrink: 0;
 }
 
 .docs-list-row-desc {
@@ -855,6 +866,16 @@ body {
   flex-shrink: 0;
   align-self: flex-start;
   padding-top: 2px;
+}
+
+.docs-list-row-dirty {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-warning);
+  flex-shrink: 0;
+  align-self: center;
+  title: "Uncommitted changes";
 }
 
 /* ================================================================
@@ -889,7 +910,7 @@ body {
    ================================================================ */
 .docs-detail-layout {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 1fr 200px;
   gap: 32px;
   align-items: start;
 }
@@ -902,7 +923,6 @@ body {
   font-size: 0.75rem;
   color: var(--foreground-muted);
   text-decoration: none;
-  margin-bottom: 20px;
   transition: color 100ms;
 }
 
@@ -971,7 +991,7 @@ body {
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--card-radius);
-  padding: 28px 32px;
+  padding: 0;
   min-width: 0;
 }
 
@@ -979,9 +999,14 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  padding: 16px 32px;
   border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  position: sticky;
+  top: var(--header-height);
+  z-index: 10;
+  /* re-apply border-radius only on the top corners when stuck at the very top */
+  border-radius: var(--card-radius) var(--card-radius) 0 0;
 }
 
 .docs-prose-icon {
@@ -1020,6 +1045,7 @@ body {
 
 /* Prose typography */
 .docs-prose-body {
+  padding: 28px 32px;
   font-size: 0.875rem;
   line-height: 1.75;
   color: var(--foreground);
@@ -1541,4 +1567,71 @@ body {
   color: var(--foreground-subtle);
   border-top: 1px solid var(--border);
   text-align: right;
+}
+
+/* ── Editor mode toggle ── */
+.doc-editor-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.doc-editor-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-family: inherit;
+  background: transparent;
+  color: var(--foreground-muted);
+  border: none;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+  white-space: nowrap;
+}
+
+.doc-editor-mode-btn svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.doc-editor-mode-btn:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.doc-editor-mode-btn.active {
+  background: var(--surface-inset);
+  color: var(--foreground);
+}
+
+.doc-editor-mode-btn + .doc-editor-mode-btn {
+  border-left: 1px solid var(--border);
+}
+
+/* ── Raw Markdown textarea ── */
+.doc-editor-raw {
+  flex: 1;
+  padding: 24px 32px;
+  min-height: 60vh;
+}
+
+.doc-editor-raw textarea {
+  width: 100%;
+  min-height: 60vh;
+  resize: vertical;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  color: var(--foreground);
+  tab-size: 2;
 }

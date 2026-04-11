@@ -62,7 +62,10 @@ export function DocsList() {
               {docIcon(doc.icon, 18)}
             </div>
             <div className="docs-list-row-body">
-              <span className="docs-list-row-title">{doc.title}</span>
+              <span className="docs-list-row-title">
+                {doc.title}
+                {doc.dirty && <span className="docs-list-row-dirty" title="Uncommitted changes" />}
+              </span>
               {doc.description && (
                 <span className="docs-list-row-desc">{doc.description}</span>
               )}

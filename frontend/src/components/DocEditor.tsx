@@ -19,6 +19,8 @@ import { Markdown } from "tiptap-markdown"
 import type { SaveDocPayload } from "@/lib/types"
 import { docIcon, allIconNames } from "@/lib/docIcons"
 
+type EditorMode = "wysiwyg" | "raw"
+
 // ── IconPicker ────────────────────────────────────────────────────
 
 const MAX_RESULTS = 80
@@ -279,6 +281,8 @@ export function DocEditor({
   const [icon, setIcon] = useState<string | null>(initialIcon)
   const [unsaved, setUnsaved] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(isNew ? null : new Date())
+  const [mode, setMode] = useState<EditorMode>("wysiwyg")
+  const [rawValue, setRawValue] = useState(initialBody)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const editor = useEditor({
@@ -318,11 +322,29 @@ export function DocEditor({
 
   const triggerSave = useCallback(() => {
     if (!editor) return
-    const body = editor.storage.markdown?.getMarkdown?.() ?? editor.getText()
+    const body = mode === "raw"
+      ? rawValue
+      : (editor.storage.markdown?.getMarkdown?.() ?? editor.getText())
     onSave({ title, icon, body })
     setLastSavedAt(new Date())
     setUnsaved(false)
-  }, [editor, title, icon, onSave])
+  }, [editor, title, icon, onSave, mode, rawValue])
+
+  // Switch between WYSIWYG and raw, round-tripping content
+  const switchMode = useCallback((next: EditorMode) => {
+    if (next === mode) return
+    if (next === "raw") {
+      // Pull current Markdown out of Tiptap
+      const md = editor?.storage.markdown?.getMarkdown?.() ?? editor?.getText() ?? ""
+      setRawValue(md)
+    } else {
+      // Push raw Markdown back into Tiptap
+      if (editor) {
+        editor.commands.setContent(rawValue)
+      }
+    }
+    setMode(next)
+  }, [mode, editor, rawValue])
 
   // Re-arm auto-save when title or icon changes
   useEffect(() => {
@@ -371,45 +393,76 @@ export function DocEditor({
 
       {/* ── Toolbar (sticky) ── */}
       <div className="doc-editor-toolbar" role="toolbar" aria-label="Formatting">
-        <ToolbarBtn title="Bold (Ctrl+B)" active={editorState?.bold} onClick={() => editor?.chain().focus().toggleBold().run()}>
-          <IcBold />
-        </ToolbarBtn>
-        <ToolbarBtn title="Italic (Ctrl+I)" active={editorState?.italic} onClick={() => editor?.chain().focus().toggleItalic().run()}>
-          <IcItalic />
-        </ToolbarBtn>
+        {/* Formatting buttons — hidden in raw mode */}
+        {mode === "wysiwyg" && (<>
+          <ToolbarBtn title="Bold (Ctrl+B)" active={editorState?.bold} onClick={() => editor?.chain().focus().toggleBold().run()}>
+            <IcBold />
+          </ToolbarBtn>
+          <ToolbarBtn title="Italic (Ctrl+I)" active={editorState?.italic} onClick={() => editor?.chain().focus().toggleItalic().run()}>
+            <IcItalic />
+          </ToolbarBtn>
 
-        <div className="doc-editor-toolbar-sep" />
+          <div className="doc-editor-toolbar-sep" />
 
-        <ToolbarBtn title="Heading 1" active={editorState?.h1} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>H1</ToolbarBtn>
-        <ToolbarBtn title="Heading 2" active={editorState?.h2} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</ToolbarBtn>
-        <ToolbarBtn title="Heading 3" active={editorState?.h3} onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>H3</ToolbarBtn>
+          <ToolbarBtn title="Heading 1" active={editorState?.h1} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>H1</ToolbarBtn>
+          <ToolbarBtn title="Heading 2" active={editorState?.h2} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</ToolbarBtn>
+          <ToolbarBtn title="Heading 3" active={editorState?.h3} onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>H3</ToolbarBtn>
 
-        <div className="doc-editor-toolbar-sep" />
+          <div className="doc-editor-toolbar-sep" />
 
-        <ToolbarBtn title="Bullet list" active={editorState?.bulletList} onClick={() => editor?.chain().focus().toggleBulletList().run()}>
-          <IcBulletList />
-        </ToolbarBtn>
-        <ToolbarBtn title="Ordered list" active={editorState?.orderedList} onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
-          <IcOrderedList />
-        </ToolbarBtn>
+          <ToolbarBtn title="Bullet list" active={editorState?.bulletList} onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+            <IcBulletList />
+          </ToolbarBtn>
+          <ToolbarBtn title="Ordered list" active={editorState?.orderedList} onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
+            <IcOrderedList />
+          </ToolbarBtn>
 
-        <div className="doc-editor-toolbar-sep" />
+          <div className="doc-editor-toolbar-sep" />
 
-        <ToolbarBtn title="Blockquote" active={editorState?.blockquote} onClick={() => editor?.chain().focus().toggleBlockquote().run()}>
-          <IcBlockquote />
-        </ToolbarBtn>
-        <ToolbarBtn title="Inline code" active={editorState?.code} onClick={() => editor?.chain().focus().toggleCode().run()}>
-          <IcCode />
-        </ToolbarBtn>
-        <ToolbarBtn title="Code block" active={editorState?.codeBlock} onClick={() => editor?.chain().focus().toggleCodeBlock().run()}>
-          <IcCodeBlock />
-        </ToolbarBtn>
+          <ToolbarBtn title="Blockquote" active={editorState?.blockquote} onClick={() => editor?.chain().focus().toggleBlockquote().run()}>
+            <IcBlockquote />
+          </ToolbarBtn>
+          <ToolbarBtn title="Inline code" active={editorState?.code} onClick={() => editor?.chain().focus().toggleCode().run()}>
+            <IcCode />
+          </ToolbarBtn>
+          <ToolbarBtn title="Code block" active={editorState?.codeBlock} onClick={() => editor?.chain().focus().toggleCodeBlock().run()}>
+            <IcCodeBlock />
+          </ToolbarBtn>
 
-        <div className="doc-editor-toolbar-sep" />
+          <div className="doc-editor-toolbar-sep" />
 
-        <ToolbarBtn title="Horizontal rule" onClick={() => editor?.chain().focus().setHorizontalRule().run()}>
-          <IcHr />
-        </ToolbarBtn>
+          <ToolbarBtn title="Horizontal rule" onClick={() => editor?.chain().focus().setHorizontalRule().run()}>
+            <IcHr />
+          </ToolbarBtn>
+
+          <div className="doc-editor-toolbar-sep" />
+        </>)}
+
+        {/* Mode toggle */}
+        <div className="doc-editor-mode-toggle" role="group" aria-label="Editor mode">
+          <button
+            type="button"
+            className={`doc-editor-mode-btn${mode === "wysiwyg" ? " active" : ""}`}
+            onClick={() => switchMode("wysiwyg")}
+            title="Rich text editor"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+            Rich
+          </button>
+          <button
+            type="button"
+            className={`doc-editor-mode-btn${mode === "raw" ? " active" : ""}`}
+            onClick={() => switchMode("raw")}
+            title="Raw Markdown"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+            Markdown
+          </button>
+        </div>
 
         {/* Push save controls to the right */}
         <div className="doc-editor-toolbar-spacer" />
@@ -421,7 +474,7 @@ export function DocEditor({
         <button
           type="button"
           className="doc-editor-save-btn"
-          disabled={isSaving}
+          disabled={isSaving || !unsaved}
           onClick={handleExplicitSave}
         >
           {isSaving ? <IcSpinner /> : null}
@@ -430,9 +483,24 @@ export function DocEditor({
       </div>
 
       {/* ── Editor body ── */}
-      <div className="doc-editor-body">
-        <EditorContent editor={editor} />
-      </div>
+      {mode === "wysiwyg" ? (
+        <div className="doc-editor-body">
+          <EditorContent editor={editor} />
+        </div>
+      ) : (
+        <div className="doc-editor-raw">
+          <textarea
+            value={rawValue}
+            spellCheck={false}
+            onChange={(e) => {
+              setRawValue(e.target.value)
+              setUnsaved(true)
+              if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+              autoSaveTimer.current = setTimeout(() => triggerSave(), 1500)
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
