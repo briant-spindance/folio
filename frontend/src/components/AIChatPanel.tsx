@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useMemo } from "react"
+import { useRef, useEffect, useCallback, useMemo, useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { UIMessage } from "ai"
@@ -49,6 +49,67 @@ interface AIChatPanelProps {
 }
 
 // ---------------------------------------------------------------------------
+// Session API — persisted server-side in {dataRoot}/ai-sessions/
+// ---------------------------------------------------------------------------
+interface Session {
+  id: string
+  name: string
+  savedAt: number
+  messages: UIMessage[]
+}
+
+async function apiFetchSessions(contextKey: string): Promise<Session[]> {
+  try {
+    const res = await fetch(`/api/ai-sessions/${encodeURIComponent(contextKey)}`)
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
+async function apiSaveSession(contextKey: string, session: Omit<Session, "id"> & { id?: string }): Promise<string> {
+  const id = session.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  try {
+    await fetch(`/api/ai-sessions/${encodeURIComponent(contextKey)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...session, id }),
+    })
+  } catch {
+    // ignore
+  }
+  return id
+}
+
+async function apiDeleteSession(contextKey: string, id: string): Promise<void> {
+  try {
+    await fetch(`/api/ai-sessions/${encodeURIComponent(contextKey)}/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    })
+  } catch {
+    // ignore
+  }
+}
+
+function firstUserText(messages: UIMessage[]): string {
+  const msg = messages.find((m) => m.role === "user")
+  const part = msg?.parts.find((p) => p.type === "text")
+  return part && "text" in part ? String(part.text).slice(0, 60) : "Conversation"
+}
+
+function formatRelativeTime(ms: number): string {
+  const diff = Date.now() - ms
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return "just now"
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
+
+// ---------------------------------------------------------------------------
 // Model options
 // ---------------------------------------------------------------------------
 const MODEL_OPTIONS = [
@@ -74,6 +135,26 @@ export function AIChatPanel({
 }: AIChatPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+  const historyRef2 = useRef<HTMLDivElement>(null)
+  // Track the id of the current in-progress session so turns update the same entry
+  const currentSessionIdRef = useRef<string | undefined>(undefined)
+
+  // Context key for session storage — per doc slug or "global"
+  const contextKey = context?.type === "wiki_doc" ? `doc:${context.slug}` : "global"
+  const contextKeyRef = useRef(contextKey)
+  // Track whether we've loaded the most recent session for this context key
+  const [sessionLoaded, setSessionLoaded] = useState(false)
+  useEffect(() => {
+    if (contextKeyRef.current !== contextKey) {
+      // Navigated to a different context — reset current session tracking
+      currentSessionIdRef.current = undefined
+      setSessionLoaded(false)
+    }
+    contextKeyRef.current = contextKey
+  }, [contextKey])
 
   // Build transport each time model/context changes
   const transport = useMemo(
@@ -94,10 +175,9 @@ export function AIChatPanel({
   const contextRef = useRef(context)
   useEffect(() => { contextRef.current = context }, [context])
 
-  const { messages, sendMessage, stop, status } = useChat({
+  const { messages, sendMessage, stop, status, setMessages } = useChat({
     transport,
     onData: (dataPart) => {
-      // dataPart.type is "data-doc-preview" or "data-doc-write"
       const part = dataPart as { type: string; data: Record<string, string> }
       if (part.type === "data-doc-preview") {
         onDocDataRef.current({ type: "doc-preview", slug: part.data.slug, body: part.data.body })
@@ -105,10 +185,19 @@ export function AIChatPanel({
         onDocDataRef.current({ type: "doc-write", slug: part.data.slug, title: part.data.title, body: part.data.body })
       }
     },
-    onFinish: async ({ message }) => {
-      // Server-side tools have providerExecuted=true; onToolCall never fires for them.
-      // Instead we inspect the final assistant message after the turn completes.
-      // For ToolUIPart, the type is `tool-${toolName}` (e.g. "tool-replace_document").
+    onFinish: async ({ message, messages: allMessages }) => {
+      // Auto-save / update the current session after every completed turn
+      if (allMessages.length > 0) {
+        const id = await apiSaveSession(contextKeyRef.current, {
+          id: currentSessionIdRef.current,
+          name: firstUserText(allMessages),
+          savedAt: Date.now(),
+          messages: allMessages,
+        })
+        currentSessionIdRef.current = id
+      }
+
+      // Detect write tool completion
       for (const part of message.parts) {
         const partAny = part as {
           type: string
@@ -117,13 +206,10 @@ export function AIChatPanel({
           input?: Record<string, unknown>
         }
         if (!partAny.type.startsWith("tool-")) continue
-
-        // Extract tool name from the type discriminant ("tool-replace_document" → "replace_document")
         const toolName = partAny.type.slice("tool-".length)
         if (!WRITE_TOOLS.has(toolName)) continue
         if (!partAny.providerExecuted) continue
         if (partAny.state !== "output-available") continue
-
         const input = partAny.input ?? {}
         const slug = String(input.slug ?? "")
         const title = String(
@@ -132,7 +218,6 @@ export function AIChatPanel({
         )
         if (slug) {
           await onWriteToolFinishedRef.current(slug, title)
-          // Only handle the first write tool per turn
           break
         }
       }
@@ -140,6 +225,44 @@ export function AIChatPanel({
   })
 
   const isStreaming = status === "streaming" || status === "submitted"
+
+  // Restore the most recent session for this context on mount / context change
+  useEffect(() => {
+    if (sessionLoaded) return
+    let cancelled = false
+    apiFetchSessions(contextKey).then((sessions) => {
+      if (cancelled) return
+      setSessionLoaded(true)
+      if (sessions.length > 0) {
+        const latest = sessions[0]
+        currentSessionIdRef.current = latest.id
+        setMessages(latest.messages as UIMessage[])
+      }
+    })
+    return () => { cancelled = true }
+  }, [contextKey, sessionLoaded, setMessages])
+
+  // Refresh session list when history panel opens
+  useEffect(() => {
+    if (!historyOpen) return
+    setSessionsLoading(true)
+    apiFetchSessions(contextKey).then((s) => {
+      setSessions(s)
+      setSessionsLoading(false)
+    })
+  }, [historyOpen, contextKey])
+
+  // Close history dropdown on outside click
+  useEffect(() => {
+    if (!historyOpen) return
+    function handleClick(e: MouseEvent) {
+      if (historyRef2.current && !historyRef2.current.contains(e.target as Node)) {
+        setHistoryOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [historyOpen])
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -171,9 +294,47 @@ export function AIChatPanel({
     }
   }
 
+  function handleNewSession() {
+    if (messages.length > 0) {
+      // Save current before clearing — fire and forget
+      apiSaveSession(contextKey, {
+        id: currentSessionIdRef.current,
+        name: firstUserText(messages),
+        savedAt: Date.now(),
+        messages,
+      })
+    }
+    currentSessionIdRef.current = undefined
+    setMessages([])
+    setHistoryOpen(false)
+  }
+
+  function handleRestoreSession(session: Session) {
+    if (messages.length > 0) {
+      apiSaveSession(contextKey, {
+        id: currentSessionIdRef.current,
+        name: firstUserText(messages),
+        savedAt: Date.now(),
+        messages,
+      })
+    }
+    currentSessionIdRef.current = session.id
+    setMessages(session.messages)
+    setHistoryOpen(false)
+  }
+
+  function handleDeleteSession(e: React.MouseEvent, id: string) {
+    e.stopPropagation()
+    apiDeleteSession(contextKey, id)
+    setSessions((prev) => prev.filter((s) => s.id !== id))
+    if (currentSessionIdRef.current === id) {
+      currentSessionIdRef.current = undefined
+    }
+  }
+
   return (
     <>
-      {/* Model selector */}
+      {/* Toolbar: model selector + session controls */}
       <div className="ai-model-selector">
         <select
           className="ai-model-select"
@@ -187,6 +348,63 @@ export function AIChatPanel({
             </option>
           ))}
         </select>
+
+        {/* New chat button */}
+        <button
+          className="ai-session-btn"
+          onClick={handleNewSession}
+          disabled={isStreaming}
+          title="New chat"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+            <path d="M12 5v14" /><path d="M5 12h14" />
+          </svg>
+        </button>
+
+        {/* History button + dropdown */}
+        <div className="ai-session-history-wrap" ref={historyRef2}>
+          <button
+            className={`ai-session-btn${historyOpen ? " active" : ""}`}
+            onClick={() => setHistoryOpen((o) => !o)}
+            disabled={isStreaming}
+            title="Chat history"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M12 7v5l4 2" />
+            </svg>
+          </button>
+
+          {historyOpen && (
+            <div className="ai-session-dropdown">
+              <div className="ai-session-dropdown-header">Chat history</div>
+              {sessionsLoading ? (
+                <div className="ai-session-dropdown-empty">Loading…</div>
+              ) : sessions.length === 0 ? (
+                <div className="ai-session-dropdown-empty">No saved sessions yet</div>
+              ) : (
+                <ul className="ai-session-list">
+                  {sessions.map((s) => (
+                    <li key={s.id} className="ai-session-item" onClick={() => handleRestoreSession(s)}>
+                      <div className="ai-session-item-name">{s.name}</div>
+                      <div className="ai-session-item-meta">{formatRelativeTime(s.savedAt)}</div>
+                      <button
+                        className="ai-session-item-delete"
+                        onClick={(e) => handleDeleteSession(e, s.id)}
+                        title="Delete session"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+                          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
@@ -346,7 +564,6 @@ function ToolCallCard({ part }: { part: ToolPartAny }) {
     <div className={`ai-tool-card${isError ? " ai-tool-card--error" : ""}`}>
       <div className="ai-tool-card-icon">
         {isPending ? (
-          // Spinner
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" style={{ animation: "spin 1s linear infinite" }}>
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>

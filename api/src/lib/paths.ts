@@ -17,4 +17,5 @@ export const paths = {
   sprints: path.join(dataRoot, "sprints"),
   team: path.join(dataRoot, "team.md"),
   config: path.join(dataRoot, "forge.yaml"),
+  aiSessions: path.join(dataRoot, ".sessions"),
 }

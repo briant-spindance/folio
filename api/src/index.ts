@@ -11,6 +11,7 @@ import wikiRouter from "./routes/wiki.js"
 import gitRouter from "./routes/git.js"
 import searchRouter from "./routes/search.js"
 import chatRouter from "./routes/chat.js"
+import sessionsRouter from "./routes/sessions.js"
 
 // ---------------------------------------------------------------------------
 // Load .env from api/.env (simple key=value parser, no dependency needed)
@@ -42,6 +43,7 @@ app.route("/api/wiki", wikiRouter)
 app.route("/api/git", gitRouter)
 app.route("/api/search", searchRouter)
 app.route("/api/chat", chatRouter)
+app.route("/api/ai-sessions", sessionsRouter)
 
 // Catch-all 501 for unimplemented routes
 app.all("/api/*", (c) => {

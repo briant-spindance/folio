@@ -97,7 +97,14 @@ export function getWikiDoc(slug: string): WikiDoc | null {
   const filePath = path.join(paths.wiki, `${slug}.md`)
   if (!existsSync(filePath)) return null
   const { data, content } = parseFrontmatter(filePath)
-  return buildDoc(slug, data, content)
+  const doc = buildDoc(slug, data, content)
+  const gitRoot = getGitRoot(paths.wiki)
+  if (gitRoot) {
+    const dirtyFiles = getDirtyFiles(gitRoot)
+    const repoRelative = path.relative(gitRoot, filePath).split(path.sep).join("/")
+    doc.dirty = dirtyFiles.has(repoRelative)
+  }
+  return doc
 }
 
 /** Derive a URL-safe slug from a title. */
