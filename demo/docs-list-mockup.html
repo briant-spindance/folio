@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Wiki</title>
+  <title>Forge — Project Docs</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -40,6 +40,7 @@
 
       --header-height: 48px;
       --sidebar-width: 220px;
+      --sidebar-collapsed-width: 56px;
       --content-max-width: 1120px;
       --content-padding: 24px;
       --card-radius: 8px;
@@ -175,6 +176,8 @@
       flex-direction: column;
       padding: 8px 0;
       z-index: 50;
+      transition: width 200ms ease;
+      overflow: hidden;
     }
 
     .sidebar-nav { flex: 1; }
@@ -190,6 +193,7 @@
       cursor: pointer;
       transition: background 100ms, color 100ms;
       border-left: 3px solid transparent;
+      white-space: nowrap;
     }
 
     .nav-item:hover {
@@ -206,10 +210,86 @@
 
     .nav-item i { width: 18px; height: 18px; flex-shrink: 0; }
 
+    .nav-item-label { transition: opacity 200ms ease; }
+
     .sidebar-footer {
       padding: 8px 0;
       border-top: 1px solid var(--border);
     }
+
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 0.75rem;
+      color: var(--foreground-subtle);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: inherit;
+      transition: color 100ms;
+      white-space: nowrap;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-toggle:hover { color: var(--foreground-muted); background: var(--accent); }
+
+    .sidebar-toggle i {
+      width: 18px; height: 18px; flex-shrink: 0;
+      transition: transform 200ms ease;
+    }
+
+    .sidebar-toggle-label { transition: opacity 200ms ease; }
+
+    /* Collapsed state */
+    body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed-width); }
+    body.sidebar-collapsed .main { margin-left: var(--sidebar-collapsed-width); }
+
+    body.sidebar-collapsed .nav-item {
+      padding: 7px 0;
+      justify-content: center;
+      border-left-color: transparent;
+    }
+
+    body.sidebar-collapsed .nav-item.active {
+      border-left-color: var(--primary);
+      padding-left: 0;
+    }
+
+    body.sidebar-collapsed .nav-item-label { opacity: 0; width: 0; overflow: hidden; }
+
+    body.sidebar-collapsed .sidebar-toggle {
+      padding: 7px 0;
+      justify-content: center;
+    }
+
+    body.sidebar-collapsed .sidebar-toggle i { transform: rotate(180deg); }
+    body.sidebar-collapsed .sidebar-toggle-label { opacity: 0; width: 0; overflow: hidden; }
+
+    body.sidebar-collapsed .nav-item { position: relative; }
+
+    body.sidebar-collapsed .nav-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(var(--sidebar-collapsed-width) - 3px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--foreground);
+      color: var(--background);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 100ms ease;
+      z-index: 200;
+    }
+
+    body.sidebar-collapsed .nav-item:hover::after { opacity: 1; }
 
     /* ================================================================
        MAIN CONTENT
@@ -218,6 +298,7 @@
       margin-left: var(--sidebar-width);
       padding-top: var(--header-height);
       min-height: 100vh;
+      transition: margin-left 200ms ease;
     }
 
     .content {
@@ -514,40 +595,48 @@
        ============================================================ -->
   <aside class="sidebar">
     <nav class="sidebar-nav">
-      <a class="nav-item" href="dashboard-mockup.html">
+      <a class="nav-item" href="dashboard-mockup.html" data-tooltip="Dashboard">
         <i data-lucide="layout-dashboard"></i>
-        Dashboard
+        <span class="nav-item-label">Dashboard</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item active" href="docs-list-mockup.html" data-tooltip="Project Docs">
+        <i data-lucide="book-open"></i>
+        <span class="nav-item-label">Project Docs</span>
+      </a>
+      <a class="nav-item" href="features-list-mockup.html" data-tooltip="Features">
         <i data-lucide="puzzle"></i>
-        Features
+        <span class="nav-item-label">Features</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Sprints">
         <i data-lucide="timer"></i>
-        Sprints
+        <span class="nav-item-label">Sprints</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Issues">
         <i data-lucide="circle-dot"></i>
-        Issues
+        <span class="nav-item-label">Issues</span>
       </a>
-      <a class="nav-item active">
+      <a class="nav-item" data-tooltip="Wiki">
         <i data-lucide="file-text"></i>
-        Wiki
+        <span class="nav-item-label">Wiki</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Review Tools">
         <i data-lucide="clipboard-check"></i>
-        Review Tools
+        <span class="nav-item-label">Review Tools</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Configuration">
         <i data-lucide="settings"></i>
-        Configuration
+        <span class="nav-item-label">Configuration</span>
       </a>
     </nav>
     <div class="sidebar-footer">
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Light">
         <i data-lucide="sun" style="width:16px;height:16px;"></i>
-        Light
+        <span class="nav-item-label">Light</span>
       </a>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" data-tooltip="Expand">
+        <i data-lucide="panel-left-close"></i>
+        <span class="sidebar-toggle-label">Collapse</span>
+      </button>
     </div>
   </aside>
 
@@ -561,13 +650,13 @@
       <div class="breadcrumbs">
         <a href="dashboard-mockup.html">Dashboard</a>
         <span class="separator">/</span>
-        <span class="current">Wiki</span>
+        <span class="current">Project Docs</span>
       </div>
 
       <!-- Page Header -->
       <div class="page-header">
         <div>
-          <h1 class="page-title">Wiki</h1>
+          <h1 class="page-title">Project Docs</h1>
           <p class="page-desc">Shared documentation that lives alongside your code — briefs, specs, architecture decisions, and guides.</p>
         </div>
         <div class="page-header-actions">
@@ -677,6 +766,12 @@
     </div>
   </main>
 
-  <script>lucide.createIcons();</script>
+  <script>
+    lucide.createIcons();
+
+    function toggleSidebar() {
+      document.body.classList.toggle('sidebar-collapsed');
+    }
+  </script>
 </body>
 </html>

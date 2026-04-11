@@ -55,6 +55,7 @@
       /* Layout */
       --header-height: 48px;
       --sidebar-width: 220px;
+      --sidebar-collapsed-width: 56px;
       --content-max-width: 1120px;
       --content-padding: 24px;
       --card-radius: 8px;
@@ -196,6 +197,8 @@
       flex-direction: column;
       padding: 8px 0;
       z-index: 50;
+      transition: width 200ms ease;
+      overflow: hidden;
     }
 
     .sidebar-nav {
@@ -213,6 +216,7 @@
       cursor: pointer;
       transition: background 100ms, color 100ms;
       border-left: 3px solid transparent;
+      white-space: nowrap;
     }
 
     .nav-item:hover {
@@ -233,9 +237,118 @@
       flex-shrink: 0;
     }
 
+    .nav-item-label {
+      transition: opacity 200ms ease;
+    }
+
     .sidebar-footer {
       padding: 8px 0;
       border-top: 1px solid var(--border);
+    }
+
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 0.75rem;
+      color: var(--foreground-subtle);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: inherit;
+      transition: color 100ms;
+      white-space: nowrap;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-toggle:hover {
+      color: var(--foreground-muted);
+      background: var(--accent);
+    }
+
+    .sidebar-toggle i {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      transition: transform 200ms ease;
+    }
+
+    .sidebar-toggle-label {
+      transition: opacity 200ms ease;
+    }
+
+    /* ================================================================
+       COLLAPSED STATE
+       ================================================================ */
+    body.sidebar-collapsed .sidebar {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    body.sidebar-collapsed .main {
+      margin-left: var(--sidebar-collapsed-width);
+    }
+
+    body.sidebar-collapsed .nav-item {
+      padding: 7px 0;
+      justify-content: center;
+      border-left-color: transparent;
+    }
+
+    body.sidebar-collapsed .nav-item.active {
+      border-left-color: var(--primary);
+      padding-left: 0;
+    }
+
+    body.sidebar-collapsed .nav-item-label {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+
+    body.sidebar-collapsed .sidebar-toggle {
+      padding: 7px 0;
+      justify-content: center;
+    }
+
+    body.sidebar-collapsed .sidebar-toggle i {
+      transform: rotate(180deg);
+    }
+
+    body.sidebar-collapsed .sidebar-toggle-label {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+
+    /* Tooltip for collapsed nav items */
+    body.sidebar-collapsed .nav-item {
+      position: relative;
+    }
+
+    body.sidebar-collapsed .nav-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(var(--sidebar-collapsed-width) - 3px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--foreground);
+      color: var(--background);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 100ms ease;
+      z-index: 200;
+    }
+
+    body.sidebar-collapsed .nav-item:hover::after {
+      opacity: 1;
     }
 
     /* ================================================================
@@ -245,6 +358,7 @@
       margin-left: var(--sidebar-width);
       padding-top: var(--header-height);
       min-height: 100vh;
+      transition: margin-left 200ms ease;
     }
 
     .content {
@@ -547,6 +661,41 @@
     }
 
     /* ================================================================
+       WIKI TABLE — recent changes
+       ================================================================ */
+    .wiki-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .wiki-table thead th {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--foreground-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: left;
+      padding: 6px 12px 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wiki-table tbody td {
+      font-size: 0.8125rem;
+      color: var(--foreground);
+      padding: 8px 12px 8px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .wiki-table tbody tr:last-child td { border-bottom: none; }
+    .wiki-table tbody tr:hover { background: var(--accent); }
+    .wiki-table tbody tr { cursor: pointer; }
+
+    .wiki-page-name { font-weight: 500; }
+    .wiki-author { color: var(--foreground-muted); }
+    .wiki-modified { text-align: right; font-size: 0.75rem; color: var(--foreground-subtle); }
+
+    /* ================================================================
        HEALTH STRIP — compact, health-only
        ================================================================ */
     .health-strip {
@@ -780,41 +929,49 @@
        ============================================================ -->
   <aside class="sidebar">
     <nav class="sidebar-nav">
-      <a class="nav-item active">
+      <a class="nav-item active" data-tooltip="Dashboard">
         <i data-lucide="layout-dashboard"></i>
-        Dashboard
+        <span class="nav-item-label">Dashboard</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Project Docs">
+        <i data-lucide="book-open"></i>
+        <span class="nav-item-label">Project Docs</span>
+      </a>
+      <a class="nav-item" data-tooltip="Features">
         <i data-lucide="puzzle"></i>
-        Features
+        <span class="nav-item-label">Features</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Sprints">
         <i data-lucide="timer"></i>
-        Sprints
+        <span class="nav-item-label">Sprints</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Issues">
         <i data-lucide="circle-dot"></i>
-        Issues
+        <span class="nav-item-label">Issues</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Wiki">
         <i data-lucide="file-text"></i>
-        Wiki
+        <span class="nav-item-label">Wiki</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Review Tools">
         <i data-lucide="clipboard-check"></i>
-        Review Tools
+        <span class="nav-item-label">Review Tools</span>
       </a>
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Configuration">
         <i data-lucide="settings"></i>
-        Configuration
+        <span class="nav-item-label">Configuration</span>
       </a>
     </nav>
 
     <div class="sidebar-footer">
-      <a class="nav-item">
+      <a class="nav-item" data-tooltip="Light">
         <i data-lucide="sun" style="width:16px;height:16px;"></i>
-        Light
+        <span class="nav-item-label">Light</span>
       </a>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" data-tooltip="Expand">
+        <i data-lucide="panel-left-close"></i>
+        <span class="sidebar-toggle-label">Collapse</span>
+      </button>
     </div>
   </aside>
 
@@ -825,13 +982,13 @@
     <div class="content">
 
       <!-- ========================================================
-           1. WIKI — tile grid
+           1. PROJECT DOCS — tile grid
            ======================================================== -->
       <div class="card">
         <div class="card-header">
           <span class="card-title">
-            <i data-lucide="file-text"></i>
-            Wiki
+            <i data-lucide="book-open"></i>
+            Project Docs
           </span>
           <a class="card-action">
             View all
@@ -1091,7 +1248,61 @@
       </div>
 
       <!-- ========================================================
-           4. TEAM
+           4. RECENT WIKI CHANGES
+           ======================================================== -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <i data-lucide="file-text"></i>
+            Recent Wiki Changes
+          </span>
+          <a class="card-action">
+            View wiki
+            <i data-lucide="chevron-right"></i>
+          </a>
+        </div>
+
+        <table class="wiki-table">
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th>Changed by</th>
+              <th style="text-align:right;">Modified</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="wiki-page-name">Getting Started</td>
+              <td class="wiki-author">Alice</td>
+              <td class="wiki-modified">2 hours ago</td>
+            </tr>
+            <tr>
+              <td class="wiki-page-name">Deployment Guide</td>
+              <td class="wiki-author">Bob</td>
+              <td class="wiki-modified">Yesterday</td>
+            </tr>
+            <tr>
+              <td class="wiki-page-name">Troubleshooting</td>
+              <td class="wiki-author">Charlie</td>
+              <td class="wiki-modified">2 days ago</td>
+            </tr>
+            <tr>
+              <td class="wiki-page-name">Development Environment</td>
+              <td class="wiki-author">Alice</td>
+              <td class="wiki-modified">3 days ago</td>
+            </tr>
+            <tr>
+              <td class="wiki-page-name">Release Process</td>
+              <td class="wiki-author">Dana</td>
+              <td class="wiki-modified">1 week ago</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ========================================================
+           5. TEAM
+
            ======================================================== -->
       <div class="card">
         <div class="card-header">
@@ -1134,7 +1345,7 @@
       </div>
 
       <!-- ========================================================
-           5. FORGE HEALTH — expanded with individual checks
+           6. FORGE HEALTH — expanded with individual checks
            ======================================================== -->
       <div class="card">
         <div class="card-header">
@@ -1214,6 +1425,10 @@
   <!-- Initialize Lucide Icons -->
   <script>
     lucide.createIcons();
+
+    function toggleSidebar() {
+      document.body.classList.toggle('sidebar-collapsed');
+    }
   </script>
 
 </body>
