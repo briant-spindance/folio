@@ -1,5 +1,12 @@
 import { Hono } from "hono"
-import { streamText, tool, stepCountIs, convertToModelMessages } from "ai"
+import {
+  streamText,
+  tool,
+  stepCountIs,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from "ai"
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { createOpenAI } from "@ai-sdk/openai"
 import { z } from "zod"
@@ -88,22 +95,38 @@ ${context.body}
 }
 
 // ---------------------------------------------------------------------------
+// Custom data types sent to the client via the UIMessageStream
+// ---------------------------------------------------------------------------
+// "doc-preview" — fired during streaming as the AI generates the new body
+//   slug:  the doc being written
+//   body:  partial body text extracted from the streaming tool input JSON
+// "doc-write" — fired after the tool execute saves to disk
+//   slug:  the doc that was saved
+//   title: the saved doc title
+//   body:  the full, final saved body
+
+type DocStreamDataTypes = {
+  "doc-preview": { slug: string; body: string }
+  "doc-write": { slug: string; title: string; body: string }
+}
+
+// ---------------------------------------------------------------------------
 // Route: POST /api/chat
 // ---------------------------------------------------------------------------
 chatRouter.post("/", async (c) => {
-  let body: {
+  let reqBody: {
     messages: Array<Record<string, unknown>>
     context?: ChatContext | null
     model?: string
   }
 
   try {
-    body = await c.req.json()
+    reqBody = await c.req.json()
   } catch {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
 
-  const { messages: rawMessages, context = null, model = DEFAULT_MODEL } = body
+  const { messages: rawMessages, context = null, model = DEFAULT_MODEL } = reqBody
 
   if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
     return c.json({ error: "messages is required and must be a non-empty array" }, 400)
@@ -125,134 +148,252 @@ chatRouter.post("/", async (c) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const modelMessages = await convertToModelMessages(rawMessages as any[])
 
-  const result = streamText({
-    model: languageModel,
-    system: systemPrompt,
-    messages: modelMessages,
-    stopWhen: stepCountIs(5),
-    tools: {
-      // ------------------------------------------------------------------
-      // replace_document: full doc replacement
-      // ------------------------------------------------------------------
-      replace_document: tool({
-        description:
-          "Replace the entire body of a wiki document. Use this for first-time authoring or complete rewrites.",
-        inputSchema: z.object({
-          slug: z.string().describe("The slug of the wiki doc to replace (e.g. 'project-brief')."),
-          title: z.string().describe("The document title."),
-          icon: z.string().nullable().optional().describe("Optional lucide icon name (kebab-case)."),
-          body: z
-            .string()
-            .describe(
-              "The full new markdown body for the document. Do NOT include the frontmatter or a leading '# Title' line — that is managed automatically."
-            ),
-        }),
-        execute: async ({ slug, title, icon, body: newBody }: { slug: string; title: string; icon?: string | null; body: string }) => {
-          const existing = getWikiDoc(slug)
-          if (!existing) {
-            return { ok: false, error: `No wiki doc with slug '${slug}' found.` }
-          }
-          const saved = saveWikiDoc(slug, {
-            title,
-            icon: icon ?? existing.icon,
-            body: newBody,
-          })
-          return {
-            ok: true,
-            slug: saved.slug,
-            title: saved.title,
-            message: `Successfully replaced the document "${title}".`,
+  // We use createUIMessageStream so we can write custom data chunks to the
+  // stream from within tool execute functions.
+  // writerRef is set synchronously before streamText starts so it's always available.
+  let writerRef: {
+    write: (chunk: {
+      type: `data-doc-preview` | `data-doc-write`
+      data: DocStreamDataTypes["doc-preview"] | DocStreamDataTypes["doc-write"]
+    }) => void
+  } | null = null
+
+  // Track accumulated tool-input JSON per tool call id for streaming preview
+  const toolInputAccum: Record<string, { toolName: string; accumulated: string }> = {}
+
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      // Expose writer to tool execute closures
+      writerRef = writer as typeof writerRef
+
+      const result = streamText({
+        model: languageModel,
+        system: systemPrompt,
+        messages: modelMessages,
+        stopWhen: stepCountIs(5),
+
+        // Intercept tool-input-delta chunks to stream a live body preview
+        onChunk: ({ chunk }) => {
+          if (chunk.type === "tool-input-start") {
+            const writeTool = chunk.toolName === "replace_document" || chunk.toolName === "edit_section"
+            if (writeTool) {
+              toolInputAccum[chunk.id] = { toolName: chunk.toolName, accumulated: "" }
+            }
+          } else if (chunk.type === "tool-input-delta") {
+            const acc = toolInputAccum[chunk.id]
+            if (!acc) return
+            acc.accumulated += chunk.delta
+
+            // Try to extract the relevant streaming field from partial JSON:
+            // - replace_document: "body"
+            // - edit_section: "newSectionContent"
+            const fieldName = acc.toolName === "replace_document" ? "body" : "newSectionContent"
+            // Synchronous extraction: scan for the field in the raw JSON text
+            const previewBody = extractFieldFast(acc.accumulated, fieldName)
+            if (previewBody !== null && writerRef) {
+              const slugValue = extractFieldFast(acc.accumulated, "slug") ?? ""
+              writerRef.write({
+                type: "data-doc-preview",
+                data: { slug: slugValue, body: previewBody },
+              })
+            }
           }
         },
-      }),
 
-      // ------------------------------------------------------------------
-      // edit_section: targeted section edit
-      // ------------------------------------------------------------------
-      edit_section: tool({
-        description:
-          "Edit a specific section of a wiki document by heading. Replaces the content between the target heading and the next heading of the same or higher level.",
-        inputSchema: z.object({
-          slug: z.string().describe("The slug of the wiki doc to edit."),
-          heading: z
-            .string()
-            .describe(
-              "The exact heading text of the section to replace (without the leading # characters, e.g. 'Getting Started')."
-            ),
-          newSectionContent: z
-            .string()
-            .describe(
-              "The new markdown content for this section. Include the heading line itself (e.g. '## Getting Started\\n\\nNew content here...')."
-            ),
-        }),
-        execute: async ({ slug, heading, newSectionContent }: { slug: string; heading: string; newSectionContent: string }) => {
-          const doc = getWikiDoc(slug)
-          if (!doc) {
-            return { ok: false, error: `No wiki doc with slug '${slug}' found.` }
-          }
+        tools: {
+          // ------------------------------------------------------------------
+          // replace_document: full doc replacement
+          // ------------------------------------------------------------------
+          replace_document: tool({
+            description:
+              "Replace the entire body of a wiki document. Use this for first-time authoring or complete rewrites.",
+            inputSchema: z.object({
+              slug: z.string().describe("The slug of the wiki doc to replace (e.g. 'project-brief')."),
+              title: z.string().describe("The document title."),
+              icon: z.string().nullable().optional().describe("Optional lucide icon name (kebab-case)."),
+              body: z
+                .string()
+                .describe(
+                  "The full new markdown body for the document. Do NOT include the frontmatter or a leading '# Title' line — that is managed automatically."
+                ),
+            }),
+            execute: async ({ slug, title, icon, body: newBody }: { slug: string; title: string; icon?: string | null; body: string }) => {
+              const existing = getWikiDoc(slug)
+              if (!existing) {
+                return { ok: false, error: `No wiki doc with slug '${slug}' found.` }
+              }
+              const saved = saveWikiDoc(slug, {
+                title,
+                icon: icon ?? existing.icon,
+                body: newBody,
+              })
+              // Emit the final saved body so the client can update immediately
+              writerRef?.write({
+                type: "data-doc-write",
+                data: { slug: saved.slug, title: saved.title, body: saved.body },
+              })
+              return {
+                ok: true,
+                slug: saved.slug,
+                title: saved.title,
+                message: `Successfully replaced the document "${title}".`,
+              }
+            },
+          }),
 
-          const docBody = doc.body
-          const lines = docBody.split("\n")
+          // ------------------------------------------------------------------
+          // edit_section: targeted section edit
+          // ------------------------------------------------------------------
+          edit_section: tool({
+            description:
+              "Edit a specific section of a wiki document by heading. Replaces the content between the target heading and the next heading of the same or higher level.",
+            inputSchema: z.object({
+              slug: z.string().describe("The slug of the wiki doc to edit."),
+              heading: z
+                .string()
+                .describe(
+                  "The exact heading text of the section to replace (without the leading # characters, e.g. 'Getting Started')."
+                ),
+              newSectionContent: z
+                .string()
+                .describe(
+                  "The new markdown content for this section. Include the heading line itself (e.g. '## Getting Started\\n\\nNew content here...')."
+                ),
+            }),
+            execute: async ({ slug, heading, newSectionContent }: { slug: string; heading: string; newSectionContent: string }) => {
+              const doc = getWikiDoc(slug)
+              if (!doc) {
+                return { ok: false, error: `No wiki doc with slug '${slug}' found.` }
+              }
 
-          // Find the target heading line
-          const headingPattern = new RegExp(`^(#{1,6})\\s+${escapeRegex(heading)}\\s*$`)
-          let targetLineIdx = -1
-          let targetLevel = 0
-          for (let i = 0; i < lines.length; i++) {
-            const m = lines[i].match(headingPattern)
-            if (m) {
-              targetLineIdx = i
-              targetLevel = m[1].length
-              break
-            }
-          }
+              const docBody = doc.body
+              const lines = docBody.split("\n")
 
-          if (targetLineIdx === -1) {
-            return {
-              ok: false,
-              error: `Could not find a heading matching "${heading}" in "${slug}".`,
-            }
-          }
+              // Find the target heading line
+              const headingPattern = new RegExp(`^(#{1,6})\\s+${escapeRegex(heading)}\\s*$`)
+              let targetLineIdx = -1
+              let targetLevel = 0
+              for (let i = 0; i < lines.length; i++) {
+                const m = lines[i].match(headingPattern)
+                if (m) {
+                  targetLineIdx = i
+                  targetLevel = m[1].length
+                  break
+                }
+              }
 
-          // Find where the section ends (next heading of same or higher level)
-          let endLineIdx = lines.length
-          for (let i = targetLineIdx + 1; i < lines.length; i++) {
-            const m = lines[i].match(/^(#{1,6})\s/)
-            if (m && m[1].length <= targetLevel) {
-              endLineIdx = i
-              break
-            }
-          }
+              if (targetLineIdx === -1) {
+                return {
+                  ok: false,
+                  error: `Could not find a heading matching "${heading}" in "${slug}".`,
+                }
+              }
 
-          const before = lines.slice(0, targetLineIdx).join("\n")
-          const after = lines.slice(endLineIdx).join("\n")
-          const newBody =
-            (before ? before + "\n" : "") +
-            newSectionContent.trimEnd() +
-            (after ? "\n\n" + after : "")
+              // Find where the section ends (next heading of same or higher level)
+              let endLineIdx = lines.length
+              for (let i = targetLineIdx + 1; i < lines.length; i++) {
+                const m = lines[i].match(/^(#{1,6})\s/)
+                if (m && m[1].length <= targetLevel) {
+                  endLineIdx = i
+                  break
+                }
+              }
 
-          const saved = saveWikiDoc(slug, {
-            title: doc.title,
-            icon: doc.icon,
-            body: newBody,
-          })
+              const before = lines.slice(0, targetLineIdx).join("\n")
+              const after = lines.slice(endLineIdx).join("\n")
+              const newBody =
+                (before ? before + "\n" : "") +
+                newSectionContent.trimEnd() +
+                (after ? "\n\n" + after : "")
 
-          return {
-            ok: true,
-            slug: saved.slug,
-            heading,
-            message: `Successfully updated the "${heading}" section of "${doc.title}".`,
-          }
+              const saved = saveWikiDoc(slug, {
+                title: doc.title,
+                icon: doc.icon,
+                body: newBody,
+              })
+
+              // Emit the final saved body so the client can update immediately
+              writerRef?.write({
+                type: "data-doc-write",
+                data: { slug: saved.slug, title: saved.title, body: saved.body },
+              })
+
+              return {
+                ok: true,
+                slug: saved.slug,
+                heading,
+                message: `Successfully updated the "${heading}" section of "${doc.title}".`,
+              }
+            },
+          }),
         },
-      }),
+      })
+
+      // Merge the streamText output into our custom UIMessageStream
+      writer.merge(result.toUIMessageStream())
     },
   })
 
-  return result.toUIMessageStreamResponse()
+  return createUIMessageStreamResponse({ stream })
 })
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/**
+ * Fast synchronous extraction of a JSON string field value from partial JSON text.
+ * Looks for `"fieldName": "value` (where value may be incomplete) in the raw text.
+ * Returns the decoded string value extracted so far, or null if the field hasn't appeared yet.
+ */
+function extractFieldFast(partialJson: string, fieldName: string): string | null {
+  // Match: "fieldName"  :  " ... (opening of the string value)
+  const keyPattern = new RegExp(`"${fieldName}"\\s*:\\s*"`)
+  const keyMatch = keyPattern.exec(partialJson)
+  if (!keyMatch) return null
+
+  // Everything after the opening quote of the value
+  const after = partialJson.slice(keyMatch.index + keyMatch[0].length)
+
+  // Decode JSON string content, stopping at an unescaped closing quote
+  let result = ""
+  let i = 0
+  while (i < after.length) {
+    const ch = after[i]
+    if (ch === '"') break // end of string
+    if (ch === "\\") {
+      i++
+      if (i >= after.length) break
+      const escaped = after[i]
+      switch (escaped) {
+        case '"': result += '"'; break
+        case "\\": result += "\\"; break
+        case "/": result += "/"; break
+        case "n": result += "\n"; break
+        case "r": result += "\r"; break
+        case "t": result += "\t"; break
+        case "b": result += "\b"; break
+        case "f": result += "\f"; break
+        case "u": {
+          const hex = after.slice(i + 1, i + 5)
+          if (hex.length === 4) {
+            result += String.fromCharCode(parseInt(hex, 16))
+            i += 4
+          }
+          break
+        }
+        default: result += escaped
+      }
+    } else {
+      result += ch
+    }
+    i++
+  }
+  return result || null
 }
 
 export default chatRouter

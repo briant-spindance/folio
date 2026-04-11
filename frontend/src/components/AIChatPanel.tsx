@@ -31,11 +31,19 @@ export type WriteResult = {
 // on the server. slug and title come from the tool input.
 export type WriteToolFinishedCallback = (slug: string, title: string) => Promise<void>
 
+// Called for streaming doc data chunks from the server
+export type DocDataEvent =
+  | { type: "doc-preview"; slug: string; body: string }
+  | { type: "doc-write"; slug: string; title: string; body: string }
+
+export type DocDataCallback = (event: DocDataEvent) => void
+
 interface AIChatPanelProps {
   context: ChatContext
   selectedModel: string
   onModelChange: (model: string) => void
   onWriteToolFinished: WriteToolFinishedCallback
+  onDocData: DocDataCallback
   lastWrite: WriteResult | null
   onUndo: () => void
 }
@@ -60,6 +68,7 @@ export function AIChatPanel({
   selectedModel,
   onModelChange,
   onWriteToolFinished,
+  onDocData,
   lastWrite,
   onUndo,
 }: AIChatPanelProps) {
@@ -77,14 +86,25 @@ export function AIChatPanel({
     [selectedModel, context?.type === "wiki_doc" ? (context as { slug: string }).slug : "global"]
   )
 
-  // Stable ref so onFinish closure doesn't go stale
+  // Stable refs so closures don't go stale
   const onWriteToolFinishedRef = useRef(onWriteToolFinished)
   useEffect(() => { onWriteToolFinishedRef.current = onWriteToolFinished }, [onWriteToolFinished])
+  const onDocDataRef = useRef(onDocData)
+  useEffect(() => { onDocDataRef.current = onDocData }, [onDocData])
   const contextRef = useRef(context)
   useEffect(() => { contextRef.current = context }, [context])
 
   const { messages, sendMessage, stop, status } = useChat({
     transport,
+    onData: (dataPart) => {
+      // dataPart.type is "data-doc-preview" or "data-doc-write"
+      const part = dataPart as { type: string; data: Record<string, string> }
+      if (part.type === "data-doc-preview") {
+        onDocDataRef.current({ type: "doc-preview", slug: part.data.slug, body: part.data.body })
+      } else if (part.type === "data-doc-write") {
+        onDocDataRef.current({ type: "doc-write", slug: part.data.slug, title: part.data.title, body: part.data.body })
+      }
+    },
     onFinish: async ({ message }) => {
       // Server-side tools have providerExecuted=true; onToolCall never fires for them.
       // Instead we inspect the final assistant message after the turn completes.

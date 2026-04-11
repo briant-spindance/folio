@@ -1993,6 +1993,43 @@ mark.search-highlight {
   transform: translateX(0);
 }
 
+/* Drag handle on the left edge of the sidebar */
+.ai-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  /* Subtle visual affordance */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-sidebar-resizer::after {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 32px;
+  border-radius: 1px;
+  background: var(--border);
+  transition: background 150ms ease, height 150ms ease;
+}
+
+.ai-sidebar-resizer:hover::after,
+.ai-sidebar-resizer.dragging::after {
+  background: var(--accent);
+  height: 48px;
+}
+
+/* Disable text selection while resizing */
+body.ai-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
 /* ================================================================
    AI SIDEBAR HEADER
    ================================================================ */

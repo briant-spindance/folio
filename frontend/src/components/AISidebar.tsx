@@ -1,14 +1,87 @@
-import { useRef, useCallback, useReducer, useState } from "react"
+import { useRef, useCallback, useReducer, useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWikiDoc } from "@/hooks/useData"
 import { saveWikiDoc } from "@/lib/api"
-import { AIChatPanel, type ChatContext, type DocSnapshot, type WriteResult, type WriteToolFinishedCallback } from "./AIChatPanel"
+import type { WikiDocDetail } from "@/lib/types"
+import {
+  AIChatPanel,
+  type ChatContext,
+  type DocSnapshot,
+  type WriteResult,
+  type WriteToolFinishedCallback,
+  type DocDataCallback,
+} from "./AIChatPanel"
 import { DocDiffView } from "./DocDiffView"
 
 const MODEL_STORAGE_KEY = "ai-sidebar-model"
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
 const MAX_HISTORY = 10
+const SIDEBAR_WIDTH_KEY = "ai-sidebar-width"
+const MIN_WIDTH = 280
+const MAX_WIDTH = 700
+const DEFAULT_WIDTH = 380
+
+// ---------------------------------------------------------------------------
+// useSidebarResize — drag-to-resize the AI sidebar
+// ---------------------------------------------------------------------------
+function useSidebarResize(): {
+  width: number
+  resizerProps: {
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void
+  }
+  sidebarStyle: React.CSSProperties
+} {
+  const [width, setWidth] = useState<number>(() => {
+    const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY)
+    return stored ? Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Number(stored))) : DEFAULT_WIDTH
+  })
+  const draggingRef = useRef(false)
+  const resizerRef = useRef<HTMLDivElement | null>(null)
+
+  // Keep the CSS variable in sync with width so .main margin tracks it
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ai-sidebar-width", `${width}px`)
+  }, [width])
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    draggingRef.current = true
+    document.body.classList.add("ai-resizing")
+    const el = e.currentTarget
+    el.classList.add("dragging")
+    resizerRef.current = el as HTMLDivElement
+
+    const onMove = (ev: PointerEvent) => {
+      if (!draggingRef.current) return
+      // sidebar is on the right; wider = more left = smaller clientX for left edge
+      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - ev.clientX))
+      setWidth(newWidth)
+    }
+
+    const onUp = () => {
+      draggingRef.current = false
+      document.body.classList.remove("ai-resizing")
+      resizerRef.current?.classList.remove("dragging")
+      resizerRef.current = null
+      setWidth((w) => {
+        localStorage.setItem(SIDEBAR_WIDTH_KEY, String(w))
+        return w
+      })
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+    }
+
+    window.addEventListener("pointermove", onMove)
+    window.addEventListener("pointerup", onUp)
+  }, [])
+
+  return {
+    width,
+    resizerProps: { onPointerDown },
+    sidebarStyle: { width },
+  }
+}
 
 interface AISidebarProps {
   open: boolean
@@ -55,8 +128,11 @@ function DocAISidebar({
   const { data: doc } = useWikiDoc(slug)
   const qc = useQueryClient()
   const [selectedModel, setSelectedModel] = useModelState()
+  const { resizerProps, sidebarStyle } = useSidebarResize()
 
   const historyRef = useRef<DocSnapshot[]>([])
+  // Snapshot taken at the start of a write turn, before any preview patches
+  const turnSnapshotRef = useRef<DocSnapshot | null>(null)
   const [state, setState] = useState<DocSidebarState>({
     lastWrite: null,
     diffOld: null,
@@ -64,57 +140,76 @@ function DocAISidebar({
     showDiff: false,
   })
 
+  // Stable ref to current doc so callbacks always see latest value
+  const docRef = useRef(doc)
+  useEffect(() => { docRef.current = doc }, [doc])
+
   const context: ChatContext = doc
     ? { type: "wiki_doc", slug: doc.slug, title: doc.title, body: doc.body }
     : null
 
-  const handleWriteToolFinished: WriteToolFinishedCallback = useCallback(
-    async (writeSlug: string, writeTitle: string) => {
-      if (!doc) return
+  // Called for each doc-preview or doc-write data chunk from the server
+  const handleDocData: DocDataCallback = useCallback((event) => {
+    const currentDoc = docRef.current
+    if (!currentDoc) return
 
-      // Snapshot taken BEFORE fetching fresh data (current in-memory value)
-      const snapshot: DocSnapshot = {
-        slug: doc.slug,
-        title: doc.title,
-        body: doc.body,
-        icon: doc.icon ?? null,
+    if (event.type === "doc-preview" && event.slug === currentDoc.slug && event.body) {
+      // Take a snapshot of the pre-write state exactly once per turn
+      if (!turnSnapshotRef.current) {
+        turnSnapshotRef.current = {
+          slug: currentDoc.slug,
+          title: currentDoc.title,
+          body: currentDoc.body,
+          icon: currentDoc.icon ?? null,
+        }
       }
+      // Optimistically patch the cache with the streaming partial body
+      qc.setQueryData<WikiDocDetail>(["wiki", currentDoc.slug], (old) =>
+        old ? { ...old, body: event.body } : old
+      )
+    } else if (event.type === "doc-write" && event.slug === currentDoc.slug) {
+      // Patch cache with the final saved body (no network round-trip)
+      qc.setQueryData<WikiDocDetail>(["wiki", currentDoc.slug], (old) =>
+        old ? { ...old, title: event.title, body: event.body } : old
+      )
+
+      // Capture snapshot for undo (may have been set by doc-preview already)
+      const snapshot: DocSnapshot = turnSnapshotRef.current ?? {
+        slug: currentDoc.slug,
+        title: currentDoc.title,
+        body: currentDoc.body,
+        icon: currentDoc.icon ?? null,
+      }
+      turnSnapshotRef.current = null // reset for next turn
 
       if (historyRef.current.length >= MAX_HISTORY) {
         historyRef.current.shift()
       }
       historyRef.current.push(snapshot)
 
-      // fetchQuery forces a fresh network fetch and updates the cache,
-      // so the page re-renders AND we get the actual new body for the diff.
-      let newBody = ""
-      try {
-        const fresh = await qc.fetchQuery<{ body: string }>({
-          queryKey: ["wiki", writeSlug],
-          queryFn: () => import("@/lib/api").then((m) => m.fetchWikiDoc(writeSlug)),
-          staleTime: 0,
-        })
-        newBody = fresh?.body ?? ""
-      } catch {
-        // If the fetch fails, still show the undo banner (diff will be empty)
-      }
-
-      // Also invalidate the wiki list so the sidebar/nav refreshes
-      await qc.invalidateQueries({ queryKey: ["wiki"] })
-
       setState({
         lastWrite: {
           ok: true,
-          slug: writeSlug,
-          title: writeTitle,
+          slug: event.slug,
+          title: event.title,
           previousSnapshot: snapshot,
         },
         diffOld: snapshot.body,
-        diffNew: newBody,
+        diffNew: event.body,
         showDiff: true,
       })
+    }
+  }, [qc])
+
+  // Called after the full turn finishes — just refresh the wiki list for nav
+  const handleWriteToolFinished: WriteToolFinishedCallback = useCallback(
+    async (_writeSlug: string, _writeTitle: string) => {
+      // Cache is already patched by doc-write data chunk; just refresh the list
+      await qc.invalidateQueries({ queryKey: ["wiki"] })
+      // Reset the turn snapshot in case doc-write never fired (e.g. tool error)
+      turnSnapshotRef.current = null
     },
-    [doc, qc]
+    [qc]
   )
 
   const handleUndo = useCallback(async () => {
@@ -126,7 +221,10 @@ function DocAISidebar({
         icon: snap.icon,
         body: snap.body,
       })
-      await qc.invalidateQueries({ queryKey: ["wiki", snap.slug] })
+      // Patch cache immediately with undo content
+      qc.setQueryData<WikiDocDetail>(["wiki", snap.slug], (old) =>
+        old ? { ...old, title: snap.title, body: snap.body } : old
+      )
       await qc.invalidateQueries({ queryKey: ["wiki"] })
     } catch (err) {
       console.error("Undo failed:", err)
@@ -135,7 +233,8 @@ function DocAISidebar({
   }, [qc])
 
   return (
-    <aside className={`ai-sidebar${open ? " open" : ""}`}>
+    <aside className={`ai-sidebar${open ? " open" : ""}`} style={sidebarStyle}>
+      <div className="ai-sidebar-resizer" {...resizerProps} />
       {/* Header */}
       <div className="ai-sidebar-header">
         <div className="ai-sidebar-header-left">
@@ -165,6 +264,7 @@ function DocAISidebar({
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         onWriteToolFinished={handleWriteToolFinished}
+        onDocData={handleDocData}
         lastWrite={state.lastWrite}
         onUndo={handleUndo}
       />
@@ -186,9 +286,11 @@ function DocAISidebar({
 // ---------------------------------------------------------------------------
 function GenericAISidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [selectedModel, setSelectedModel] = useModelState()
+  const { resizerProps, sidebarStyle } = useSidebarResize()
 
   return (
-    <aside className={`ai-sidebar${open ? " open" : ""}`}>
+    <aside className={`ai-sidebar${open ? " open" : ""}`} style={sidebarStyle}>
+      <div className="ai-sidebar-resizer" {...resizerProps} />
       <div className="ai-sidebar-header">
         <div className="ai-sidebar-header-left">
           <span className="ai-sidebar-title">AI</span>
@@ -207,6 +309,7 @@ function GenericAISidebar({ open, onClose }: { open: boolean; onClose: () => voi
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         onWriteToolFinished={async () => {}}
+        onDocData={() => {}}
         lastWrite={null}
         onUndo={() => {}}
       />
