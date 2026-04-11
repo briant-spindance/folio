@@ -7,6 +7,7 @@ import statusRouter from "./routes/status.js"
 import featuresRouter from "./routes/features.js"
 import wikiRouter from "./routes/wiki.js"
 import gitRouter from "./routes/git.js"
+import searchRouter from "./routes/search.js"
 
 const app = new Hono()
 
@@ -17,6 +18,7 @@ app.route("/api/status", statusRouter)
 app.route("/api/features", featuresRouter)
 app.route("/api/wiki", wikiRouter)
 app.route("/api/git", gitRouter)
+app.route("/api/search", searchRouter)
 
 // Catch-all 501 for unimplemented routes
 app.all("/api/*", (c) => {

@@ -1,3 +1,5 @@
+import { SearchBar } from "./SearchBar"
+
 interface HeaderProps {
   projectName: string
   branch?: string
@@ -28,6 +30,10 @@ export function Header({ projectName, branch, commit, dirty }: HeaderProps) {
         </svg>
         <div className="header-brand-divider" />
         <span className="header-project-name">{projectName}</span>
+      </div>
+
+      <div className="top-header-center">
+        <SearchBar />
       </div>
 
       <div className="top-header-right">

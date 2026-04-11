@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -47,4 +47,10 @@ export function createWikiDoc(payload: SaveDocPayload): Promise<WikiDocDetail> {
 
 export function deleteWikiDoc(slug: string): Promise<{ ok: boolean; slug: string }> {
   return apiMutate(`/api/wiki/${slug}`, "DELETE")
+}
+
+export function fetchSearch(q: string, type?: string): Promise<SearchResponse> {
+  const params = new URLSearchParams({ q })
+  if (type) params.set("type", type)
+  return apiFetch<SearchResponse>(`/api/search?${params.toString()}`)
 }

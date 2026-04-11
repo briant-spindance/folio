@@ -8,8 +8,9 @@ import {
   saveWikiDoc as apiSaveWikiDoc,
   createWikiDoc as apiCreateWikiDoc,
   deleteWikiDoc as apiDeleteWikiDoc,
+  fetchSearch,
 } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus } from "@/lib/types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -81,5 +82,14 @@ export function useDeleteWikiDoc() {
       qc.invalidateQueries({ queryKey: ["status"] })
       navigate("/docs")
     },
+  })
+}
+
+export function useSearch(query: string) {
+  return useQuery<SearchResponse>({
+    queryKey: ["search", query],
+    queryFn: () => fetchSearch(query),
+    enabled: query.length >= 2,
+    staleTime: 10_000,
   })
 }

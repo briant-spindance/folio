@@ -55,6 +55,21 @@ export interface TeamMember {
   initials: string
 }
 
+export interface SearchResult {
+  type: "wiki" | "feature" | "issue"
+  slug: string
+  title: string
+  snippet: string
+  status?: string
+  assignee?: string
+}
+
+export interface SearchResponse {
+  query: string
+  total: number
+  results: SearchResult[]
+}
+
 export type HealthLevel = "pass" | "warn" | "fail"
 
 export interface HealthCheck {

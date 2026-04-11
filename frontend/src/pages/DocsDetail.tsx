@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useParams, useSearchParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useWikiDoc, useDeleteWikiDoc } from "@/hooks/useData"
@@ -45,6 +45,80 @@ function formatUpdatedAt(dateStr?: string | null): string {
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return dateStr
   return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+}
+
+// ── Highlight helpers ─────────────────────────────────────────────
+
+/**
+ * Walk text nodes inside `root`, wrapping every case-insensitive match of
+ * `query` in a <mark class="search-highlight"> element.
+ * Returns the number of marks inserted.
+ */
+function applyHighlights(root: HTMLElement, query: string): number {
+  if (!query) return 0
+
+  const lq = query.toLowerCase()
+  let count = 0
+
+  // Collect all text nodes first (can't mutate while iterating)
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      // Skip content inside existing marks and script/style/code blocks
+      const parent = node.parentElement
+      if (!parent) return NodeFilter.FILTER_REJECT
+      const tag = parent.tagName.toLowerCase()
+      if (tag === "mark" || tag === "script" || tag === "style" || tag === "code" || tag === "pre") {
+        return NodeFilter.FILTER_REJECT
+      }
+      return NodeFilter.FILTER_ACCEPT
+    },
+  })
+
+  const textNodes: Text[] = []
+  let n: Node | null
+  while ((n = walker.nextNode())) textNodes.push(n as Text)
+
+  for (const textNode of textNodes) {
+    const text = textNode.nodeValue ?? ""
+    const lower = text.toLowerCase()
+    let idx = lower.indexOf(lq)
+    if (idx === -1) continue
+
+    const frag = document.createDocumentFragment()
+    let last = 0
+
+    while (idx !== -1) {
+      if (idx > last) {
+        frag.appendChild(document.createTextNode(text.slice(last, idx)))
+      }
+      const mark = document.createElement("mark")
+      mark.className = "search-highlight"
+      mark.textContent = text.slice(idx, idx + query.length)
+      frag.appendChild(mark)
+      count++
+      last = idx + query.length
+      idx = lower.indexOf(lq, last)
+    }
+
+    if (last < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(last)))
+    }
+
+    textNode.parentNode?.replaceChild(frag, textNode)
+  }
+
+  return count
+}
+
+/** Remove all <mark class="search-highlight"> elements, restoring text nodes. */
+function removeHighlights(root: HTMLElement) {
+  const marks = root.querySelectorAll("mark.search-highlight")
+  for (const mark of marks) {
+    const parent = mark.parentNode
+    if (!parent) continue
+    parent.replaceChild(document.createTextNode(mark.textContent ?? ""), mark)
+    parent.normalize()
+  }
 }
 
 // ── TOC with active heading tracking ─────────────────────────────
@@ -114,9 +188,32 @@ function headingRenderer(depth: 2 | 3 | 4) {
 
 export function DocsDetail() {
   const { slug } = useParams<{ slug: string }>()
+  const [searchParams] = useSearchParams()
   const { data: doc, isLoading, error } = useWikiDoc(slug ?? "")
   const { mutate: deleteDoc, isPending: isDeleting } = useDeleteWikiDoc()
   const contentRef = useRef<HTMLDivElement>(null)
+
+  const searchQuery = searchParams.get("q") ?? ""
+
+  // Apply / remove highlights whenever the query or rendered content changes.
+  // We run after paint so the markdown has been committed to the DOM.
+  useEffect(() => {
+    const root = contentRef.current
+    if (!root) return
+
+    // Always clear previous marks first
+    removeHighlights(root)
+
+    if (!searchQuery) return
+
+    applyHighlights(root, searchQuery)
+
+    // Scroll the first match into view
+    const first = root.querySelector("mark.search-highlight")
+    if (first) {
+      first.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [searchQuery, doc])
 
   if (isLoading) {
     return <div style={{ color: "var(--foreground-muted)", padding: "40px", textAlign: "center" }}>Loading…</div>
