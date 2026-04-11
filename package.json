@@ -1,0 +1,13 @@
+{
+  "name": "forge",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names api,frontend --prefix-colors cyan,magenta \"pnpm --filter api dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter frontend build",
+    "api": "pnpm --filter api dev",
+    "frontend": "pnpm --filter frontend dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

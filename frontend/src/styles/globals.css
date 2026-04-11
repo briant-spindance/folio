@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+
+  /* Surfaces */
+  --color-background: hsl(0 0% 100%);
+  --color-surface: hsl(220 14% 96%);
+  --color-surface-raised: hsl(0 0% 100%);
+  --color-surface-inset: hsl(220 14% 93%);
+
+  /* Borders */
+  --color-border: hsl(220 13% 91%);
+  --color-border-strong: hsl(220 9% 80%);
+
+  /* Text */
+  --color-foreground: hsl(220 14% 10%);
+  --color-foreground-muted: hsl(220 8% 46%);
+  --color-foreground-subtle: hsl(220 8% 65%);
+
+  /* Interactive */
+  --color-primary: hsl(221 83% 53%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-primary-hover: hsl(221 83% 47%);
+  --color-accent: hsl(220 14% 96%);
+  --color-accent-foreground: hsl(220 14% 10%);
+
+  /* Status */
+  --color-status-success: hsl(142 71% 45%);
+  --color-status-warning: hsl(38 92% 50%);
+  --color-status-error: hsl(0 84% 60%);
+
+  /* Workflow States */
+  --color-state-draft: hsl(220 8% 65%);
+  --color-state-ready: hsl(199 89% 48%);
+  --color-state-in-progress: hsl(38 92% 50%);
+  --color-state-review: hsl(271 76% 53%);
+  --color-state-done: hsl(142 71% 45%);
+
+  /* shadcn/ui OKLCH palette (zinc base) */
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(220 14% 10%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(220 14% 10%);
+  --color-secondary: hsl(220 14% 96%);
+  --color-secondary-foreground: hsl(220 14% 10%);
+  --color-muted: hsl(220 14% 96%);
+  --color-muted-foreground: hsl(220 8% 46%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-input: hsl(220 13% 91%);
+  --color-ring: hsl(221 83% 53%);
+
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+/* ================================================================
+   CSS CUSTOM PROPERTIES (referenced in components as var(--...))
+   ================================================================ */
+:root {
+  --background: hsl(0 0% 100%);
+  --surface: hsl(220 14% 96%);
+  --surface-raised: hsl(0 0% 100%);
+  --surface-inset: hsl(220 14% 93%);
+
+  --border: hsl(220 13% 91%);
+  --border-strong: hsl(220 9% 80%);
+
+  --foreground: hsl(220 14% 10%);
+  --foreground-muted: hsl(220 8% 46%);
+  --foreground-subtle: hsl(220 8% 65%);
+
+  --primary: hsl(221 83% 53%);
+  --primary-foreground: hsl(0 0% 100%);
+  --primary-hover: hsl(221 83% 47%);
+
+  --status-success: hsl(142 71% 45%);
+  --status-warning: hsl(38 92% 50%);
+  --status-error: hsl(0 84% 60%);
+
+  --state-draft: hsl(220 8% 65%);
+  --state-ready: hsl(199 89% 48%);
+  --state-in-progress: hsl(38 92% 50%);
+  --state-review: hsl(271 76% 53%);
+  --state-done: hsl(142 71% 45%);
+
+  --header-height: 48px;
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 56px;
+  --card-radius: 8px;
+  --badge-radius: 9999px;
+}
+
+/* ================================================================
+   RESET & BASE
+   ================================================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--foreground);
+  background: var(--background);
+}

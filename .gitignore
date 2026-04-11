@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.local
+*.local
+
+# pnpm
+.pnpm-store/
+
+# build outputs
+frontend/dist/
+api/dist/
+
+# editor
+.DS_Store
+*.swp
