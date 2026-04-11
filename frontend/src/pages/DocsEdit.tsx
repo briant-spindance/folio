@@ -49,6 +49,7 @@ export function DocsEdit() {
         initialBody={bodyForEditor}
         onSave={handleSave}
         isSaving={isPending}
+        viewHref={`/docs/${slug}`}
       />
     </>
   )

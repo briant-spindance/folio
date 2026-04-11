@@ -12,6 +12,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Link } from "react-router-dom"
 import { useEditor, useEditorState, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
@@ -267,6 +268,8 @@ interface DocEditorProps {
   onSave: (payload: SaveDocPayload) => void
   isSaving: boolean
   isNew?: boolean
+  /** If provided, a "View" link is shown next to the Save button */
+  viewHref?: string
 }
 
 export function DocEditor({
@@ -276,6 +279,7 @@ export function DocEditor({
   onSave,
   isSaving,
   isNew = false,
+  viewHref,
 }: DocEditorProps) {
   const [title, setTitle] = useState(initialTitle)
   const [icon, setIcon] = useState<string | null>(initialIcon)
@@ -322,9 +326,10 @@ export function DocEditor({
 
   const triggerSave = useCallback(() => {
     if (!editor) return
+    const mdStorage = editor.storage.markdown as { getMarkdown?: () => string } | undefined
     const body = mode === "raw"
       ? rawValue
-      : (editor.storage.markdown?.getMarkdown?.() ?? editor.getText())
+      : (mdStorage?.getMarkdown?.() ?? editor.getText())
     onSave({ title, icon, body })
     setLastSavedAt(new Date())
     setUnsaved(false)
@@ -334,8 +339,8 @@ export function DocEditor({
   const switchMode = useCallback((next: EditorMode) => {
     if (next === mode) return
     if (next === "raw") {
-      // Pull current Markdown out of Tiptap
-      const md = editor?.storage.markdown?.getMarkdown?.() ?? editor?.getText() ?? ""
+      const mdStorage = editor?.storage.markdown as { getMarkdown?: () => string } | undefined
+      const md = mdStorage?.getMarkdown?.() ?? editor?.getText() ?? ""
       setRawValue(md)
     } else {
       // Push raw Markdown back into Tiptap
@@ -471,6 +476,19 @@ export function DocEditor({
           <span className="doc-editor-save-meta">{formatLastSaved(lastSavedAt)}</span>
         )}
         {unsaved && <span className="doc-editor-unsaved-dot" title="Unsaved changes" />}
+        {viewHref && (
+          <Link
+            to={viewHref}
+            className="doc-editor-view-btn"
+            title="View document"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            View
+          </Link>
+        )}
         <button
           type="button"
           className="doc-editor-save-btn"

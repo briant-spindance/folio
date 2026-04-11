@@ -1,3 +1,5 @@
+import { readFileSync, existsSync } from "node:fs"
+import { resolve } from "node:path"
 import { serve } from "@hono/node-server"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
@@ -8,6 +10,26 @@ import featuresRouter from "./routes/features.js"
 import wikiRouter from "./routes/wiki.js"
 import gitRouter from "./routes/git.js"
 import searchRouter from "./routes/search.js"
+import chatRouter from "./routes/chat.js"
+
+// ---------------------------------------------------------------------------
+// Load .env from api/.env (simple key=value parser, no dependency needed)
+// ---------------------------------------------------------------------------
+const envPath = resolve(process.cwd(), ".env")
+if (existsSync(envPath)) {
+  const lines = readFileSync(envPath, "utf-8").split("\n")
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith("#")) continue
+    const eqIdx = trimmed.indexOf("=")
+    if (eqIdx === -1) continue
+    const key = trimmed.slice(0, eqIdx).trim()
+    const val = trimmed.slice(eqIdx + 1).trim()
+    if (key && val && !process.env[key]) {
+      process.env[key] = val
+    }
+  }
+}
 
 const app = new Hono()
 
@@ -19,6 +41,7 @@ app.route("/api/features", featuresRouter)
 app.route("/api/wiki", wikiRouter)
 app.route("/api/git", gitRouter)
 app.route("/api/search", searchRouter)
+app.route("/api/chat", chatRouter)
 
 // Catch-all 501 for unimplemented routes
 app.all("/api/*", (c) => {

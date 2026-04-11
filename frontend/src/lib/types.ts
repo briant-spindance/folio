@@ -1,3 +1,5 @@
+export type FeatureStatus = "draft" | "ready" | "in-progress" | "review" | "done"
+
 export interface GitStatus {
   branch: string | null
   commit: string | null

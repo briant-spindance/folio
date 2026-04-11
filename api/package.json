@@ -8,9 +8,13 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.69",
+    "@ai-sdk/openai": "^3.0.52",
     "@hono/node-server": "^1.13.7",
+    "ai": "^6.0.158",
     "gray-matter": "^4.0.3",
-    "hono": "^4.7.7"
+    "hono": "^4.7.7",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

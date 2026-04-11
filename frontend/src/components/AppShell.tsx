@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react"
 import { Header } from "./Header"
 import { Sidebar } from "./Sidebar"
+import { AISidebar } from "./AISidebar"
 import { useGitStatus } from "@/hooks/useData"
 
 const STORAGE_KEY = "sidebar-collapsed"
+const AI_STORAGE_KEY = "ai-sidebar-open"
 
 interface AppShellProps {
   children: ReactNode
@@ -13,6 +15,9 @@ interface AppShellProps {
 export function AppShell({ children, projectName = "forge-project" }: AppShellProps) {
   const [collapsed, setCollapsed] = useState<boolean>(
     () => localStorage.getItem(STORAGE_KEY) === "true"
+  )
+  const [aiOpen, setAiOpen] = useState<boolean>(
+    () => localStorage.getItem(AI_STORAGE_KEY) === "true"
   )
 
   const { data: git } = useGitStatus()
@@ -25,18 +30,36 @@ export function AppShell({ children, projectName = "forge-project" }: AppShellPr
     })
   }
 
+  function handleAiToggle() {
+    setAiOpen((o) => {
+      const next = !o
+      localStorage.setItem(AI_STORAGE_KEY, String(next))
+      return next
+    })
+  }
+
+  const rootClass = [
+    collapsed ? "sidebar-collapsed" : "",
+    aiOpen ? "ai-sidebar-open" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
   return (
-    <div className={collapsed ? "sidebar-collapsed" : ""}>
+    <div className={rootClass || undefined}>
       <Header
         projectName={projectName}
         branch={git?.branch ?? undefined}
         commit={git?.commit ?? undefined}
         dirty={git?.dirty ?? false}
+        aiOpen={aiOpen}
+        onAiToggle={handleAiToggle}
       />
       <Sidebar collapsed={collapsed} onToggle={handleToggle} />
       <main className="main">
         <div className="content">{children}</div>
       </main>
+      <AISidebar open={aiOpen} onClose={handleAiToggle} />
     </div>
   )
 }
