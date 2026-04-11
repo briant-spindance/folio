@@ -1,4 +1,4 @@
-import { readdirSync, existsSync } from "node:fs"
+import { readdirSync, existsSync, writeFileSync, unlinkSync } from "node:fs"
 import path from "node:path"
 import { parseFrontmatter } from "../lib/frontmatter.js"
 import { paths } from "../lib/paths.js"
@@ -9,6 +9,12 @@ export interface WikiDoc {
   description: string | null
   icon: string | null
   updatedAt: string | null
+  body: string
+}
+
+export interface SaveWikiDocInput {
+  title: string
+  icon: string | null
   body: string
 }
 
@@ -24,15 +30,12 @@ function getExcerpt(body: string): string | null {
 
   for (const line of lines) {
     const trimmed = line.trim()
-    // Track fenced code blocks and skip their contents entirely
     if (trimmed.startsWith("```") || trimmed.startsWith("~~~")) {
       inFence = !inFence
       continue
     }
     if (inFence) continue
-    // Stop at a blank line once we've started collecting
     if (paragraphLines.length > 0 && trimmed === "") break
-    // Skip headings, HTML, blank lines at the start
     if (trimmed === "" || trimmed.startsWith("#") || trimmed.startsWith("<")) continue
     paragraphLines.push(trimmed)
   }
@@ -40,16 +43,15 @@ function getExcerpt(body: string): string | null {
   if (paragraphLines.length === 0) return null
 
   const raw = paragraphLines.join(" ")
-  // Strip inline Markdown: bold, italic, code, links, images
   const plain = raw
-    .replace(/!\[.*?\]\(.*?\)/g, "")        // images
-    .replace(/\[([^\]]+)\]\(.*?\)/g, "$1")  // links → text
-    .replace(/`([^`]+)`/g, "$1")            // inline code
-    .replace(/\*\*([^*]+)\*\*/g, "$1")      // bold
-    .replace(/\*([^*]+)\*/g, "$1")          // italic
-    .replace(/__([^_]+)__/g, "$1")          // bold alt
-    .replace(/_([^_]+)_/g, "$1")            // italic alt
-    .replace(/~~([^~]+)~~/g, "$1")          // strikethrough
+    .replace(/!\[.*?\]\(.*?\)/g, "")
+    .replace(/\[([^\]]+)\]\(.*?\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/~~([^~]+)~~/g, "$1")
     .trim()
 
   if (plain.length <= 160) return plain
@@ -86,4 +88,47 @@ export function getWikiDoc(slug: string): WikiDoc | null {
   if (!existsSync(filePath)) return null
   const { data, content } = parseFrontmatter(filePath)
   return buildDoc(slug, data, content)
+}
+
+/** Derive a URL-safe slug from a title. */
+export function slugifyTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "untitled"
+}
+
+/** Find a unique slug, appending -2, -3, … if already taken. */
+export function uniqueSlug(base: string, excludeSlug?: string): string {
+  const taken = existsSync(paths.wiki)
+    ? readdirSync(paths.wiki)
+        .filter((f) => f.endsWith(".md"))
+        .map((f) => f.replace(/\.md$/, ""))
+        .filter((s) => s !== excludeSlug)
+    : []
+
+  if (!taken.includes(base)) return base
+  let n = 2
+  while (taken.includes(`${base}-${n}`)) n++
+  return `${base}-${n}`
+}
+
+/** Write (create or overwrite) a wiki doc. Sets `modified` to today. */
+export function saveWikiDoc(slug: string, input: SaveWikiDocInput): WikiDoc {
+  const today = new Date().toISOString().slice(0, 10)
+  const icon = input.icon ? `\nicon: ${input.icon}` : ""
+  const fileContent = `---\ntitle: ${input.title}\nmodified: "${today}"${icon}\n---\n\n${input.body.trimStart()}\n`
+  writeFileSync(path.join(paths.wiki, `${slug}.md`), fileContent, "utf-8")
+  return buildDoc(slug, { title: input.title, modified: today, icon: input.icon ?? undefined }, input.body)
+}
+
+/** Delete a wiki doc. Returns false if it didn't exist. */
+export function deleteWikiDoc(slug: string): boolean {
+  const filePath = path.join(paths.wiki, `${slug}.md`)
+  if (!existsSync(filePath)) return false
+  unlinkSync(filePath)
+  return true
 }

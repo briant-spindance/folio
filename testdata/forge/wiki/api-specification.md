@@ -1,12 +1,10 @@
 ---
-title: API Specification
-modified: "2026-04-09"
+title: API Specification 2
+modified: "2026-04-11"
 icon: plug
 ---
 
-# API Specification
-
-The Forge API is a JSON REST API served at `/api` by the Go binary.
+The Forge API is a JSON REST API served at /api by the Go binary.
 
 ## Base URL
 
@@ -18,6 +16,8 @@ http://localhost:8080/api
 
 No authentication for local development. Production deployments may add bearer token support.
 
+Some more content here.
+
 ## Features
 
 ### List Features
@@ -28,7 +28,12 @@ GET /api/features
 
 Returns all features sorted by backlog priority.
 
+```
+GET /api/seomthing else
+```
+
 **Response**
+
 ```json
 {
   "features": [

@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { listWikiDocs, getWikiDoc } from "../store/wiki.js"
+import { listWikiDocs, getWikiDoc, saveWikiDoc, deleteWikiDoc, slugifyTitle, uniqueSlug } from "../store/wiki.js"
 
 const router = new Hono()
 
@@ -17,6 +17,52 @@ router.get("/:slug", (c) => {
     return c.json({ error: "Document not found", slug }, 404)
   }
   return c.json(doc)
+})
+
+// PUT /api/wiki/:slug — create or update
+router.put("/:slug", async (c) => {
+  const slug = c.req.param("slug")
+  const body = await c.req.json<{ title?: string; icon?: string | null; body?: string }>()
+
+  if (!body.title || typeof body.title !== "string") {
+    return c.json({ error: "title is required" }, 400)
+  }
+
+  const doc = saveWikiDoc(slug, {
+    title: body.title,
+    icon: body.icon ?? null,
+    body: body.body ?? "",
+  })
+  return c.json(doc)
+})
+
+// POST /api/wiki — create new with auto-generated slug
+router.post("/", async (c) => {
+  const body = await c.req.json<{ title?: string; icon?: string | null; body?: string }>()
+
+  if (!body.title || typeof body.title !== "string") {
+    return c.json({ error: "title is required" }, 400)
+  }
+
+  const baseSlug = slugifyTitle(body.title)
+  const slug = uniqueSlug(baseSlug)
+
+  const doc = saveWikiDoc(slug, {
+    title: body.title,
+    icon: body.icon ?? null,
+    body: body.body ?? "",
+  })
+  return c.json({ ...doc, slug }, 201)
+})
+
+// DELETE /api/wiki/:slug
+router.delete("/:slug", (c) => {
+  const slug = c.req.param("slug")
+  const deleted = deleteWikiDoc(slug)
+  if (!deleted) {
+    return c.json({ error: "Document not found", slug }, 404)
+  }
+  return c.json({ ok: true, slug })
 })
 
 export default router

@@ -3,7 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AppShell } from "@/components/AppShell"
 import { Dashboard } from "@/pages/Dashboard"
 import { DocsList } from "@/pages/DocsList"
+import { DocsNew } from "@/pages/DocsNew"
 import { DocsDetail } from "@/pages/DocsDetail"
+import { DocsEdit } from "@/pages/DocsEdit"
 import { StubPage } from "@/pages/StubPage"
 
 const queryClient = new QueryClient()
@@ -16,6 +18,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/docs" element={<DocsList />} />
+            <Route path="/docs/new" element={<DocsNew />} />
+            <Route path="/docs/:slug/edit" element={<DocsEdit />} />
             <Route path="/docs/:slug" element={<DocsDetail />} />
             <Route path="/features" element={<StubPage title="Features" />} />
             <Route path="/sprints" element={<StubPage title="Sprints" />} />

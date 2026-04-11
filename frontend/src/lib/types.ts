@@ -1,4 +1,10 @@
-export type FeatureStatus = "draft" | "ready" | "in-progress" | "review" | "done"
+export interface SaveDocPayload {
+  title: string
+  icon: string | null
+  body: string
+}
+
+
 export type IssuePriority = "critical" | "high" | "medium" | "low"
 
 export interface DocSummary {

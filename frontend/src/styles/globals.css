@@ -274,6 +274,55 @@ body {
   display: none;
 }
 
+/* Tooltips — only visible when sidebar is collapsed */
+.sidebar-collapsed .nav-item[data-tooltip],
+.sidebar-collapsed .sidebar-toggle[data-tooltip] {
+  position: relative;
+}
+
+.sidebar-collapsed .nav-item[data-tooltip]::after,
+.sidebar-collapsed .sidebar-toggle[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 200;
+}
+
+/* Small arrow pointing left */
+.sidebar-collapsed .nav-item[data-tooltip]::before,
+.sidebar-collapsed .sidebar-toggle[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 4px solid transparent;
+  border-right-color: var(--foreground);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 200;
+}
+
+.sidebar-collapsed .nav-item[data-tooltip]:hover::after,
+.sidebar-collapsed .nav-item[data-tooltip]:hover::before,
+.sidebar-collapsed .sidebar-toggle[data-tooltip]:hover::after,
+.sidebar-collapsed .sidebar-toggle[data-tooltip]:hover::before {
+  opacity: 1;
+}
+
 /* ================================================================
    MAIN CONTENT — copied verbatim from dashboard-mockup.html
    ================================================================ */
@@ -1088,4 +1137,408 @@ body {
 .docs-prose-body a:hover {
   color: var(--primary-hover);
   text-decoration: underline;
+}
+
+/* ================================================================
+   DOCS EDITOR
+   ================================================================ */
+
+/* Full-page layout: meta bar + sticky toolbar + body */
+.doc-editor-layout {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+}
+
+/* ── Meta bar (title + icon) ── */
+.doc-editor-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.doc-editor-title-input {
+  flex: 1;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.doc-editor-title-input::placeholder {
+  color: var(--foreground-subtle);
+  font-weight: 400;
+}
+
+.doc-editor-icon-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--foreground-muted);
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 100ms, background 100ms;
+}
+
+.doc-editor-icon-select:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-inset);
+}
+
+.doc-editor-icon-select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* ── Toolbar (sticky) — formatting controls + save on right ── */
+.doc-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-wrap: wrap;
+  position: sticky;
+  top: var(--header-height);
+  z-index: 40;
+  /* Re-apply border-radius only on top corners when not stuck,
+     but visually it merges cleanly since the card sits below the header */
+}
+
+.doc-editor-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--foreground-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  transition: background 100ms, color 100ms;
+}
+
+.doc-editor-toolbar-btn:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.doc-editor-toolbar-btn.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.doc-editor-toolbar-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.doc-editor-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── Editor body (ProseMirror container) ── */
+.doc-editor-body {
+  flex: 1;
+  padding: 24px 32px;
+  min-height: 60vh;
+}
+
+.doc-editor-body .ProseMirror {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--foreground);
+  outline: none;
+  min-height: 280px;
+}
+
+.doc-editor-body .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--foreground-subtle);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.doc-editor-body .ProseMirror h1,
+.doc-editor-body .ProseMirror h2,
+.doc-editor-body .ProseMirror h3,
+.doc-editor-body .ProseMirror h4 {
+  font-weight: 600;
+  color: var(--foreground);
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+.doc-editor-body .ProseMirror h1:first-child,
+.doc-editor-body .ProseMirror h2:first-child,
+.doc-editor-body .ProseMirror h3:first-child {
+  margin-top: 0;
+}
+
+.doc-editor-body .ProseMirror h1 { font-size: 1.25rem; }
+.doc-editor-body .ProseMirror h2 { font-size: 1.0625rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+.doc-editor-body .ProseMirror h3 { font-size: 0.9375rem; }
+.doc-editor-body .ProseMirror h4 { font-size: 0.875rem; }
+
+.doc-editor-body .ProseMirror p {
+  margin-bottom: 1em;
+}
+
+.doc-editor-body .ProseMirror ul,
+.doc-editor-body .ProseMirror ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.doc-editor-body .ProseMirror li {
+  margin-bottom: 0.25em;
+}
+
+.doc-editor-body .ProseMirror li > ul,
+.doc-editor-body .ProseMirror li > ol {
+  margin-top: 0.25em;
+  margin-bottom: 0;
+}
+
+.doc-editor-body .ProseMirror code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125em;
+  background: var(--surface-inset);
+  color: var(--foreground);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+}
+
+.doc-editor-body .ProseMirror pre {
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.doc-editor-body .ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.doc-editor-body .ProseMirror blockquote {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 1em;
+  margin: 0 0 1em;
+  color: var(--foreground-muted);
+  font-style: italic;
+}
+
+.doc-editor-body .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+.doc-editor-body .ProseMirror a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.doc-editor-body .ProseMirror a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* ── Save controls embedded in toolbar ── */
+.doc-editor-toolbar-spacer {
+  flex: 1;
+}
+
+.doc-editor-unsaved-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-warning);
+  flex-shrink: 0;
+}
+
+.doc-editor-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  margin-left: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.doc-editor-save-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.doc-editor-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.doc-editor-save-btn svg {
+  width: 13px;
+  height: 13px;
+  animation: spin 0.7s linear infinite;
+}
+
+.doc-editor-save-meta {
+  font-size: 0.6875rem;
+  color: var(--foreground-subtle);
+  white-space: nowrap;
+}
+
+/* ── Icon picker popover ── */
+.doc-icon-picker-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.doc-icon-picker-trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  transition: border-color 100ms, background 100ms;
+}
+
+.doc-icon-picker-trigger:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-inset);
+}
+
+.doc-icon-picker-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.doc-icon-picker-search {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--foreground-subtle);
+}
+
+.doc-icon-picker-search svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.doc-icon-picker-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+}
+
+.doc-icon-picker-search input::placeholder {
+  color: var(--foreground-subtle);
+}
+
+.doc-icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.doc-icon-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  transition: background 80ms, color 80ms;
+}
+
+.doc-icon-picker-item:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.doc-icon-picker-item.selected {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.doc-icon-picker-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--foreground-subtle);
+}
+
+.doc-icon-picker-count {
+  padding: 5px 10px;
+  font-size: 0.625rem;
+  color: var(--foreground-subtle);
+  border-top: 1px solid var(--border);
+  text-align: right;
 }

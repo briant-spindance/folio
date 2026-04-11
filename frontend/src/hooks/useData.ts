@@ -1,6 +1,14 @@
-import { useQuery } from "@tanstack/react-query"
-import { fetchStatus, fetchWikiDocs, fetchWikiDoc } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail } from "@/lib/types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
+import {
+  fetchStatus,
+  fetchWikiDocs,
+  fetchWikiDoc,
+  saveWikiDoc as apiSaveWikiDoc,
+  createWikiDoc as apiCreateWikiDoc,
+  deleteWikiDoc as apiDeleteWikiDoc,
+} from "@/lib/api"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -24,5 +32,44 @@ export function useWikiDoc(slug: string) {
     queryFn: () => fetchWikiDoc(slug),
     staleTime: 30_000,
     enabled: !!slug,
+  })
+}
+
+export function useSaveWikiDoc(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: SaveDocPayload) => apiSaveWikiDoc(slug, payload),
+    onSuccess: (doc) => {
+      qc.setQueryData(["wiki", slug], doc)
+      qc.invalidateQueries({ queryKey: ["wiki"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useCreateWikiDoc() {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (payload: SaveDocPayload) => apiCreateWikiDoc(payload),
+    onSuccess: (doc) => {
+      qc.setQueryData(["wiki", doc.slug], doc)
+      qc.invalidateQueries({ queryKey: ["wiki"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+      navigate(`/docs/${doc.slug}`)
+    },
+  })
+}
+
+export function useDeleteWikiDoc() {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (slug: string) => apiDeleteWikiDoc(slug),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wiki"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+      navigate("/docs")
+    },
   })
 }
