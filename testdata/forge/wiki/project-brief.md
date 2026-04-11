@@ -1,6 +1,6 @@
 ---
 title: Project Brief
-modified: "2026-04-09"
+modified: "2026-04-11"
 icon: book-open
 ---
 
@@ -30,6 +30,39 @@ Modern development with AI agents requires project context to be **file-native**
 | Storage | Filesystem (Markdown + YAML) |
 | AI | Vercel AI SDK |
 
+## Golang System Architecture
+
+Forge's backend is built as a **single Go binary** that provides both CLI commands and an HTTP API server.
+
+### Core Components
+
+**CLI Layer**
+- Built with [Cobra](https://github.com/spf13/cobra) for command structure
+- All project operations available as subcommands (`forge feature create`, `forge wiki edit`, etc.)
+- Direct filesystem operations for maximum speed and simplicity
+
+**API Server**
+- JSON REST API served at `/api` using Go's standard `net/http` package
+- Single binary serves both static UI assets and API endpoints
+- Reads and writes to `forge/` directory in the repository root
+
+**Storage Layer**
+- File-based persistence using Markdown and YAML
+- No database required — all state is human-readable and git-friendly
+- Structured directory layout under `forge/` for features, wiki, sprints, etc.
+
+### Design Philosophy
+
+The Go implementation follows these principles:
+
+1. **Simplicity** — Minimal dependencies, standard library first
+2. **Portability** — Single static binary runs anywhere
+3. **Transparency** — All operations are file I/O that can be inspected
+4. **Performance** — Direct filesystem access, no ORM overhead
+5. **AI-friendly** — Structured text files that LLMs can parse and generate
+
+This architecture enables Forge to be both a powerful CLI tool for developers and a web application with full CRUD capabilities, all while maintaining human-readable project state.
+
 ## Development Phases
 
 ### Phase 1 — Foundation
@@ -40,3 +73,4 @@ ADRs, review-to-feature linking, enhanced git integration, cloud deployment.
 
 ### Phase 3 — AI Integration
 Chat interface with project context, AI-assisted feature writing, smart sprint planning.
+
