@@ -13,6 +13,7 @@ export interface RoadmapCard {
   column: string
   row: string
   order: number
+  featureSlug: string | null
 }
 
 export interface RoadmapRow {
@@ -71,6 +72,7 @@ function buildRoadmap(data: Record<string, unknown>): Roadmap {
           column: String(card.column ?? columns[0] ?? "now"),
           row: String(card.row ?? ""),
           order: typeof card.order === "number" ? card.order : 0,
+          featureSlug: card.featureSlug ? String(card.featureSlug) : null,
         }
       })
     : []

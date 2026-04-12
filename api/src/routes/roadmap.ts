@@ -53,6 +53,7 @@ router.post("/cards", async (c) => {
     column: body.column ?? "now",
     row: body.row ?? "",
     order: body.order ?? 0,
+    featureSlug: null,
   })
   return c.json(card, 201)
 })

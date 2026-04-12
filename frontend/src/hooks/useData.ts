@@ -24,6 +24,7 @@ import {
   updateRoadmapColumn as apiUpdateRoadmapColumn,
   deleteRoadmapColumn as apiDeleteRoadmapColumn,
   reorderRoadmapColumns as apiReorderRoadmapColumns,
+  createFeature as apiCreateFeature,
 } from "@/lib/api"
 import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard } from "@/lib/types"
 
@@ -265,6 +266,23 @@ export function useDeleteRoadmapColumn() {
     mutationFn: (name: string) => apiDeleteRoadmapColumn(name),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Features
+// ---------------------------------------------------------------------------
+
+export function useCreateFeature() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { title: string; body?: string; priority?: string; roadmapCardId?: string }) =>
+      apiCreateFeature(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["features"] })
       qc.invalidateQueries({ queryKey: ["status"] })
     },
   })

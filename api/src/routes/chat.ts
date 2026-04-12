@@ -378,6 +378,7 @@ chatRouter.post("/", async (c) => {
               roadmapData.cards = cards.map((c, i) => ({
                 ...c,
                 id: Math.random().toString(36).slice(2, 10),
+                featureSlug: null,
               }))
               const saved = saveRoadmap(roadmapData)
               return {

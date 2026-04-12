@@ -44,6 +44,7 @@ export interface FeatureSummary {
   assignee?: string
   points?: number
   tags?: string[]
+  roadmapCard?: string | null
 }
 
 export interface IssueSummary {
@@ -113,6 +114,7 @@ export interface RoadmapCard {
   column: string
   row: string
   order: number
+  featureSlug: string | null
 }
 
 export interface RoadmapRow {

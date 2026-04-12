@@ -32,6 +32,7 @@ import {
   useAddRoadmapColumn,
   useUpdateRoadmapColumn,
   useDeleteRoadmapColumn,
+  useCreateFeature,
 } from "@/hooks/useData"
 import type { RoadmapCard, RoadmapRow } from "@/lib/types"
 
@@ -218,6 +219,16 @@ function IconCheck() {
   )
 }
 
+function IconFeature({ size = 13 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5Z" />
+      <path d="m2 17 10 5 10-5" />
+      <path d="m2 12 10 5 10-5" />
+    </svg>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Card Detail Modal
 // ---------------------------------------------------------------------------
@@ -227,9 +238,11 @@ interface CardModalProps {
   onSave: (updates: { title: string; notes: string }) => void
   onDelete: () => void
   onClose: () => void
+  onCreateFeature: () => void
+  isCreatingFeature: boolean
 }
 
-function CardModal({ card, onSave, onDelete, onClose }: CardModalProps) {
+function CardModal({ card, onSave, onDelete, onClose, onCreateFeature, isCreatingFeature }: CardModalProps) {
   const [title, setTitle] = useState(card.title)
   const [notes, setNotes] = useState(card.notes)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -244,11 +257,20 @@ function CardModal({ card, onSave, onDelete, onClose }: CardModalProps) {
     }
   }
 
+  const hasFeature = !!card.featureSlug
+
   return (
     <div className="roadmap-modal-overlay" onClick={onClose}>
       <div className="roadmap-modal" onClick={(e) => e.stopPropagation()}>
         <div className="roadmap-modal-header">
           <span className="roadmap-modal-title">Edit Card</span>
+          {hasFeature && (
+            <span className="roadmap-feature-badge" title={`Linked to feature: ${card.featureSlug}`}>
+              <IconFeature size={12} />
+              <span>{card.featureSlug}</span>
+            </span>
+          )}
+          <div style={{ flex: 1 }} />
           <button className="roadmap-icon-btn" onClick={onClose} title="Close">
             <IconX />
           </button>
@@ -276,6 +298,16 @@ function CardModal({ card, onSave, onDelete, onClose }: CardModalProps) {
           <button className="roadmap-btn roadmap-btn--danger" onClick={onDelete}>
             <IconTrash /> Delete
           </button>
+          {!hasFeature && (
+            <button
+              className="roadmap-btn roadmap-btn--ghost"
+              onClick={onCreateFeature}
+              disabled={isCreatingFeature}
+              title="Create a feature from this card"
+            >
+              <IconFeature size={13} /> {isCreatingFeature ? "Creating..." : "Create Feature"}
+            </button>
+          )}
           <div style={{ flex: 1 }} />
           <button className="roadmap-btn roadmap-btn--ghost" onClick={onClose}>
             Cancel
@@ -361,6 +393,11 @@ function SortableCard({ card, onEdit }: { card: RoadmapCard; onEdit: () => void 
         <span className="roadmap-card-title">{card.title}</span>
         {card.notes && <span className="roadmap-card-notes">{card.notes}</span>}
       </div>
+      {card.featureSlug && (
+        <div className="roadmap-card-feature-icon" title={`Feature: ${card.featureSlug}`}>
+          <IconFeature size={11} />
+        </div>
+      )}
     </div>
   )
 }
@@ -894,6 +931,7 @@ export function RoadmapPage() {
   const addColumn = useAddRoadmapColumn()
   const updateColumnMutation = useUpdateRoadmapColumn()
   const deleteColumnMutation = useDeleteRoadmapColumn()
+  const createFeatureMutation = useCreateFeature()
 
   const [editingCard, setEditingCard] = useState<RoadmapCard | null>(null)
   const [quickAdd, setQuickAdd] = useState<{ column: string; row: string } | null>(null)
@@ -1106,6 +1144,22 @@ export function RoadmapPage() {
     [deleteColumnMutation]
   )
 
+  const handleCreateFeature = useCallback(() => {
+    if (!editingCard) return
+    createFeatureMutation.mutate(
+      {
+        title: editingCard.title,
+        body: editingCard.notes || undefined,
+        roadmapCardId: editingCard.id,
+      },
+      {
+        onSuccess: () => {
+          setEditingCard(null)
+        },
+      }
+    )
+  }, [editingCard, createFeatureMutation])
+
   if (isLoading) {
     return <div style={{ color: "var(--foreground-muted)", padding: "40px", textAlign: "center" }}>Loading...</div>
   }
@@ -1242,6 +1296,8 @@ export function RoadmapPage() {
           onSave={handleCardSave}
           onDelete={handleCardDelete}
           onClose={() => setEditingCard(null)}
+          onCreateFeature={handleCreateFeature}
+          isCreatingFeature={createFeatureMutation.isPending}
         />
       )}
     </div>

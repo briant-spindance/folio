@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -137,4 +137,21 @@ export function deleteRoadmapColumn(name: string): Promise<{ ok: boolean }> {
 
 export function reorderRoadmapColumns(names: string[]): Promise<{ ok: boolean }> {
   return apiMutate("/api/roadmap/columns/reorder", "PATCH", { names })
+}
+
+// ---------------------------------------------------------------------------
+// Features
+// ---------------------------------------------------------------------------
+
+export function fetchFeatures(): Promise<FeatureSummary[]> {
+  return apiFetch<FeatureSummary[]>("/api/features")
+}
+
+export function createFeature(data: {
+  title: string
+  body?: string
+  priority?: string
+  roadmapCardId?: string
+}): Promise<FeatureSummary> {
+  return apiMutate<FeatureSummary>("/api/features", "POST", data)
 }
