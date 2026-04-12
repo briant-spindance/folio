@@ -109,7 +109,7 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
         feat.slug,
         feat.title,
         feat.status,
-        feat.assignee ?? "",
+        ...feat.assignees,
         feat.sprint ?? "",
         ...feat.tags,
       ].filter(Boolean)
@@ -122,7 +122,7 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
           title: feat.title,
           snippet: makeSnippet(metaMatch, query),
           status: feat.status,
-          assignee: feat.assignee ?? undefined,
+          assignee: feat.assignees.length > 0 ? feat.assignees.join(", ") : undefined,
         })
         continue
       }
@@ -135,7 +135,7 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
           title: feat.title,
           snippet: makeSnippet(bodyLine.trim(), query),
           status: feat.status,
-          assignee: feat.assignee ?? undefined,
+          assignee: feat.assignees.length > 0 ? feat.assignees.join(", ") : undefined,
         })
       }
     }

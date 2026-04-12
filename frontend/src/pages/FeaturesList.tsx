@@ -468,7 +468,7 @@ function SortableFeatureRow({
       <td><StatusBadge status={feature.status} /></td>
       <td><PriorityBadge priority={feature.priority} /></td>
       <td className="features-table-assignee">
-        {feature.assignee ?? <span className="text-muted">Unassigned</span>}
+        {feature.assignees.length > 0 ? feature.assignees.join(", ") : <span className="text-muted">Unassigned</span>}
       </td>
       <td className="features-table-points">
         {feature.points ?? <span className="text-muted">—</span>}
@@ -494,7 +494,7 @@ function FeatureRowOverlay({ feature }: { feature: FeatureDetail }) {
           <td><StatusBadge status={feature.status} /></td>
           <td><PriorityBadge priority={feature.priority} /></td>
           <td className="features-table-assignee">
-            {feature.assignee ?? <span className="text-muted">Unassigned</span>}
+            {feature.assignees.length > 0 ? feature.assignees.join(", ") : <span className="text-muted">Unassigned</span>}
           </td>
           <td className="features-table-points">
             {feature.points ?? <span className="text-muted">—</span>}
@@ -636,7 +636,7 @@ export function FeaturesList() {
   const allAssignees = useMemo(() => {
     const names = new Set<string>()
     for (const f of allFeatures) {
-      if (f.assignee) names.add(f.assignee)
+      for (const a of f.assignees) names.add(a)
     }
     return Array.from(names).sort()
   }, [allFeatures])

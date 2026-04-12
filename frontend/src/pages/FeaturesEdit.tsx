@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
 import { DocEditor } from "@/components/DocEditor"
-import { useFeature, useSaveFeature } from "@/hooks/useData"
+import { AssigneePicker } from "@/components/AssigneePicker"
+import { useFeature, useSaveFeature, useStatus } from "@/hooks/useData"
 import type { SaveDocPayload, FeatureStatus, IssuePriority } from "@/lib/types"
 
 const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
@@ -11,11 +12,13 @@ export function FeaturesEdit() {
   const { slug } = useParams<{ slug: string }>()
   const { data: feature, isLoading, error } = useFeature(slug ?? "")
   const { mutate: saveFeature, isPending } = useSaveFeature(slug ?? "")
+  const { data: statusData } = useStatus()
+  const teamMembers = statusData?.team?.map((t) => t.name) ?? []
 
   // Local metadata state (synced from feature data on load)
   const [status, setStatus] = useState<FeatureStatus>("draft")
   const [priority, setPriority] = useState<IssuePriority>("medium")
-  const [assignee, setAssignee] = useState("")
+  const [assignees, setAssignees] = useState<string[]>([])
   const [points, setPoints] = useState("")
   const initialized = useRef(false)
 
@@ -23,7 +26,7 @@ export function FeaturesEdit() {
     if (feature && !initialized.current) {
       setStatus(feature.status)
       setPriority(feature.priority)
-      setAssignee(feature.assignee ?? "")
+      setAssignees(feature.assignees)
       setPoints(feature.points != null ? String(feature.points) : "")
       initialized.current = true
     }
@@ -35,10 +38,10 @@ export function FeaturesEdit() {
       body: payload.body,
       status,
       priority,
-      assignee: assignee.trim() || null,
+      assignees,
       points: points.trim() ? Number(points) : null,
     })
-  }, [saveFeature, status, priority, assignee, points])
+  }, [saveFeature, status, priority, assignees, points])
 
   if (isLoading) {
     return (
@@ -98,13 +101,12 @@ export function FeaturesEdit() {
           </select>
         </div>
         <div className="feature-edit-meta-field">
-          <label className="feature-edit-meta-label">Assignee</label>
-          <input
-            className="feature-edit-meta-input"
-            type="text"
-            value={assignee}
-            placeholder="Unassigned"
-            onChange={(e) => setAssignee(e.target.value)}
+          <label className="feature-edit-meta-label">Assignees</label>
+          <AssigneePicker
+            value={assignees}
+            teamMembers={teamMembers}
+            onChange={setAssignees}
+            mode="field"
           />
         </div>
         <div className="feature-edit-meta-field">

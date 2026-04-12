@@ -12,7 +12,7 @@ export interface Feature {
   title: string
   status: FeatureStatus
   priority: Priority
-  assignee: string | null
+  assignees: string[]
   points: number | null
   sprint: string | null
   tags: string[]
@@ -41,13 +41,19 @@ function normalizePriority(raw: unknown): Priority {
   return "medium"
 }
 
+function parseAssignees(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.map(String).filter(Boolean)
+  if (raw && typeof raw === "string") return [raw]
+  return []
+}
+
 function parseFeature(slug: string, data: Record<string, unknown>, content: string): Feature {
   return {
     slug,
     title: String(data.title ?? slug),
     status: (data.status as FeatureStatus) ?? "draft",
     priority: normalizePriority(data.priority),
-    assignee: data.assignee ? String(data.assignee) : null,
+    assignees: parseAssignees(data.assignee ?? data.assignees),
     points: data.points != null ? Number(data.points) : null,
     sprint: data.sprint ? String(data.sprint) : null,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
@@ -125,9 +131,9 @@ export function listFeatures(params: ListFeaturesParams = {}): PaginatedFeatures
   }
   if (assignee !== undefined) {
     if (assignee === null) {
-      features = features.filter((f) => !f.assignee)
+      features = features.filter((f) => f.assignees.length === 0)
     } else {
-      features = features.filter((f) => f.assignee === assignee)
+      features = features.filter((f) => f.assignees.includes(assignee))
     }
   }
   if (pointsMin !== undefined) {
@@ -242,7 +248,7 @@ export function createFeature(input: CreateFeatureInput): Feature {
     title: input.title,
     status: "draft",
     priority: input.priority ?? "medium",
-    assignee: null,
+    assignees: [],
     points: null,
     sprint: null,
     tags: [],
@@ -261,7 +267,7 @@ export interface UpdateFeatureInput {
   title?: string
   status?: FeatureStatus
   priority?: Priority
-  assignee?: string | null
+  assignees?: string[]
   points?: number | null
   tags?: string[]
   body?: string
@@ -286,9 +292,9 @@ export function updateFeature(slug: string, input: UpdateFeatureInput): Feature 
   // Preserve order
   if (existing.order !== undefined) frontmatter.order = existing.order
 
-  // Handle assignee (explicitly nullable)
-  const assignee = input.assignee !== undefined ? input.assignee : existing.assignee
-  if (assignee) frontmatter.assignee = assignee
+  // Handle assignees (array)
+  const assignees = input.assignees !== undefined ? input.assignees : existing.assignees
+  if (assignees.length > 0) frontmatter.assignees = assignees
 
   // Handle points (explicitly nullable)
   const points = input.points !== undefined ? input.points : existing.points
@@ -314,7 +320,7 @@ export function updateFeature(slug: string, input: UpdateFeatureInput): Feature 
     title: frontmatter.title as string,
     status: frontmatter.status as FeatureStatus,
     priority: frontmatter.priority as Priority,
-    assignee: assignee ?? null,
+    assignees,
     points: points ?? null,
     sprint: existing.sprint,
     tags,
@@ -352,7 +358,7 @@ export function reorderFeatures(slugs: string[], offset: number = 0): void {
       order: newOrder,
     }
     if (feature.created) frontmatter.created = feature.created
-    if (feature.assignee) frontmatter.assignee = feature.assignee
+    if (feature.assignees.length > 0) frontmatter.assignees = feature.assignees
     if (feature.points != null) frontmatter.points = feature.points
     if (feature.sprint) frontmatter.sprint = feature.sprint
     if (feature.tags.length > 0) frontmatter.tags = feature.tags

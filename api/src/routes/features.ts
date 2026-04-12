@@ -144,7 +144,7 @@ router.put("/:slug", async (c) => {
     title?: string
     status?: string
     priority?: string
-    assignee?: string | null
+    assignees?: string[]
     points?: number | null
     tags?: string[]
     body?: string
@@ -155,7 +155,7 @@ router.put("/:slug", async (c) => {
       title: body.title,
       status: body.status as FeatureStatus | undefined,
       priority: body.priority as Priority | undefined,
-      assignee: body.assignee,
+      assignees: body.assignees,
       points: body.points,
       tags: body.tags,
       body: body.body,

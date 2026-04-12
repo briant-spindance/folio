@@ -224,7 +224,7 @@ export function Dashboard() {
                   </div>
                 </td>
                 <td><StatusBadge status={f.status} /></td>
-                <td className="feature-assignee">{f.assignee ?? "—"}</td>
+                <td className="feature-assignee">{f.assignees?.length ? f.assignees.join(", ") : "—"}</td>
                 <td className="feature-points">{f.points ?? "—"}</td>
               </tr>
             ))}

@@ -41,7 +41,7 @@ export interface FeatureSummary {
   title: string
   status: FeatureStatus
   priority?: IssuePriority
-  assignee?: string
+  assignees?: string[]
   points?: number
   tags?: string[]
   roadmapCard?: string | null
@@ -53,7 +53,7 @@ export interface FeatureDetail {
   title: string
   status: FeatureStatus
   priority: IssuePriority
-  assignee: string | null
+  assignees: string[]
   points: number | null
   sprint: string | null
   tags: string[]
@@ -76,7 +76,7 @@ export interface SaveFeaturePayload {
   title?: string
   status?: FeatureStatus
   priority?: IssuePriority
-  assignee?: string | null
+  assignees?: string[]
   points?: number | null
   tags?: string[]
   body?: string

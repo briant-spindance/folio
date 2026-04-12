@@ -4247,6 +4247,163 @@ body.ai-resizing {
   outline: none;
 }
 
+/* ── Assignee multi-select picker ── */
+
+.feature-assignee-trigger {
+  min-height: 30px;
+}
+
+.feature-assignee-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.feature-assignee-chip {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--foreground);
+  line-height: 1.5;
+}
+
+.feature-assignee-dropdown {
+  position: relative;
+}
+
+.feature-assignee-search {
+  display: block;
+  width: 100%;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--primary);
+  border-radius: 6px 6px 0 0;
+  background: var(--surface);
+  color: var(--foreground);
+  outline: none;
+}
+
+.feature-assignee-options {
+  max-height: 180px;
+  overflow-y: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Portal-rendered dropdown: positioned absolutely relative to <body> */
+.feature-assignee-options-portal {
+  z-index: 9999;
+}
+
+.feature-assignee-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.feature-assignee-option:hover {
+  background: var(--accent);
+}
+
+.feature-assignee-option input[type="checkbox"] {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.feature-assignee-add {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  border: none;
+  background: none;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.feature-assignee-add:hover {
+  background: var(--accent);
+}
+
+.feature-assignee-empty {
+  display: block;
+  padding: 8px;
+  font-size: 0.75rem;
+  color: var(--foreground-muted);
+}
+
+/* Field mode (edit pages) */
+
+.feature-assignee-dropdown-field {
+  position: relative;
+}
+
+.feature-assignee-token-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  min-height: 32px;
+  cursor: text;
+}
+
+.feature-assignee-token-input:focus-within {
+  border-color: var(--primary);
+}
+
+.feature-assignee-token-search {
+  flex: 1;
+  min-width: 80px;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: var(--foreground);
+  padding: 0;
+}
+
+.feature-assignee-dropdown-field .feature-assignee-options {
+  /* Portal handles positioning; no extra overrides needed */
+}
+
+.feature-assignee-chips-field {
+  margin-bottom: 6px;
+}
+
+.feature-assignee-chip-remove {
+  display: inline;
+  margin-left: 4px;
+  border: none;
+  background: none;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.feature-assignee-chip-remove:hover {
+  color: var(--status-error);
+}
+
 /* ── Artifacts section ── */
 
 /* Sidebar supporting files card */
@@ -4667,6 +4824,7 @@ body.ai-resizing {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative;
 }
 
 .feature-edit-meta-label {

@@ -28,13 +28,6 @@ cards:
     row: Frontend
     order: 2
     featureSlug: null
-  - id: i9j0k1l2
-    title: API rate limiting
-    notes: Add rate limiting middleware to protect against abuse
-    column: later
-    row: Frontend
-    order: 1
-    featureSlug: null
   - id: m3n4o5p6
     title: Feature board UI
     notes: Kanban-style board for managing feature status and assignments
@@ -91,6 +84,20 @@ cards:
     notes: Doctor should check if links are valid
     column: later
     row: AI Features
+    order: 0
+    featureSlug: null
+  - id: d1ca0e3f
+    title: Internationalization
+    notes: ''
+    column: later
+    row: Frontend
+    order: 0
+    featureSlug: null
+  - id: 123c6022
+    title: Themes
+    notes: ''
+    column: later
+    row: Frontend
     order: 0
     featureSlug: null
 modified: '2026-04-12'

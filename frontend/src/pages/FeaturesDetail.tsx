@@ -2,8 +2,9 @@ import { useState, useRef, useCallback } from "react"
 import { Link, useParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts, useUploadArtifact, useDeleteArtifact } from "@/hooks/useData"
+import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts, useUploadArtifact, useDeleteArtifact, useStatus } from "@/hooks/useData"
 import { StatusBadge } from "@/components/Badges"
+import { AssigneePicker } from "@/components/AssigneePicker"
 import type { FeatureStatus, IssuePriority } from "@/lib/types"
 
 const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
@@ -216,6 +217,8 @@ export function FeaturesDetail() {
   const { mutate: deleteFeature, isPending: isDeleting } = useDeleteFeature()
   const { mutate: saveFeature } = useSaveFeature(slug ?? "")
   const { data: artifacts } = useFeatureArtifacts(slug ?? "")
+  const { data: statusData } = useStatus()
+  const teamMembers = statusData?.team?.map((t) => t.name) ?? []
   const uploadMutation = useUploadArtifact(slug ?? "")
   const deleteArtifactMutation = useDeleteArtifact(slug ?? "")
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -330,12 +333,12 @@ export function FeaturesDetail() {
           </div>
 
           <div className="feature-meta-field">
-            <span className="feature-meta-label">Assignee</span>
+            <span className="feature-meta-label">Assignees</span>
             <div className="feature-meta-value">
-              <InlineText
-                value={feature.assignee ?? ""}
-                placeholder="Unassigned"
-                onSave={(v) => saveFeature({ assignee: v })}
+              <AssigneePicker
+                value={feature.assignees}
+                teamMembers={teamMembers}
+                onChange={(v) => saveFeature({ assignees: v })}
               />
             </div>
           </div>

@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { DocEditor } from "@/components/DocEditor"
-import { useCreateFeature } from "@/hooks/useData"
+import { AssigneePicker } from "@/components/AssigneePicker"
+import { useCreateFeature, useStatus } from "@/hooks/useData"
 import type { SaveDocPayload, FeatureStatus, IssuePriority } from "@/lib/types"
 
 const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
@@ -9,10 +10,12 @@ const PRIORITY_OPTIONS: IssuePriority[] = ["critical", "high", "medium", "low"]
 
 export function FeaturesNew() {
   const { mutate: createFeature, isPending } = useCreateFeature()
+  const { data: statusData } = useStatus()
+  const teamMembers = statusData?.team?.map((t) => t.name) ?? []
 
   const [status, setStatus] = useState<FeatureStatus>("draft")
   const [priority, setPriority] = useState<IssuePriority>("medium")
-  const [assignee, setAssignee] = useState("")
+  const [assignees, setAssignees] = useState<string[]>([])
   const [points, setPoints] = useState("")
 
   const handleSave = useCallback((payload: SaveDocPayload) => {
@@ -59,13 +62,12 @@ export function FeaturesNew() {
           </select>
         </div>
         <div className="feature-edit-meta-field">
-          <label className="feature-edit-meta-label">Assignee</label>
-          <input
-            className="feature-edit-meta-input"
-            type="text"
-            value={assignee}
-            placeholder="Unassigned"
-            onChange={(e) => setAssignee(e.target.value)}
+          <label className="feature-edit-meta-label">Assignees</label>
+          <AssigneePicker
+            value={assignees}
+            teamMembers={teamMembers}
+            onChange={setAssignees}
+            mode="field"
           />
         </div>
         <div className="feature-edit-meta-field">
