@@ -54,7 +54,7 @@ interface ChatContext {
 
 function buildSystemPrompt(context: ChatContext | null): string {
   const wikis = listWikiDocs()
-  const features = listFeatures()
+  const features = listFeatures({ limit: 1000 }).features
   const roadmap = getRoadmap()
 
   const wikiList = wikis

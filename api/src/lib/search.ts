@@ -102,7 +102,7 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
 
   // --- Features ---
   if (types.includes("feature")) {
-    for (const feat of listFeatures()) {
+    for (const feat of listFeatures({ limit: 1000 }).features) {
       if (results.length >= limit) break
 
       const metaValues = [

@@ -45,6 +45,47 @@ export interface FeatureSummary {
   points?: number
   tags?: string[]
   roadmapCard?: string | null
+  order?: number
+}
+
+export interface FeatureDetail {
+  slug: string
+  title: string
+  status: FeatureStatus
+  priority: IssuePriority
+  assignee: string | null
+  points: number | null
+  sprint: string | null
+  tags: string[]
+  created: string | null
+  modified: string | null
+  roadmapCard: string | null
+  body: string
+  order?: number
+}
+
+export interface PaginatedFeatures {
+  features: FeatureDetail[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface SaveFeaturePayload {
+  title?: string
+  status?: FeatureStatus
+  priority?: IssuePriority
+  assignee?: string | null
+  points?: number | null
+  tags?: string[]
+  body?: string
+}
+
+export interface FeatureArtifact {
+  name: string
+  size: number
+  type: string
 }
 
 export interface IssueSummary {

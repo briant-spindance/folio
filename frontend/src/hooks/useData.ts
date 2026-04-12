@@ -24,9 +24,16 @@ import {
   updateRoadmapColumn as apiUpdateRoadmapColumn,
   deleteRoadmapColumn as apiDeleteRoadmapColumn,
   reorderRoadmapColumns as apiReorderRoadmapColumns,
+  fetchFeatures,
+  fetchFeature,
   createFeature as apiCreateFeature,
+  updateFeature as apiUpdateFeature,
+  deleteFeature as apiDeleteFeature,
+  fetchFeatureArtifacts,
+  reorderFeatures as apiReorderFeatures,
 } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard } from "@/lib/types"
+import type { FetchFeaturesParams } from "@/lib/api"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -275,13 +282,79 @@ export function useDeleteRoadmapColumn() {
 // Features
 // ---------------------------------------------------------------------------
 
+export function useFeatures(params: FetchFeaturesParams = {}) {
+  return useQuery<PaginatedFeatures>({
+    queryKey: ["features", params],
+    queryFn: () => fetchFeatures(params),
+    staleTime: 30_000,
+  })
+}
+
+export function useFeature(slug: string) {
+  return useQuery<FeatureDetail>({
+    queryKey: ["features", slug],
+    queryFn: () => fetchFeature(slug),
+    staleTime: 30_000,
+    enabled: !!slug,
+  })
+}
+
 export function useCreateFeature() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   return useMutation({
     mutationFn: (data: { title: string; body?: string; priority?: string; roadmapCardId?: string }) =>
       apiCreateFeature(data),
-    onSuccess: () => {
+    onSuccess: (feature) => {
+      qc.setQueryData(["features", feature.slug], feature)
       qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["features"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+      navigate(`/features/${feature.slug}`)
+    },
+  })
+}
+
+export function useSaveFeature(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: SaveFeaturePayload) => apiUpdateFeature(slug, payload),
+    onSuccess: (feature) => {
+      qc.setQueryData(["features", slug], feature)
+      qc.invalidateQueries({ queryKey: ["features"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useDeleteFeature() {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (slug: string) => apiDeleteFeature(slug),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["features"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+      navigate("/features")
+    },
+  })
+}
+
+export function useFeatureArtifacts(slug: string) {
+  return useQuery<FeatureArtifact[]>({
+    queryKey: ["features", slug, "artifacts"],
+    queryFn: () => fetchFeatureArtifacts(slug),
+    staleTime: 30_000,
+    enabled: !!slug,
+  })
+}
+
+export function useReorderFeatures() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ slugs, offset }: { slugs: string[]; offset: number }) =>
+      apiReorderFeatures(slugs, offset),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["features"] })
       qc.invalidateQueries({ queryKey: ["status"] })
     },

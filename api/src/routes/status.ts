@@ -21,7 +21,7 @@ const HEALTH_CHECKS = [
 ] as const
 
 router.get("/", (c) => {
-  const features = listFeatures()
+  const features = listFeatures({ limit: 1000 }).features
   const docs = listWikiDocs()
   const issues = listIssues()
   const team = listTeam()

@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -143,8 +143,43 @@ export function reorderRoadmapColumns(names: string[]): Promise<{ ok: boolean }>
 // Features
 // ---------------------------------------------------------------------------
 
-export function fetchFeatures(): Promise<FeatureSummary[]> {
-  return apiFetch<FeatureSummary[]>("/api/features")
+export interface FetchFeaturesParams {
+  page?: number
+  limit?: number
+  status?: string[]
+  priority?: string[]
+  assignee?: string | null
+  pointsMin?: number
+  pointsMax?: number
+  tags?: string[]
+  sort?: string
+  dir?: string
+}
+
+export function fetchFeatures(params: FetchFeaturesParams = {}): Promise<PaginatedFeatures> {
+  const qs = new URLSearchParams()
+  if (params.page) qs.set("page", String(params.page))
+  if (params.limit) qs.set("limit", String(params.limit))
+  if (params.status && params.status.length > 0) qs.set("status", params.status.join(","))
+  if (params.priority && params.priority.length > 0) qs.set("priority", params.priority.join(","))
+  if (params.assignee !== undefined) {
+    qs.set("assignee", params.assignee === null ? "__unassigned__" : params.assignee)
+  }
+  if (params.pointsMin !== undefined) qs.set("pointsMin", String(params.pointsMin))
+  if (params.pointsMax !== undefined) qs.set("pointsMax", String(params.pointsMax))
+  if (params.tags && params.tags.length > 0) qs.set("tags", params.tags.join(","))
+  if (params.sort) qs.set("sort", params.sort)
+  if (params.dir) qs.set("dir", params.dir)
+  const query = qs.toString()
+  return apiFetch<PaginatedFeatures>(`/api/features${query ? `?${query}` : ""}`)
+}
+
+export function reorderFeatures(slugs: string[], offset: number = 0): Promise<{ ok: boolean }> {
+  return apiMutate<{ ok: boolean }>("/api/features/reorder", "PATCH", { slugs, offset })
+}
+
+export function fetchFeature(slug: string): Promise<FeatureDetail> {
+  return apiFetch<FeatureDetail>(`/api/features/${slug}`)
 }
 
 export function createFeature(data: {
@@ -152,6 +187,18 @@ export function createFeature(data: {
   body?: string
   priority?: string
   roadmapCardId?: string
-}): Promise<FeatureSummary> {
-  return apiMutate<FeatureSummary>("/api/features", "POST", data)
+}): Promise<FeatureDetail> {
+  return apiMutate<FeatureDetail>("/api/features", "POST", data)
+}
+
+export function updateFeature(slug: string, payload: SaveFeaturePayload): Promise<FeatureDetail> {
+  return apiMutate<FeatureDetail>(`/api/features/${slug}`, "PUT", payload)
+}
+
+export function deleteFeature(slug: string): Promise<{ ok: boolean; slug: string }> {
+  return apiMutate(`/api/features/${slug}`, "DELETE")
+}
+
+export function fetchFeatureArtifacts(slug: string): Promise<FeatureArtifact[]> {
+  return apiFetch<FeatureArtifact[]>(`/api/features/${slug}/artifacts`)
 }
