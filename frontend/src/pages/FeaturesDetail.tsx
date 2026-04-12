@@ -242,8 +242,8 @@ export function FeaturesDetail() {
     )
   }
 
-  // Strip leading whitespace then a `# Title` line
-  const body = feature.body.trimStart().replace(/^#\s+.+\n?/, "")
+  // Strip leading whitespace, `# Title` line, and any blank lines after it
+  const body = feature.body.trimStart().replace(/^#\s+.+\n?/, "").trimStart()
 
   return (
     <>

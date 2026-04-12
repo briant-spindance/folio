@@ -4106,12 +4106,20 @@ body.ai-resizing {
   min-width: 0;
 }
 
+.feature-detail-content .docs-prose-body {
+  padding-top: 12px;
+}
+
+.feature-detail-content .docs-prose-body > :first-child {
+  margin-top: 0;
+}
+
 .feature-detail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .feature-detail-title {
