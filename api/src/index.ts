@@ -12,6 +12,7 @@ import gitRouter from "./routes/git.js"
 import searchRouter from "./routes/search.js"
 import chatRouter from "./routes/chat.js"
 import sessionsRouter from "./routes/sessions.js"
+import roadmapRouter from "./routes/roadmap.js"
 
 // ---------------------------------------------------------------------------
 // Load .env from api/.env (simple key=value parser, no dependency needed)
@@ -42,6 +43,7 @@ app.route("/api/features", featuresRouter)
 app.route("/api/wiki", wikiRouter)
 app.route("/api/git", gitRouter)
 app.route("/api/search", searchRouter)
+app.route("/api/roadmap", roadmapRouter)
 app.route("/api/chat", chatRouter)
 app.route("/api/ai-sessions", sessionsRouter)
 

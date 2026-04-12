@@ -1,9 +1,10 @@
 import { listWikiDocs } from "../store/wiki.js"
 import { listFeatures } from "../store/features.js"
 import { listIssues } from "../store/issues.js"
+import { getRoadmap } from "../store/roadmap.js"
 
 export interface SearchResult {
-  type: "wiki" | "feature" | "issue"
+  type: "wiki" | "feature" | "issue" | "roadmap"
   slug: string
   title: string
   snippet: string
@@ -64,7 +65,7 @@ function matchesBodyLine(body: string, query: string): string | null {
 }
 
 export function search(query: string, opts: SearchOptions = {}): SearchResponse {
-  const types = opts.types && opts.types.length > 0 ? opts.types : ["wiki", "feature", "issue"]
+  const types = opts.types && opts.types.length > 0 ? opts.types : ["wiki", "feature", "issue", "roadmap"]
   const limit = opts.limit ?? 20
   const results: SearchResult[] = []
 
@@ -175,6 +176,27 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
           snippet: makeSnippet(bodyLine.trim(), query),
           status: issue.status,
           assignee: issue.assignee ?? undefined,
+        })
+      }
+    }
+  }
+
+  // --- Roadmap cards ---
+  if (types.includes("roadmap")) {
+    const roadmap = getRoadmap()
+    for (const card of roadmap.cards) {
+      if (results.length >= limit) break
+
+      const metaMatch = matchesQuery(
+        [card.title, card.notes, card.column, card.row].filter(Boolean),
+        query
+      )
+      if (metaMatch) {
+        results.push({
+          type: "roadmap",
+          slug: card.id,
+          title: card.title,
+          snippet: makeSnippet(metaMatch, query),
         })
       }
     }

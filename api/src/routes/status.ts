@@ -3,6 +3,7 @@ import { listFeatures } from "../store/features.js"
 import { listWikiDocs } from "../store/wiki.js"
 import { listIssues } from "../store/issues.js"
 import { listTeam } from "../store/team.js"
+import { getRoadmap } from "../store/roadmap.js"
 
 const router = new Hono()
 
@@ -24,6 +25,7 @@ router.get("/", (c) => {
   const docs = listWikiDocs()
   const issues = listIssues()
   const team = listTeam()
+  const roadmap = getRoadmap()
 
   const byStatus = features.reduce<Record<string, number>>((acc, f) => {
     acc[f.status] = (acc[f.status] ?? 0) + 1
@@ -55,6 +57,16 @@ router.get("/", (c) => {
       failed: HEALTH_CHECKS.filter(c => c.level === "fail").length,
       lastRun: "Last run: Apr 10, 2026 at 2:32 PM",
       checks: HEALTH_CHECKS,
+    },
+    roadmap: {
+      title: roadmap.title,
+      totalCards: roadmap.cards.length,
+      columns: roadmap.columns,
+      byColumn: roadmap.columns.reduce<Record<string, number>>((acc, col) => {
+        acc[col] = roadmap.cards.filter((card) => card.column === col).length
+        return acc
+      }, {}),
+      rowCount: roadmap.rows.length,
     },
   })
 })

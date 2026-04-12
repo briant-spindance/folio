@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -57,4 +57,84 @@ export function fetchSearch(q: string, type?: string): Promise<SearchResponse> {
 
 export function reorderWikiDocs(slugs: string[]): Promise<{ ok: boolean }> {
   return apiMutate<{ ok: boolean }>("/api/wiki/reorder", "PATCH", { slugs })
+}
+
+// ---------------------------------------------------------------------------
+// Roadmap
+// ---------------------------------------------------------------------------
+
+export function fetchRoadmap(): Promise<Roadmap> {
+  return apiFetch<Roadmap>("/api/roadmap")
+}
+
+export function saveRoadmap(roadmap: Roadmap): Promise<Roadmap> {
+  return apiMutate<Roadmap>("/api/roadmap", "PUT", roadmap)
+}
+
+export function createRoadmapCard(card: {
+  title: string
+  notes?: string
+  column: string
+  row: string
+  order?: number
+}): Promise<RoadmapCard> {
+  return apiMutate<RoadmapCard>("/api/roadmap/cards", "POST", card)
+}
+
+export function updateRoadmapCard(
+  id: string,
+  updates: Partial<Omit<RoadmapCard, "id">>
+): Promise<RoadmapCard> {
+  return apiMutate<RoadmapCard>(`/api/roadmap/cards/${id}`, "PUT", updates)
+}
+
+export function deleteRoadmapCard(id: string): Promise<{ ok: boolean; id: string }> {
+  return apiMutate(`/api/roadmap/cards/${id}`, "DELETE")
+}
+
+export function moveRoadmapCard(
+  id: string,
+  target: { column?: string; row?: string; order?: number }
+): Promise<RoadmapCard> {
+  return apiMutate<RoadmapCard>(`/api/roadmap/cards/${id}/move`, "PATCH", target)
+}
+
+export function addRoadmapRow(label: string, color?: string | null): Promise<RoadmapRow> {
+  return apiMutate("/api/roadmap/rows", "POST", { label, color })
+}
+
+export function updateRoadmapRow(
+  oldLabel: string,
+  updates: { label?: string; color?: string | null }
+): Promise<RoadmapRow> {
+  return apiMutate<RoadmapRow>(`/api/roadmap/rows/${encodeURIComponent(oldLabel)}`, "PUT", updates)
+}
+
+export function deleteRoadmapRow(label: string): Promise<{ ok: boolean }> {
+  return apiMutate(`/api/roadmap/rows/${encodeURIComponent(label)}`, "DELETE")
+}
+
+export function reorderRoadmapRows(labels: string[]): Promise<{ ok: boolean }> {
+  return apiMutate("/api/roadmap/rows/reorder", "PATCH", { labels })
+}
+
+// Column operations
+
+export function addRoadmapColumn(name: string): Promise<{ columns: string[] }> {
+  return apiMutate("/api/roadmap/columns", "POST", { name })
+}
+
+export function updateRoadmapColumn(
+  oldName: string,
+  newName: string
+): Promise<{ columns: string[] }> {
+  return apiMutate(`/api/roadmap/columns/${encodeURIComponent(oldName)}`, "PUT", { name: newName })
+}
+
+export function deleteRoadmapColumn(name: string): Promise<{ ok: boolean }> {
+  return apiMutate(`/api/roadmap/columns/${encodeURIComponent(name)}`, "DELETE")
+}
+
+export function reorderRoadmapColumns(names: string[]): Promise<{ ok: boolean }> {
+  return apiMutate("/api/roadmap/columns/reorder", "PATCH", { names })
 }

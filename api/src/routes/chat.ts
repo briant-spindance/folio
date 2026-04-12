@@ -12,6 +12,10 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { z } from "zod"
 import { listWikiDocs, getWikiDoc, saveWikiDoc } from "../store/wiki.js"
 import { listFeatures } from "../store/features.js"
+import { getRoadmap, saveRoadmap } from "../store/roadmap.js"
+import { mkdirSync, existsSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+import { paths } from "../lib/paths.js"
 
 const chatRouter = new Hono()
 
@@ -42,7 +46,7 @@ function resolveModel(modelKey: string) {
 // System prompt builder
 // ---------------------------------------------------------------------------
 interface ChatContext {
-  type: "wiki_doc" | "global"
+  type: "wiki_doc" | "roadmap" | "global"
   slug?: string
   title?: string
   body?: string
@@ -51,6 +55,7 @@ interface ChatContext {
 function buildSystemPrompt(context: ChatContext | null): string {
   const wikis = listWikiDocs()
   const features = listFeatures()
+  const roadmap = getRoadmap()
 
   const wikiList = wikis
     .map((d) => `- **${d.title}** (\`${d.slug}\`)${d.description ? `: ${d.description}` : ""}`)
@@ -60,7 +65,7 @@ function buildSystemPrompt(context: ChatContext | null): string {
     .map((f) => `- **${f.title}** [${f.status}]${f.priority ? ` (${f.priority})` : ""}`)
     .join("\n")
 
-  let systemPrompt = `You are an AI assistant embedded in Forge, a project management tool for software teams. You help users read, understand, and author project documentation and plan features.
+  let systemPrompt = `You are an AI assistant embedded in Forge, a project management tool for software teams. You help users read, understand, and author project documentation, plan features, and build roadmaps.
 
 ## Project Knowledge Base
 
@@ -70,10 +75,17 @@ ${wikiList || "No wiki docs yet."}
 ### Features
 ${featureList || "No features yet."}
 
+### Roadmap
+${roadmap.rows.length > 0
+    ? `Columns: ${roadmap.columns.join(", ")}\nRows: ${roadmap.rows.map((r) => r.label).join(", ")}\nTotal cards: ${roadmap.cards.length}`
+    : "No roadmap configured yet."}
+
 ## Guidelines
 - When asked to write or edit a document, use the available tools — do not just paste the content as a message.
 - For targeted edits, prefer \`edit_section\` when only part of a document needs to change.
 - For first-time authoring or complete rewrites, use \`replace_document\`.
+- When asked to generate a roadmap, use the \`generate_roadmap\` tool.
+- When asked to convert a roadmap card to a feature, use the \`convert_to_feature\` tool.
 - Always confirm what you did after using a tool.
 - Keep your prose concise and professional.
 - When writing documentation, match the style and voice of existing docs where possible.`
@@ -89,6 +101,17 @@ You have full access to read and write this document.
 \`\`\`markdown
 ${context.body}
 \`\`\``
+  }
+
+  if (context?.type === "roadmap") {
+    systemPrompt += `
+
+## Roadmap Context
+You are currently viewing the project roadmap. The roadmap has columns (time horizons): ${roadmap.columns.join(", ")}.
+${roadmap.rows.length > 0 ? `Rows (themes/categories): ${roadmap.rows.map((r) => r.label).join(", ")}` : "No rows defined yet."}
+${roadmap.cards.length > 0 ? `\nCurrent cards:\n${roadmap.cards.map((c) => `- "${c.title}" [${c.column} / ${c.row}]${c.notes ? ` — ${c.notes}` : ""}`).join("\n")}` : "\nNo cards yet."}
+
+You can generate a full roadmap using the \`generate_roadmap\` tool, or convert individual cards to features using \`convert_to_feature\`.`
   }
 
   return systemPrompt
@@ -323,6 +346,106 @@ chatRouter.post("/", async (c) => {
                 slug: saved.slug,
                 heading,
                 message: `Successfully updated the "${heading}" section of "${doc.title}".`,
+              }
+            },
+          }),
+
+          // ------------------------------------------------------------------
+          // generate_roadmap: AI generates a full roadmap from project docs
+          // ------------------------------------------------------------------
+          generate_roadmap: tool({
+            description:
+              "Generate a roadmap by reading existing project docs and features. Creates rows (themes/categories) and cards organized into time-frame columns (now, next, later). Use this when the user asks to create, generate, or build a roadmap.",
+            inputSchema: z.object({
+              rows: z
+                .array(z.object({ label: z.string() }))
+                .describe("The rows/themes/categories for the roadmap."),
+              cards: z
+                .array(
+                  z.object({
+                    title: z.string().describe("Short title for the idea/initiative."),
+                    notes: z.string().describe("Brief description or notes."),
+                    column: z.enum(["now", "next", "later"]).describe("Time horizon column."),
+                    row: z.string().describe("Which row/theme this card belongs to."),
+                    order: z.number().describe("Sort order within the cell (0-based)."),
+                  })
+                )
+                .describe("The roadmap cards to create."),
+            }),
+            execute: async ({ rows, cards }: { rows: { label: string }[]; cards: { title: string; notes: string; column: string; row: string; order: number }[] }) => {
+              const roadmapData = getRoadmap()
+              roadmapData.rows = rows.map((r) => ({ ...r, color: null }))
+              roadmapData.cards = cards.map((c, i) => ({
+                ...c,
+                id: Math.random().toString(36).slice(2, 10),
+              }))
+              const saved = saveRoadmap(roadmapData)
+              return {
+                ok: true,
+                message: `Generated roadmap with ${rows.length} rows and ${cards.length} cards.`,
+                rowCount: saved.rows.length,
+                cardCount: saved.cards.length,
+              }
+            },
+          }),
+
+          // ------------------------------------------------------------------
+          // convert_to_feature: create a Feature from a roadmap card
+          // ------------------------------------------------------------------
+          convert_to_feature: tool({
+            description:
+              "Convert a roadmap card into a concrete Feature by creating a feature directory with FEATURE.md. Use this when the user asks to turn a roadmap idea into a feature.",
+            inputSchema: z.object({
+              cardId: z.string().describe("The ID of the roadmap card to convert."),
+              status: z
+                .enum(["draft", "ready", "in-progress", "review", "done"])
+                .optional()
+                .describe("Initial status for the feature. Defaults to 'draft'."),
+              priority: z
+                .enum(["critical", "high", "medium", "low"])
+                .optional()
+                .describe("Priority for the feature. Defaults to 'medium'."),
+            }),
+            execute: async ({ cardId, status, priority }: { cardId: string; status?: string; priority?: string }) => {
+              const roadmapData = getRoadmap()
+              const card = roadmapData.cards.find((c) => c.id === cardId)
+              if (!card) {
+                return { ok: false, error: `No roadmap card with id '${cardId}' found.` }
+              }
+
+              // Create a slug from the card title
+              const slug = card.title
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^-|-$/g, "") || "untitled"
+
+              const featureDir = join(paths.features, slug)
+              if (existsSync(featureDir)) {
+                return { ok: false, error: `Feature directory '${slug}' already exists.` }
+              }
+
+              const today = new Date().toISOString().slice(0, 10)
+              const featureContent = `---
+title: ${card.title}
+status: ${status ?? "draft"}
+priority: ${priority ?? "medium"}
+created: "${today}"
+modified: "${today}"
+tags: []
+---
+
+${card.notes || "No description yet."}
+`
+              mkdirSync(featureDir, { recursive: true })
+              writeFileSync(join(featureDir, "FEATURE.md"), featureContent, "utf-8")
+
+              return {
+                ok: true,
+                slug,
+                title: card.title,
+                message: `Created feature "${card.title}" from roadmap card.`,
               }
             },
           }),

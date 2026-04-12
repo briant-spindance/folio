@@ -10,8 +10,22 @@ import {
   deleteWikiDoc as apiDeleteWikiDoc,
   reorderWikiDocs as apiReorderWikiDocs,
   fetchSearch,
+  fetchRoadmap,
+  saveRoadmap as apiSaveRoadmap,
+  createRoadmapCard as apiCreateRoadmapCard,
+  updateRoadmapCard as apiUpdateRoadmapCard,
+  deleteRoadmapCard as apiDeleteRoadmapCard,
+  moveRoadmapCard as apiMoveRoadmapCard,
+  addRoadmapRow as apiAddRoadmapRow,
+  updateRoadmapRow as apiUpdateRoadmapRow,
+  deleteRoadmapRow as apiDeleteRoadmapRow,
+  reorderRoadmapRows as apiReorderRoadmapRows,
+  addRoadmapColumn as apiAddRoadmapColumn,
+  updateRoadmapColumn as apiUpdateRoadmapColumn,
+  deleteRoadmapColumn as apiDeleteRoadmapColumn,
+  reorderRoadmapColumns as apiReorderRoadmapColumns,
 } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse } from "@/lib/types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -103,5 +117,155 @@ export function useSearch(query: string) {
     queryFn: () => fetchSearch(query),
     enabled: query.length >= 2,
     staleTime: 10_000,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Roadmap
+// ---------------------------------------------------------------------------
+
+export function useRoadmap() {
+  return useQuery<Roadmap>({
+    queryKey: ["roadmap"],
+    queryFn: fetchRoadmap,
+    staleTime: 30_000,
+  })
+}
+
+export function useSaveRoadmap() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (roadmap: Roadmap) => apiSaveRoadmap(roadmap),
+    onSuccess: (data) => {
+      qc.setQueryData(["roadmap"], data)
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useCreateRoadmapCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (card: { title: string; notes?: string; column: string; row: string; order?: number }) =>
+      apiCreateRoadmapCard(card),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useUpdateRoadmapCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Omit<RoadmapCard, "id">> }) =>
+      apiUpdateRoadmapCard(id, updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useDeleteRoadmapCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => apiDeleteRoadmapCard(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useMoveRoadmapCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, target }: { id: string; target: { column?: string; row?: string; order?: number } }) =>
+      apiMoveRoadmapCard(id, target),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useAddRoadmapRow() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ label, color }: { label: string; color?: string | null }) =>
+      apiAddRoadmapRow(label, color),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useUpdateRoadmapRow() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ oldLabel, updates }: { oldLabel: string; updates: { label?: string; color?: string | null } }) =>
+      apiUpdateRoadmapRow(oldLabel, updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useDeleteRoadmapRow() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (label: string) => apiDeleteRoadmapRow(label),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useReorderRoadmapRows() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (labels: string[]) => apiReorderRoadmapRows(labels),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useAddRoadmapColumn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => apiAddRoadmapColumn(name),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useUpdateRoadmapColumn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ oldName, newName }: { oldName: string; newName: string }) =>
+      apiUpdateRoadmapColumn(oldName, newName),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useDeleteRoadmapColumn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => apiDeleteRoadmapColumn(name),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
   })
 }

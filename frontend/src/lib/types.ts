@@ -60,7 +60,7 @@ export interface TeamMember {
 }
 
 export interface SearchResult {
-  type: "wiki" | "feature" | "issue"
+  type: "wiki" | "feature" | "issue" | "roadmap"
   slug: string
   title: string
   snippet: string
@@ -99,4 +99,39 @@ export interface StatusResponse {
   openIssues: IssueSummary[]
   team: TeamMember[]
   health: HealthSummary
+  roadmap?: RoadmapStatusSummary
+}
+
+// ---------------------------------------------------------------------------
+// Roadmap
+// ---------------------------------------------------------------------------
+
+export interface RoadmapCard {
+  id: string
+  title: string
+  notes: string
+  column: string
+  row: string
+  order: number
+}
+
+export interface RoadmapRow {
+  label: string
+  color: string | null
+}
+
+export interface Roadmap {
+  title: string
+  columns: string[]
+  rows: RoadmapRow[]
+  cards: RoadmapCard[]
+  modified: string | null
+}
+
+export interface RoadmapStatusSummary {
+  title: string
+  totalCards: number
+  columns: string[]
+  byColumn: Record<string, number>
+  rowCount: number
 }
