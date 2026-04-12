@@ -2783,6 +2783,14 @@ body.ai-resizing {
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Let the roadmap use the full width of the main area */
+.content:has(.roadmap-page) {
+  max-width: none;
 }
 
 .roadmap-header {
@@ -3165,9 +3173,9 @@ body.ai-resizing {
 /* ── Card ────────────────────────────────────────────────────────────────── */
 
 .roadmap-card {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 6px;
   padding: 8px 10px;
   background: var(--surface-raised);
   border: 1px solid var(--border);
@@ -3192,10 +3200,12 @@ body.ai-resizing {
 }
 
 .roadmap-card-grip {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--foreground-muted);
-  padding-top: 2px;
   cursor: grab;
-  flex-shrink: 0;
   opacity: 0;
   transition: opacity 100ms;
 }

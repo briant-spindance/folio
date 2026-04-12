@@ -536,10 +536,7 @@ function RowHeader({
           onBlur={handleRenameSubmit}
         />
       ) : (
-        <>
-          {row.color && <span className="roadmap-row-color-dot" style={{ backgroundColor: row.color }} />}
-          <span className="roadmap-row-label">{row.label}</span>
-        </>
+        <span className="roadmap-row-label">{row.label}</span>
       )}
       <div className="roadmap-row-menu-wrap">
         <button
@@ -1136,7 +1133,7 @@ export function RoadmapPage() {
   }
 
   // Total grid columns: row header + data columns + optional add-column button
-  const gridCols = `160px repeat(${columns.length}, minmax(160px, 1fr))${showAddColumn ? " 180px" : ""}`
+  const gridCols = `180px repeat(${columns.length}, 260px)${showAddColumn ? " 120px" : ""}`
   const rowIds = rows.map((r) => rowDragId(r.label))
   const draggingRow = draggingRowLabel ? rows.find((r) => r.label === draggingRowLabel) : null
 
