@@ -240,6 +240,10 @@ export async function uploadArtifact(slug: string, file: File): Promise<FeatureA
   return res.json() as Promise<FeatureArtifact>
 }
 
+export async function createArtifact(slug: string, filename: string): Promise<FeatureArtifact> {
+  return apiMutate<FeatureArtifact>(`/api/features/${slug}/artifacts/create`, "POST", { filename })
+}
+
 export function getArtifactRawUrl(slug: string, filename: string): string {
   return `/api/features/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
 }

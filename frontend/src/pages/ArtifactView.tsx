@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react"
-import { Link, useParams, useNavigate } from "react-router-dom"
+import { useState, useCallback, useEffect } from "react"
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import CodeMirror from "@uiw/react-codemirror"
@@ -9,6 +9,8 @@ import { markdown as markdownLang } from "@codemirror/lang-markdown"
 import { yaml as yamlLang } from "@codemirror/lang-yaml"
 import { css as cssLang } from "@codemirror/lang-css"
 import { html as htmlLang } from "@codemirror/lang-html"
+import { python } from "@codemirror/lang-python"
+import { sql } from "@codemirror/lang-sql"
 import {
   useFeature,
   useArtifactContent,
@@ -73,6 +75,14 @@ function getCodeMirrorExtensions(name: string) {
     case ".xml":
     case ".svg":
       return [htmlLang()]
+    case ".py":
+      return [python()]
+    case ".sql":
+      return [sql()]
+    case ".sh":
+    case ".bash":
+      // Shell scripts get basic highlighting from the default stream parser
+      return []
     default:
       return []
   }
@@ -135,7 +145,7 @@ function CodeViewer({ content, filename }: { content: string; filename: string }
         value={content}
         extensions={getCodeMirrorExtensions(filename)}
         editable={false}
-        theme="dark"
+        theme="light"
         basicSetup={{
           lineNumbers: true,
           foldGutter: false,
@@ -178,6 +188,7 @@ function BinaryViewer({ slug, filename, size }: { slug: string; filename: string
 export function ArtifactView() {
   const { slug, filename } = useParams<{ slug: string; filename: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: feature } = useFeature(slug ?? "")
   const { data: artifact, isLoading, error } = useArtifactContent(slug ?? "", filename ?? "")
   const saveMutation = useSaveArtifact(slug ?? "", filename ?? "")
@@ -189,6 +200,17 @@ export function ArtifactView() {
 
   const category = artifact ? categorize(artifact.type, artifact.name) : null
   const isEditable = category === "markdown" || category === "code"
+
+  // Auto-enter edit mode when ?edit is in the URL (e.g. after creating a new file)
+  useEffect(() => {
+    if (searchParams.has("edit") && artifact && isEditable && !editing) {
+      setEditContent(artifact.content)
+      setEditing(true)
+      // Remove the ?edit param so refreshing doesn't re-trigger
+      searchParams.delete("edit")
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams, artifact, isEditable, editing])
 
   const handleEdit = useCallback(() => {
     if (artifact) {
@@ -379,7 +401,7 @@ export function ArtifactView() {
                   value={editContent}
                   onChange={setEditContent}
                   extensions={getCodeMirrorExtensions(artifact.name)}
-                  theme="dark"
+                  theme="light"
                   basicSetup={{
                     lineNumbers: true,
                     foldGutter: true,
@@ -394,7 +416,7 @@ export function ArtifactView() {
                   value={editContent}
                   onChange={setEditContent}
                   extensions={getCodeMirrorExtensions(artifact.name)}
-                  theme="dark"
+                  theme="light"
                   basicSetup={{
                     lineNumbers: true,
                     foldGutter: true,

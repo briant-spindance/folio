@@ -35,6 +35,7 @@ import {
   saveArtifactContent as apiSaveArtifactContent,
   deleteArtifact as apiDeleteArtifact,
   uploadArtifact as apiUploadArtifact,
+  createArtifact as apiCreateArtifact,
 } from "@/lib/api"
 import type { FetchFeaturesParams } from "@/lib/api"
 import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail } from "@/lib/types"
@@ -401,6 +402,16 @@ export function useUploadArtifact(slug: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (file: File) => apiUploadArtifact(slug, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["features", slug, "artifacts"] })
+    },
+  })
+}
+
+export function useCreateArtifact(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (filename: string) => apiCreateArtifact(slug, filename),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["features", slug, "artifacts"] })
     },

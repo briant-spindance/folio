@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from "react"
-import { Link, useParams } from "react-router-dom"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { Link, useParams, useNavigate } from "react-router-dom"
+import { createPortal } from "react-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts, useUploadArtifact, useDeleteArtifact, useStatus } from "@/hooks/useData"
+import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts, useUploadArtifact, useDeleteArtifact, useCreateArtifact, useStatus } from "@/hooks/useData"
 import { StatusBadge } from "@/components/Badges"
 import { AssigneePicker } from "@/components/AssigneePicker"
 import type { FeatureStatus, IssuePriority } from "@/lib/types"
@@ -213,6 +214,7 @@ function ArtifactIcon({ type }: { type: string }) {
 
 export function FeaturesDetail() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const { data: feature, isLoading, error } = useFeature(slug ?? "")
   const { mutate: deleteFeature, isPending: isDeleting } = useDeleteFeature()
   const { mutate: saveFeature } = useSaveFeature(slug ?? "")
@@ -220,9 +222,22 @@ export function FeaturesDetail() {
   const { data: statusData } = useStatus()
   const teamMembers = statusData?.team?.map((t) => t.name) ?? []
   const uploadMutation = useUploadArtifact(slug ?? "")
+  const createArtifactMutation = useCreateArtifact(slug ?? "")
   const deleteArtifactMutation = useDeleteArtifact(slug ?? "")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  // Add-file dropdown state
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const addBtnRef = useRef<HTMLButtonElement>(null)
+  const addMenuRef = useRef<HTMLDivElement>(null)
+  const [addMenuPos, setAddMenuPos] = useState<{ top: number; left: number } | null>(null)
+
+  // Create file modal state
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [newFilename, setNewFilename] = useState("")
+  const [createError, setCreateError] = useState("")
+  const createInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileUpload = useCallback((files: FileList | null) => {
     if (!files) return
@@ -230,6 +245,59 @@ export function FeaturesDetail() {
       uploadMutation.mutate(files[i])
     }
   }, [uploadMutation])
+
+  // Position the add-file dropdown under the button
+  useEffect(() => {
+    if (!addMenuOpen || !addBtnRef.current) return
+    const rect = addBtnRef.current.getBoundingClientRect()
+    setAddMenuPos({
+      top: rect.bottom + window.scrollY + 4,
+      left: rect.right + window.scrollX,
+    })
+  }, [addMenuOpen])
+
+  // Close add-file dropdown on outside click
+  useEffect(() => {
+    if (!addMenuOpen) return
+    function handleClick(e: MouseEvent) {
+      const target = e.target as Node
+      if (addBtnRef.current?.contains(target)) return
+      if (addMenuRef.current?.contains(target)) return
+      setAddMenuOpen(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [addMenuOpen])
+
+  // Focus the create-file input when modal opens
+  useEffect(() => {
+    if (createModalOpen) {
+      setTimeout(() => createInputRef.current?.focus(), 0)
+    }
+  }, [createModalOpen])
+
+  function handleCreateFile() {
+    const filename = newFilename.trim()
+    if (!filename) {
+      setCreateError("Filename is required")
+      return
+    }
+    if (filename === "FEATURE.md") {
+      setCreateError("Cannot use reserved name FEATURE.md")
+      return
+    }
+    setCreateError("")
+    createArtifactMutation.mutate(filename, {
+      onSuccess: () => {
+        setCreateModalOpen(false)
+        setNewFilename("")
+        navigate(`/features/${slug}/artifacts/${encodeURIComponent(filename)}?edit`)
+      },
+      onError: (err) => {
+        setCreateError(err.message)
+      },
+    })
+  }
 
   if (isLoading) {
     return <div style={{ color: "var(--foreground-muted)", padding: "40px", textAlign: "center" }}>Loading...</div>
@@ -394,24 +462,70 @@ export function FeaturesDetail() {
           <div className="feature-sidebar-files-header">
             <h3 className="feature-meta-heading">Supporting Files</h3>
             <button
+              ref={addBtnRef}
               className="btn btn-sm btn-outline"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setAddMenuOpen((v) => !v)}
               disabled={uploadMutation.isPending}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              {uploadMutation.isPending ? "Uploading..." : "Upload"}
+              Add
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: "2px" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
             <input
               ref={fileInputRef}
               type="file"
               multiple
               style={{ display: "none" }}
-              onChange={(e) => handleFileUpload(e.target.files)}
+              onChange={(e) => { handleFileUpload(e.target.files); setAddMenuOpen(false) }}
             />
+            {/* Add-file dropdown portal */}
+            {addMenuOpen && addMenuPos && createPortal(
+              <div
+                ref={addMenuRef}
+                className="files-add-dropdown"
+                style={{
+                  position: "absolute",
+                  top: addMenuPos.top,
+                  left: addMenuPos.left,
+                }}
+              >
+                <button
+                  className="files-add-option"
+                  onClick={() => {
+                    setAddMenuOpen(false)
+                    fileInputRef.current?.click()
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Upload File
+                </button>
+                <button
+                  className="files-add-option"
+                  onClick={() => {
+                    setAddMenuOpen(false)
+                    setCreateModalOpen(true)
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
+                  Create File
+                </button>
+              </div>,
+              document.body,
+            )}
           </div>
 
           {artifacts && artifacts.length > 0 ? (
@@ -465,6 +579,45 @@ export function FeaturesDetail() {
         </div>
         </div>
       </div>
+
+      {/* ── Create File modal ── */}
+      {createModalOpen && createPortal(
+        <div className="create-file-backdrop" onClick={() => { setCreateModalOpen(false); setNewFilename(""); setCreateError("") }}>
+          <div className="create-file-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="create-file-title">Create New File</h3>
+            <label className="create-file-label">Filename</label>
+            <input
+              ref={createInputRef}
+              className="create-file-input"
+              type="text"
+              value={newFilename}
+              placeholder="notes.md"
+              onChange={(e) => { setNewFilename(e.target.value); setCreateError("") }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreateFile()
+                if (e.key === "Escape") { setCreateModalOpen(false); setNewFilename(""); setCreateError("") }
+              }}
+            />
+            {createError && <p className="create-file-error">{createError}</p>}
+            <div className="create-file-actions">
+              <button
+                className="btn btn-sm btn-outline"
+                onClick={() => { setCreateModalOpen(false); setNewFilename(""); setCreateError("") }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={handleCreateFile}
+                disabled={createArtifactMutation.isPending}
+              >
+                {createArtifactMutation.isPending ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </>
   )
 }

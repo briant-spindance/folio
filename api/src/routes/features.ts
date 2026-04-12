@@ -221,6 +221,37 @@ router.post("/:slug/artifacts/upload", async (c) => {
   }
 })
 
+// POST /api/features/:slug/artifacts/create — create a new empty text file
+router.post("/:slug/artifacts/create", async (c) => {
+  const slug = c.req.param("slug")
+  const body = await c.req.json<{ filename?: string }>()
+
+  const filename = body.filename?.trim()
+  if (!filename) {
+    return c.json({ error: "filename is required" }, 400)
+  }
+  if (filename === "FEATURE.md") {
+    return c.json({ error: "Invalid filename" }, 400)
+  }
+
+  // Check if file already exists
+  const existing = getArtifactFilePath(slug, filename)
+  if (existing) {
+    return c.json({ error: "File already exists", filename }, 409)
+  }
+
+  try {
+    const artifact = saveArtifactContent(slug, filename, "")
+    if (!artifact) {
+      return c.json({ error: "Feature not found", slug }, 404)
+    }
+    return c.json(artifact, 201)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to create file"
+    return c.json({ error: message }, 500)
+  }
+})
+
 // GET /api/features/:slug/artifacts/:filename — get artifact content
 router.get("/:slug/artifacts/:filename", (c) => {
   const slug = c.req.param("slug")
