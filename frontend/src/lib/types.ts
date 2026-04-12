@@ -88,6 +88,14 @@ export interface FeatureArtifact {
   type: string
 }
 
+export interface ArtifactDetail {
+  name: string
+  content: string
+  type: string
+  mimeType: string
+  size: number
+}
+
 export interface IssueSummary {
   slug: string
   title: string

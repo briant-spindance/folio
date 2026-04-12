@@ -1,13 +1,16 @@
 ---
 title: OAuth Integration
 status: ready
+priority: high
+modified: '2026-04-09'
+order: 6
+created: '2026-04-01'
 assignee: Alice
 points: 5
 sprint: sprint-3
-priority: 2
-created: "2026-04-01"
-modified: "2026-04-09"
 ---
+
+
 
 ## Summary
 
@@ -59,3 +62,5 @@ A provider is automatically enabled when its `CLIENT_ID` and `CLIENT_SECRET` are
 ## Open Questions
 
 > Should we support SAML/OIDC for enterprise SSO in this feature, or defer to a separate feature?
+
+

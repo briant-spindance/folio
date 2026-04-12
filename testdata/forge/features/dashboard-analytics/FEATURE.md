@@ -1,13 +1,16 @@
 ---
 title: Dashboard Analytics
 status: in-progress
+priority: medium
+modified: '2026-04-06'
+order: 2
+created: '2026-03-25'
 assignee: Bob
 points: 5
 sprint: sprint-3
-priority: 6
-created: "2026-03-25"
-modified: "2026-04-06"
 ---
+
+
 
 ## Summary
 
@@ -20,3 +23,5 @@ Add an analytics dashboard showing key project metrics: feature velocity, open i
 - [ ] Sprint burndown chart
 - [ ] Team throughput breakdown by assignee
 - [ ] Date range picker for all charts
+
+

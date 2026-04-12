@@ -1,13 +1,15 @@
 ---
 title: Real-Time Notifications
 status: ready
+priority: low
+modified: '2026-04-04'
+order: 5
+created: '2026-04-04'
 assignee: Charlie
 points: 5
-sprint: null
-priority: 8
-created: "2026-04-04"
-modified: "2026-04-04"
 ---
+
+
 
 ## Summary
 
@@ -19,3 +21,5 @@ Push real-time in-app notifications via WebSocket when relevant project events o
 - [ ] Notification bell shows unread count badge
 - [ ] Users can mark notifications as read individually or all at once
 - [ ] Notification preferences can be configured per event type
+
+

@@ -31,9 +31,13 @@ import {
   deleteFeature as apiDeleteFeature,
   fetchFeatureArtifacts,
   reorderFeatures as apiReorderFeatures,
+  fetchArtifactContent,
+  saveArtifactContent as apiSaveArtifactContent,
+  deleteArtifact as apiDeleteArtifact,
+  uploadArtifact as apiUploadArtifact,
 } from "@/lib/api"
 import type { FetchFeaturesParams } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures } from "@/lib/types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -357,6 +361,48 @@ export function useReorderFeatures() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["features"] })
       qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useArtifactContent(slug: string, filename: string) {
+  return useQuery<ArtifactDetail>({
+    queryKey: ["features", slug, "artifacts", filename],
+    queryFn: () => fetchArtifactContent(slug, filename),
+    staleTime: 30_000,
+    enabled: !!slug && !!filename,
+  })
+}
+
+export function useSaveArtifact(slug: string, filename: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (content: string) => apiSaveArtifactContent(slug, filename, content),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["features", slug, "artifacts", filename] })
+      qc.invalidateQueries({ queryKey: ["features", slug, "artifacts"] })
+    },
+  })
+}
+
+export function useDeleteArtifact(slug: string) {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (filename: string) => apiDeleteArtifact(slug, filename),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["features", slug, "artifacts"] })
+      navigate(`/features/${slug}`)
+    },
+  })
+}
+
+export function useUploadArtifact(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => apiUploadArtifact(slug, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["features", slug, "artifacts"] })
     },
   })
 }

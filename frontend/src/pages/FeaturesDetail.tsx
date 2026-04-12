@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Link, useParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts } from "@/hooks/useData"
+import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts, useUploadArtifact, useDeleteArtifact } from "@/hooks/useData"
 import { StatusBadge } from "@/components/Badges"
 import type { FeatureStatus, IssuePriority } from "@/lib/types"
 
@@ -216,6 +216,17 @@ export function FeaturesDetail() {
   const { mutate: deleteFeature, isPending: isDeleting } = useDeleteFeature()
   const { mutate: saveFeature } = useSaveFeature(slug ?? "")
   const { data: artifacts } = useFeatureArtifacts(slug ?? "")
+  const uploadMutation = useUploadArtifact(slug ?? "")
+  const deleteArtifactMutation = useDeleteArtifact(slug ?? "")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const handleFileUpload = useCallback((files: FileList | null) => {
+    if (!files) return
+    for (let i = 0; i < files.length; i++) {
+      uploadMutation.mutate(files[i])
+    }
+  }, [uploadMutation])
 
   if (isLoading) {
     return <div style={{ color: "var(--foreground-muted)", padding: "40px", textAlign: "center" }}>Loading...</div>
@@ -291,26 +302,11 @@ export function FeaturesDetail() {
               {body}
             </ReactMarkdown>
           </div>
-
-          {/* ── Artifacts ────────────────────────────────────── */}
-          {artifacts && artifacts.length > 0 && (
-            <div className="feature-artifacts">
-              <h3 className="feature-artifacts-title">Supporting Artifacts</h3>
-              <div className="feature-artifacts-list">
-                {artifacts.map((a) => (
-                  <div key={a.name} className="feature-artifact-row">
-                    <ArtifactIcon type={a.type} />
-                    <span className="feature-artifact-name">{a.name}</span>
-                    <span className="feature-artifact-size">{formatFileSize(a.size)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* ── Metadata sidebar ──────────────────────────────── */}
-        <aside className="feature-meta-sidebar">
+        {/* ── Right column ───────────────────────────────── */}
+        <div className="feature-detail-sidebar">
+          <aside className="feature-meta-sidebar">
           <h3 className="feature-meta-heading">Details</h3>
 
           <div className="feature-meta-field">
@@ -389,6 +385,82 @@ export function FeaturesDetail() {
             </div>
           </div>
         </aside>
+
+        {/* ── Supporting files (own box) ────────────────────── */}
+        <div className="feature-sidebar-files-card">
+          <div className="feature-sidebar-files-header">
+            <h3 className="feature-meta-heading">Supporting Files</h3>
+            <button
+              className="btn btn-sm btn-outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadMutation.isPending}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {uploadMutation.isPending ? "Uploading..." : "Upload"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+          </div>
+
+          {artifacts && artifacts.length > 0 ? (
+            <div className="feature-sidebar-files-list">
+              {artifacts.map((a) => (
+                <div key={a.name} className="feature-sidebar-file-row">
+                  <Link
+                    to={`/features/${slug}/artifacts/${encodeURIComponent(a.name)}`}
+                    className="feature-sidebar-file-link"
+                  >
+                    <ArtifactIcon type={a.type} />
+                    <span className="feature-sidebar-file-name">{a.name}</span>
+                  </Link>
+                  {deleteConfirm === a.name ? (
+                    <div className="feature-artifact-confirm">
+                      <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => setDeleteConfirm(null)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => {
+                          deleteArtifactMutation.mutate(a.name, {
+                            onSettled: () => setDeleteConfirm(null),
+                          })
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="feature-artifact-delete"
+                      title="Delete file"
+                      onClick={() => setDeleteConfirm(a.name)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="feature-sidebar-files-empty">No files yet</p>
+          )}
+        </div>
+        </div>
       </div>
     </>
   )

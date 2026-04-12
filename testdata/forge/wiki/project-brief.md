@@ -1,11 +1,8 @@
 ---
 title: Project Brief
-modified: "2026-04-11"
+modified: "2026-04-12"
 icon: book-open
-order: 0
 ---
-
-# Project Brief
 
 Forge is a lightweight, local-first project management tool for software teams working alongside AI agents. It stores all project state as Markdown and YAML files directly in your repository.
 
@@ -23,13 +20,7 @@ Modern development with AI agents requires project context to be **file-native**
 
 ## Technology Stack
 
-| Layer | Technology |
-|---|---|
-| CLI | Go, Cobra |
-| Web UI | React 19, Vite, Tailwind CSS v4 |
-| API | Go, net/http |
-| Storage | Filesystem (Markdown + YAML) |
-| AI | Vercel AI SDK |
+LayerTechnologyCLIGo, CobraWeb UIReact 19, Vite, Tailwind CSS v4APIGo, net/httpStorageFilesystem (Markdown + YAML)AIVercel AI SDK
 
 ## Golang System Architecture
 
@@ -38,16 +29,23 @@ Forge's backend is built as a **single Go binary** that provides both CLI comman
 ### Core Components
 
 **CLI Layer**
+
 - Built with [Cobra](https://github.com/spf13/cobra) for command structure
 - All project operations available as subcommands (`forge feature create`, `forge wiki edit`, etc.)
 - Direct filesystem operations for maximum speed and simplicity
 
 **API Server**
+
 - JSON REST API served at `/api` using Go's standard `net/http` package
 - Single binary serves both static UI assets and API endpoints
 - Reads and writes to `forge/` directory in the repository root
 
+**Web Server**
+
+ The binary also servers the Single Page Web App (SPA) for the user
+
 **Storage Layer**
+
 - File-based persistence using Markdown and YAML
 - No database required — all state is human-readable and git-friendly
 - Structured directory layout under `forge/` for features, wiki, sprints, etc.
@@ -67,13 +65,13 @@ This architecture enables Forge to be both a powerful CLI tool for developers an
 ## Development Phases
 
 ### Phase 1 — Foundation
+
 Core CRUD for all entity types, web UI, CLI parity, health checks.
 
 ### Phase 2 — Enhancement
+
 ADRs, review-to-feature linking, enhanced git integration, cloud deployment.
 
 ### Phase 3 — AI Integration
+
 Chat interface with project context, AI-assisted feature writing, smart sprint planning.
-
-
-

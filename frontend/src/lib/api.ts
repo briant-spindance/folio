@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -201,4 +201,45 @@ export function deleteFeature(slug: string): Promise<{ ok: boolean; slug: string
 
 export function fetchFeatureArtifacts(slug: string): Promise<FeatureArtifact[]> {
   return apiFetch<FeatureArtifact[]>(`/api/features/${slug}/artifacts`)
+}
+
+export function fetchArtifactContent(slug: string, filename: string): Promise<ArtifactDetail> {
+  return apiFetch<ArtifactDetail>(`/api/features/${slug}/artifacts/${encodeURIComponent(filename)}`)
+}
+
+export function saveArtifactContent(
+  slug: string,
+  filename: string,
+  content: string
+): Promise<FeatureArtifact> {
+  return apiMutate<FeatureArtifact>(
+    `/api/features/${slug}/artifacts/${encodeURIComponent(filename)}`,
+    "PUT",
+    { content }
+  )
+}
+
+export function deleteArtifact(
+  slug: string,
+  filename: string
+): Promise<{ ok: boolean; slug: string; filename: string }> {
+  return apiMutate(`/api/features/${slug}/artifacts/${encodeURIComponent(filename)}`, "DELETE")
+}
+
+export async function uploadArtifact(slug: string, file: File): Promise<FeatureArtifact> {
+  const formData = new FormData()
+  formData.append("file", file)
+  const res = await fetch(`/api/features/${slug}/artifacts/upload`, {
+    method: "POST",
+    body: formData,
+  })
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(err.error ?? `Upload failed: ${res.status}`)
+  }
+  return res.json() as Promise<FeatureArtifact>
+}
+
+export function getArtifactRawUrl(slug: string, filename: string): string {
+  return `/api/features/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
 }

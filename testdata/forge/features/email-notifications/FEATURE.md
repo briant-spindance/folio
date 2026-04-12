@@ -1,13 +1,13 @@
 ---
 title: Email Notifications
 status: draft
-assignee: null
-points: null
-sprint: null
-priority: 4
-created: "2026-04-02"
-modified: "2026-04-02"
+priority: medium
+modified: '2026-04-02'
+order: 3
+created: '2026-04-02'
 ---
+
+
 
 ## Summary
 
@@ -19,3 +19,5 @@ Send transactional and digest email notifications for key project events: featur
 - [ ] Email sent when a feature moves to review status
 - [ ] Daily digest of open issues and sprint progress
 - [ ] Users can configure notification preferences
+
+

@@ -1,4 +1,4 @@
-import { readdirSync, existsSync, mkdirSync, writeFileSync, rmSync, statSync } from "node:fs"
+import { readdirSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync } from "node:fs"
 import path from "node:path"
 import matter from "gray-matter"
 import { parseFrontmatter } from "../lib/frontmatter.js"
@@ -421,4 +421,173 @@ export function listFeatureArtifacts(slug: string): FeatureArtifact[] | null {
       }
     })
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+// ---------------------------------------------------------------------------
+// Artifact content operations
+// ---------------------------------------------------------------------------
+
+const TEXT_TYPES = new Set(["markdown", "text", "data"])
+
+const MIME_TYPES: Record<string, string> = {
+  ".md": "text/markdown",
+  ".txt": "text/plain",
+  ".json": "application/json",
+  ".yaml": "application/x-yaml",
+  ".yml": "application/x-yaml",
+  ".csv": "text/csv",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".pdf": "application/pdf",
+  ".html": "text/html",
+  ".css": "text/css",
+  ".js": "application/javascript",
+  ".ts": "text/plain",
+  ".tsx": "text/plain",
+  ".jsx": "text/plain",
+  ".xml": "application/xml",
+  ".sh": "text/x-shellscript",
+  ".py": "text/x-python",
+  ".rb": "text/x-ruby",
+  ".go": "text/x-go",
+  ".rs": "text/x-rust",
+  ".sql": "text/x-sql",
+  ".graphql": "text/plain",
+  ".env": "text/plain",
+  ".toml": "text/plain",
+  ".ini": "text/plain",
+  ".conf": "text/plain",
+  ".log": "text/plain",
+}
+
+function getMimeType(filename: string): string {
+  const ext = path.extname(filename).toLowerCase()
+  return MIME_TYPES[ext] ?? "application/octet-stream"
+}
+
+/**
+ * Validate an artifact filename to prevent path traversal.
+ * Returns the safe absolute path or null if invalid.
+ */
+function safeArtifactPath(slug: string, filename: string): string | null {
+  // Reject obvious attacks
+  if (!filename || filename.includes("..") || filename.includes("/") || filename.includes("\\") || filename.includes("\0")) {
+    return null
+  }
+  // Must not be FEATURE.md
+  if (filename === "FEATURE.md") return null
+
+  const featureDir = path.join(paths.features, slug)
+  const filePath = path.join(featureDir, filename)
+
+  // Verify the resolved path is inside the feature directory
+  const resolved = path.resolve(filePath)
+  const resolvedDir = path.resolve(featureDir)
+  if (!resolved.startsWith(resolvedDir + path.sep)) return null
+
+  return filePath
+}
+
+export function isTextArtifact(filename: string): boolean {
+  const type = guessFileType(filename)
+  if (TEXT_TYPES.has(type)) return true
+  // Also treat code files as text
+  const ext = path.extname(filename).toLowerCase()
+  const codeExts = new Set([
+    ".js", ".ts", ".tsx", ".jsx", ".html", ".css",
+    ".sh", ".py", ".rb", ".go", ".rs", ".sql",
+    ".graphql", ".env", ".toml", ".ini", ".conf", ".log",
+    ".xml",
+  ])
+  return codeExts.has(ext)
+}
+
+export interface ArtifactContent {
+  name: string
+  content: string
+  type: string
+  mimeType: string
+  size: number
+}
+
+/**
+ * Read the content of a text artifact. Returns null if the feature or file
+ * doesn't exist, or if the filename is invalid.
+ */
+export function getArtifactContent(slug: string, filename: string): ArtifactContent | null {
+  const filePath = safeArtifactPath(slug, filename)
+  if (!filePath || !existsSync(filePath)) return null
+
+  const stats = statSync(filePath)
+  const content = readFileSync(filePath, "utf-8")
+  return {
+    name: filename,
+    content,
+    type: guessFileType(filename),
+    mimeType: getMimeType(filename),
+    size: stats.size,
+  }
+}
+
+/**
+ * Get the absolute file path and MIME type of an artifact for raw serving.
+ * Returns null if the feature or file doesn't exist, or if the filename is invalid.
+ */
+export function getArtifactFilePath(slug: string, filename: string): { filePath: string; mimeType: string } | null {
+  const filePath = safeArtifactPath(slug, filename)
+  if (!filePath || !existsSync(filePath)) return null
+  return { filePath, mimeType: getMimeType(filename) }
+}
+
+/**
+ * Save text content to an artifact file. Creates the file if it doesn't exist.
+ */
+export function saveArtifactContent(slug: string, filename: string, content: string): FeatureArtifact | null {
+  const featureDir = path.join(paths.features, slug)
+  if (!existsSync(featureDir)) return null
+
+  const filePath = safeArtifactPath(slug, filename)
+  if (!filePath) return null
+
+  writeFileSync(filePath, content, "utf-8")
+  const stats = statSync(filePath)
+  return {
+    name: filename,
+    size: stats.size,
+    type: guessFileType(filename),
+  }
+}
+
+/**
+ * Save a binary buffer to an artifact file (for uploads).
+ */
+export function saveArtifactBuffer(slug: string, filename: string, buffer: Buffer): FeatureArtifact | null {
+  const featureDir = path.join(paths.features, slug)
+  if (!existsSync(featureDir)) return null
+
+  const filePath = safeArtifactPath(slug, filename)
+  if (!filePath) return null
+
+  writeFileSync(filePath, buffer)
+  const stats = statSync(filePath)
+  return {
+    name: filename,
+    size: stats.size,
+    type: guessFileType(filename),
+  }
+}
+
+/**
+ * Delete a single artifact file. Returns false if the file doesn't exist or
+ * the filename is invalid.
+ */
+export function deleteArtifact(slug: string, filename: string): boolean {
+  const filePath = safeArtifactPath(slug, filename)
+  if (!filePath || !existsSync(filePath)) return false
+  unlinkSync(filePath)
+  return true
 }

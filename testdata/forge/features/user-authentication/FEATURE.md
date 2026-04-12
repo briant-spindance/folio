@@ -1,13 +1,16 @@
 ---
 title: User Authentication
 status: in-progress
+priority: critical
+modified: '2026-04-08'
+order: 9
+created: '2026-03-15'
 assignee: Alice
 points: 8
 sprint: sprint-3
-priority: 1
-created: "2026-03-15"
-modified: "2026-04-08"
 ---
+
+
 
 ## Summary
 
@@ -29,3 +32,5 @@ The application requires authenticated access for all project management feature
 ## Technical Approach
 
 Use JWT tokens stored in httpOnly cookies. Implement refresh token rotation for extended sessions.
+
+

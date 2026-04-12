@@ -11,6 +11,7 @@ import { FeaturesList } from "@/pages/FeaturesList"
 import { FeaturesDetail } from "@/pages/FeaturesDetail"
 import { FeaturesEdit } from "@/pages/FeaturesEdit"
 import { FeaturesNew } from "@/pages/FeaturesNew"
+import { ArtifactView } from "@/pages/ArtifactView"
 import { StubPage } from "@/pages/StubPage"
 
 const queryClient = new QueryClient()
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/features" element={<FeaturesList />} />
             <Route path="/features/new" element={<FeaturesNew />} />
             <Route path="/features/:slug/edit" element={<FeaturesEdit />} />
+            <Route path="/features/:slug/artifacts/:filename" element={<ArtifactView />} />
             <Route path="/features/:slug" element={<FeaturesDetail />} />
             <Route path="/sprints" element={<StubPage title="Sprints" />} />
             <Route path="/issues" element={<StubPage title="Issues" />} />

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { Hono } from "hono"
 import {
   listFeatures,
@@ -7,6 +8,12 @@ import {
   deleteFeature,
   listFeatureArtifacts,
   reorderFeatures,
+  getArtifactContent,
+  getArtifactFilePath,
+  saveArtifactContent,
+  saveArtifactBuffer,
+  deleteArtifact,
+  isTextArtifact,
 } from "../store/features.js"
 import type { FeatureStatus, Priority } from "../store/features.js"
 import { updateCard } from "../store/roadmap.js"
@@ -183,6 +190,94 @@ router.get("/:slug/artifacts", (c) => {
     return c.json({ error: "Feature not found", slug }, 404)
   }
   return c.json(artifacts)
+})
+
+// POST /api/features/:slug/artifacts/upload — upload a file
+router.post("/:slug/artifacts/upload", async (c) => {
+  const slug = c.req.param("slug")
+  const formData = await c.req.formData()
+  const file = formData.get("file")
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ error: "file is required" }, 400)
+  }
+
+  const filename = file.name
+  if (!filename || filename === "FEATURE.md") {
+    return c.json({ error: "Invalid filename" }, 400)
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const artifact = saveArtifactBuffer(slug, filename, buffer)
+    if (!artifact) {
+      return c.json({ error: "Feature not found", slug }, 404)
+    }
+    return c.json(artifact, 201)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to upload file"
+    return c.json({ error: message }, 500)
+  }
+})
+
+// GET /api/features/:slug/artifacts/:filename — get artifact content
+router.get("/:slug/artifacts/:filename", (c) => {
+  const slug = c.req.param("slug")
+  const filename = c.req.param("filename")
+  const url = new URL(c.req.url)
+  const raw = url.searchParams.has("raw")
+
+  // If ?raw or binary file, serve the raw file
+  if (raw || !isTextArtifact(filename)) {
+    const result = getArtifactFilePath(slug, filename)
+    if (!result) {
+      return c.json({ error: "Artifact not found", slug, filename }, 404)
+    }
+    const content = readFileSync(result.filePath)
+    return new Response(content, {
+      headers: {
+        "Content-Type": result.mimeType,
+        "Content-Length": String(content.length),
+        "Cache-Control": "no-cache",
+      },
+    })
+  }
+
+  // Text file — return as JSON
+  const artifact = getArtifactContent(slug, filename)
+  if (!artifact) {
+    return c.json({ error: "Artifact not found", slug, filename }, 404)
+  }
+  return c.json(artifact)
+})
+
+// PUT /api/features/:slug/artifacts/:filename — save artifact content
+router.put("/:slug/artifacts/:filename", async (c) => {
+  const slug = c.req.param("slug")
+  const filename = c.req.param("filename")
+  const body = await c.req.json<{ content?: string }>()
+
+  if (typeof body.content !== "string") {
+    return c.json({ error: "content is required" }, 400)
+  }
+
+  const artifact = saveArtifactContent(slug, filename, body.content)
+  if (!artifact) {
+    return c.json({ error: "Feature not found or invalid filename", slug, filename }, 404)
+  }
+  return c.json(artifact)
+})
+
+// DELETE /api/features/:slug/artifacts/:filename — delete an artifact
+router.delete("/:slug/artifacts/:filename", (c) => {
+  const slug = c.req.param("slug")
+  const filename = c.req.param("filename")
+  const deleted = deleteArtifact(slug, filename)
+  if (!deleted) {
+    return c.json({ error: "Artifact not found", slug, filename }, 404)
+  }
+  return c.json({ ok: true, slug, filename })
 })
 
 export default router

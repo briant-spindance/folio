@@ -1,0 +1,59 @@
+metrics:
+  page_views:
+    description: "Total page views per time period"
+    aggregation: count
+    dimensions: [page, referrer, device_type]
+    retention: 90d
+
+  active_users:
+    description: "Unique active users (DAU/WAU/MAU)"
+    aggregation: count_distinct
+    field: user_id
+    dimensions: [plan, country]
+    retention: 365d
+
+  feature_usage:
+    description: "Feature adoption and usage frequency"
+    aggregation: count
+    dimensions: [feature_name, user_plan]
+    retention: 180d
+
+  api_latency:
+    description: "API response time percentiles"
+    aggregation: percentile
+    percentiles: [50, 90, 95, 99]
+    field: response_time_ms
+    dimensions: [endpoint, method]
+    retention: 30d
+
+  error_rate:
+    description: "Error rate by endpoint"
+    aggregation: ratio
+    numerator: error_count
+    denominator: total_count
+    dimensions: [endpoint, status_code]
+    retention: 90d
+
+dashboards:
+  overview:
+    title: "Product Overview"
+    widgets:
+      - type: metric_card
+        metric: active_users
+        period: day
+        comparison: week_over_week
+
+      - type: line_chart
+        metric: page_views
+        period: hour
+        range: 7d
+
+      - type: bar_chart
+        metric: feature_usage
+        group_by: feature_name
+        range: 30d
+
+      - type: heatmap
+        metric: active_users
+        dimensions: [hour_of_day, day_of_week]
+        range: 30d
