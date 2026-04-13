@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/briant-spindance/folio/internal/banner"
 	"github.com/briant-spindance/folio/internal/logging"
 	foliomdns "github.com/briant-spindance/folio/internal/mdns"
 	"github.com/briant-spindance/folio/internal/server"
@@ -45,6 +46,8 @@ var webCmd = &cobra.Command{
 }
 
 func runWeb(cmd *cobra.Command, args []string) error {
+	banner.Print(Version)
+
 	// Configure logging based on build mode.
 	isDev := !IsProduction
 	logWriter, logCloser, err := logging.Setup(isDev, logDir)
