@@ -18,12 +18,6 @@ function formatDate(dateStr?: string | null): string {
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
@@ -66,55 +60,6 @@ function InlineSelect<T extends string>({
         </option>
       ))}
     </select>
-  )
-}
-
-function InlineText({
-  value,
-  placeholder,
-  onSave,
-}: {
-  value: string
-  placeholder?: string
-  onSave: (v: string | null) => void
-}) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(value)
-
-  if (!editing) {
-    return (
-      <button
-        className="feature-meta-inline-btn"
-        onClick={() => { setDraft(value); setEditing(true) }}
-      >
-        {value || <span className="text-muted">{placeholder ?? "—"}</span>}
-      </button>
-    )
-  }
-
-  return (
-    <input
-      className="feature-meta-inline-input"
-      autoFocus
-      value={draft}
-      placeholder={placeholder}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => {
-        setEditing(false)
-        const trimmed = draft.trim()
-        if (trimmed !== value) {
-          onSave(trimmed || null)
-        }
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          (e.target as HTMLInputElement).blur()
-        } else if (e.key === "Escape") {
-          setDraft(value)
-          setEditing(false)
-        }
-      }}
-    />
   )
 }
 

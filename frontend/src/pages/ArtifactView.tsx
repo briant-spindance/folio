@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react"
-import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useParams, useSearchParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import CodeMirror from "@uiw/react-codemirror"
@@ -187,7 +187,6 @@ function BinaryViewer({ slug, filename, size }: { slug: string; filename: string
 // ---------------------------------------------------------------------------
 export function ArtifactView() {
   const { slug, filename } = useParams<{ slug: string; filename: string }>()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { data: feature } = useFeature(slug ?? "")
   const { data: artifact, isLoading, error } = useArtifactContent(slug ?? "", filename ?? "")
@@ -255,7 +254,7 @@ export function ArtifactView() {
     if (imageExts.has(ext)) {
       return (
         <div>
-          <ArtifactBreadcrumbs slug={slug} featureTitle={feature?.title} filename={filename} />
+          <ArtifactBreadcrumbs slug={slug ?? ""} featureTitle={feature?.title} filename={filename} />
           <div className="card">
             <div className="artifact-view-header">
               <div className="artifact-view-title-row">
@@ -297,7 +296,7 @@ export function ArtifactView() {
     // Other binary file
     return (
       <div>
-        <ArtifactBreadcrumbs slug={slug} featureTitle={feature?.title} filename={filename} />
+        <ArtifactBreadcrumbs slug={slug ?? ""} featureTitle={feature?.title} filename={filename ?? ""} />
         <div className="card">
           <div className="artifact-view-header">
             <div className="artifact-view-title-row">

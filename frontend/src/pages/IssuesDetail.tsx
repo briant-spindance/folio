@@ -4,7 +4,6 @@ import { createPortal } from "react-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useIssue, useDeleteIssue, useSaveIssue, useIssueArtifacts, useUploadIssueArtifact, useDeleteIssueArtifact, useCreateIssueArtifact, useStatus } from "@/hooks/useData"
-import { StatusBadge, IssueTypeBadge } from "@/components/Badges"
 import { AssigneePicker } from "@/components/AssigneePicker"
 import { FeaturePicker } from "@/components/FeaturePicker"
 import type { IssueStatus, IssueType, IssuePriority } from "@/lib/types"
@@ -18,12 +17,6 @@ function formatDate(dateStr?: string | null): string {
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return dateStr
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function slugifyHeading(text: string): string {

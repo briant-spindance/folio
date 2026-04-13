@@ -581,7 +581,7 @@ function ToolCallCard({ part }: { part: ToolPartAny }) {
       </div>
       <div className="ai-tool-card-body">
         <span className="ai-tool-card-title">{toolLabel}</span>
-        {part.input?.slug && (
+        {part.input?.slug != null && (
           <span className="ai-tool-card-detail">{String(part.input.slug)}</span>
         )}
         <span className="ai-tool-card-detail">{detail}</span>

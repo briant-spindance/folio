@@ -23,7 +23,6 @@ import {
   addRoadmapColumn as apiAddRoadmapColumn,
   updateRoadmapColumn as apiUpdateRoadmapColumn,
   deleteRoadmapColumn as apiDeleteRoadmapColumn,
-  reorderRoadmapColumns as apiReorderRoadmapColumns,
   fetchFeatures,
   fetchFeature,
   createFeature as apiCreateFeature,

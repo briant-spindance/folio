@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail } from "./types"
+import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)

@@ -8,6 +8,7 @@ const TYPE_LABELS: Record<SearchResult["type"], string> = {
   wiki: "Doc",
   feature: "Feature",
   issue: "Issue",
+  roadmap: "Roadmap",
 }
 
 function resultPath(r: SearchResult, query: string): string {

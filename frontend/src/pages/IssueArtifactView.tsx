@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react"
-import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useParams, useSearchParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import CodeMirror from "@uiw/react-codemirror"
@@ -181,7 +181,6 @@ function BinaryViewer({ slug, filename, size }: { slug: string; filename: string
 // ---------------------------------------------------------------------------
 export function IssueArtifactView() {
   const { slug, filename } = useParams<{ slug: string; filename: string }>()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { data: issue } = useIssue(slug ?? "")
   const { data: artifact, isLoading, error } = useIssueArtifactContent(slug ?? "", filename ?? "")

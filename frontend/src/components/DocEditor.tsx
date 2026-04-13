@@ -342,7 +342,7 @@ export function DocEditor({
 
   const triggerSave = useCallback(() => {
     if (!editor) return
-    const mdStorage = editor.storage.markdown as { getMarkdown?: () => string } | undefined
+    const mdStorage = (editor.storage as unknown as Record<string, unknown>).markdown as { getMarkdown?: () => string } | undefined
     const body = mode === "raw"
       ? rawValue
       : (mdStorage?.getMarkdown?.() ?? editor.getText())
@@ -355,7 +355,7 @@ export function DocEditor({
   const switchMode = useCallback((next: EditorMode) => {
     if (next === mode) return
     if (next === "raw") {
-      const mdStorage = editor?.storage.markdown as { getMarkdown?: () => string } | undefined
+      const mdStorage = (editor?.storage as unknown as Record<string, unknown> | undefined)?.markdown as { getMarkdown?: () => string } | undefined
       const md = mdStorage?.getMarkdown?.() ?? editor?.getText() ?? ""
       setRawValue(md)
     } else {
