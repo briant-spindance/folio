@@ -102,7 +102,7 @@ function SortableDocRow({ doc }: { doc: WikiDocDetail }) {
             <span className="docs-list-row-desc">{doc.description}</span>
           )}
         </div>
-        <span className="docs-list-row-date">{formatRelativeDate(doc.updatedAt)}</span>
+        <span className="docs-list-row-date">{formatRelativeDate(doc.updated_at)}</span>
       </Link>
     </div>
   )
@@ -127,7 +127,7 @@ function DocRowOverlay({ doc }: { doc: WikiDocDetail }) {
             <span className="docs-list-row-desc">{doc.description}</span>
           )}
         </div>
-        <span className="docs-list-row-date">{formatRelativeDate(doc.updatedAt)}</span>
+        <span className="docs-list-row-date">{formatRelativeDate(doc.updated_at)}</span>
       </div>
     </div>
   )
@@ -148,13 +148,13 @@ export function DocsList() {
   )
 
   // Use localOrder while dragging, otherwise server data
-  const docs = localOrder ?? data ?? []
+  const docs = localOrder ?? data?.docs ?? []
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(String(event.active.id))
     // Snapshot the current order so drag reorders are local-only until drop
-    if (!localOrder && data) {
-      setLocalOrder([...data])
+    if (!localOrder && data?.docs) {
+      setLocalOrder([...data.docs])
     }
   }, [localOrder, data])
 
@@ -167,7 +167,7 @@ export function DocsList() {
       return
     }
 
-    const currentDocs = localOrder ?? data ?? []
+    const currentDocs = localOrder ?? data?.docs ?? []
     const oldIndex = currentDocs.findIndex((d) => d.slug === active.id)
     const newIndex = currentDocs.findIndex((d) => d.slug === over.id)
 

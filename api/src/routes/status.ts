@@ -36,12 +36,18 @@ router.get("/", (c) => {
 
   return c.json({
     project: "forge-project",
-    featureCount: features.length,
-    byStatus,
-    activeSprint,
-    recentDocs: docs.slice(0, 6).map(({ slug, title, description, icon, updatedAt }) => ({ slug, title, description, icon, updatedAt })),
-    topFeatures: features.slice(0, 10).map(({ slug, title, status, priority, assignees, points, tags }) => ({ slug, title, status, priority, assignees, points, tags })),
-    openIssues: issues.filter(i => i.status !== "closed").map(({ slug, title, status, type, priority, labels, assignees, points }) => ({ slug, title, status, type, priority, labels, assignees, points })),
+    feature_count: features.length,
+    by_status: byStatus,
+    active_sprint: activeSprint,
+    recent_docs: docs.slice(0, 6).map(({ slug, title, description, icon, updatedAt }) => ({
+      slug, title, description, icon, updated_at: updatedAt,
+    })),
+    top_features: features.slice(0, 10).map(({ slug, title, status, priority, assignees, points, tags, roadmapCard }) => ({
+      slug, title, status, priority, assignees, points, tags, roadmap_card: roadmapCard,
+    })),
+    open_issues: issues.filter(i => i.status !== "closed").map(({ slug, title, status, type, priority, labels, assignees, points }) => ({
+      slug, title, status, type, priority, labels, assignees, points,
+    })),
     team: team.map(({ name, role }) => ({
       name,
       role,
@@ -55,18 +61,18 @@ router.get("/", (c) => {
       passed: HEALTH_CHECKS.filter(c => c.level === "pass").length,
       warnings: HEALTH_CHECKS.filter(c => c.level === "warn").length,
       failed: HEALTH_CHECKS.filter(c => c.level === "fail").length,
-      lastRun: "Last run: Apr 10, 2026 at 2:32 PM",
+      last_run: "Last run: Apr 10, 2026 at 2:32 PM",
       checks: HEALTH_CHECKS,
     },
     roadmap: {
       title: roadmap.title,
-      totalCards: roadmap.cards.length,
+      total_cards: roadmap.cards.length,
       columns: roadmap.columns,
-      byColumn: roadmap.columns.reduce<Record<string, number>>((acc, col) => {
+      by_column: roadmap.columns.reduce<Record<string, number>>((acc, col) => {
         acc[col] = roadmap.cards.filter((card) => card.column === col).length
         return acc
       }, {}),
-      rowCount: roadmap.rows.length,
+      row_count: roadmap.rows.length,
     },
   })
 })

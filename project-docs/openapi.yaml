@@ -1,0 +1,1715 @@
+openapi: 3.0.3
+info:
+  title: Forge API
+  description: |
+    REST API for Forge, a file-system-backed project management tool for software teams.
+    All request/response bodies use **snake_case** field names.
+    Paginated list endpoints return `{ items, total, page, limit, total_pages }`.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── Status / Dashboard ────────────────────────────────────────────────────
+  /api/status:
+    get:
+      summary: Project dashboard
+      description: Returns project-wide stats including feature counts, recent docs, open issues, team info, health checks, and roadmap summary.
+      operationId: getStatus
+      tags: [Status]
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+
+  # ── Features ──────────────────────────────────────────────────────────────
+  /api/features:
+    get:
+      summary: List features (paginated)
+      operationId: listFeatures
+      tags: [Features]
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+        - name: status
+          in: query
+          schema: { type: string }
+          description: Comma-separated list of statuses (draft, deferred, ready, in-progress, review, done)
+        - name: priority
+          in: query
+          schema: { type: string }
+          description: Comma-separated list of priorities (critical, high, medium, low)
+        - name: assignee
+          in: query
+          schema: { type: string }
+          description: Filter by assignee name, or `__unassigned__` for unassigned features
+        - name: points_min
+          in: query
+          schema: { type: number }
+          description: Minimum points filter
+        - name: points_max
+          in: query
+          schema: { type: number }
+          description: Maximum points filter
+        - name: tags
+          in: query
+          schema: { type: string }
+          description: Comma-separated list of tags to filter by
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [order, title, status, priority, modified]
+            default: order
+        - name: dir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        "200":
+          description: Paginated list of features
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedFeatures"
+
+    post:
+      summary: Create a feature
+      operationId: createFeature
+      tags: [Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFeatureInput"
+      responses:
+        "201":
+          description: Feature created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feature"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/features/reorder:
+    patch:
+      summary: Reorder features
+      operationId: reorderFeatures
+      tags: [Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/features/{slug}:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+
+    get:
+      summary: Get a feature by slug
+      operationId: getFeature
+      tags: [Features]
+      responses:
+        "200":
+          description: Feature detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feature"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Update a feature
+      operationId: updateFeature
+      tags: [Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFeatureInput"
+      responses:
+        "200":
+          description: Updated feature
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feature"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete a feature
+      operationId: deleteFeature
+      tags: [Features]
+      responses:
+        "200":
+          description: Feature deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  slug: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/features/{slug}/artifacts:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+    get:
+      summary: List artifacts for a feature
+      operationId: listFeatureArtifacts
+      tags: [Features]
+      responses:
+        "200":
+          description: List of artifacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Artifact"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/features/{slug}/artifacts/upload:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+    post:
+      summary: Upload a file artifact
+      operationId: uploadFeatureArtifact
+      tags: [Features]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        "201":
+          description: Artifact uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/features/{slug}/artifacts/create:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+    post:
+      summary: Create an empty text artifact
+      operationId: createFeatureArtifact
+      tags: [Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateArtifactInput"
+      responses:
+        "201":
+          description: Artifact created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/features/{slug}/artifacts/{filename}:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+      - $ref: "#/components/parameters/filename"
+
+    get:
+      summary: Get artifact content
+      description: |
+        Returns JSON `{ name, content, type, mime_type, size }` for text files.
+        Returns raw binary with appropriate Content-Type for binary files or when `?raw` is passed.
+      operationId: getFeatureArtifactContent
+      tags: [Features]
+      parameters:
+        - name: raw
+          in: query
+          schema: { type: boolean }
+          description: Force raw binary response
+      responses:
+        "200":
+          description: Artifact content (JSON for text, binary for non-text)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactContent"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Save artifact content
+      operationId: saveFeatureArtifactContent
+      tags: [Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveArtifactContentInput"
+      responses:
+        "200":
+          description: Artifact saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete an artifact
+      operationId: deleteFeatureArtifact
+      tags: [Features]
+      responses:
+        "200":
+          description: Artifact deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  slug: { type: string }
+                  filename: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Issues ────────────────────────────────────────────────────────────────
+  /api/issues:
+    get:
+      summary: List issues (paginated)
+      operationId: listIssues
+      tags: [Issues]
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+        - name: status
+          in: query
+          schema: { type: string }
+          description: Comma-separated statuses (open, in-progress, closed)
+        - name: type
+          in: query
+          schema: { type: string }
+          description: Comma-separated types (bug, task, improvement, chore)
+        - name: priority
+          in: query
+          schema: { type: string }
+          description: Comma-separated priorities (critical, high, medium, low)
+        - name: assignee
+          in: query
+          schema: { type: string }
+          description: Filter by assignee or `__unassigned__`
+        - name: feature
+          in: query
+          schema: { type: string }
+          description: Filter by linked feature slug or `__unlinked__`
+        - name: points_min
+          in: query
+          schema: { type: number }
+        - name: points_max
+          in: query
+          schema: { type: number }
+        - name: labels
+          in: query
+          schema: { type: string }
+          description: Comma-separated labels
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [order, title, status, type, priority, modified]
+            default: order
+        - name: dir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        "200":
+          description: Paginated list of issues
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedIssues"
+
+    post:
+      summary: Create an issue
+      operationId: createIssue
+      tags: [Issues]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIssueInput"
+      responses:
+        "201":
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Issue"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/issues/reorder:
+    patch:
+      summary: Reorder issues
+      operationId: reorderIssues
+      tags: [Issues]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/issues/{slug}:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+
+    get:
+      summary: Get an issue by slug
+      operationId: getIssue
+      tags: [Issues]
+      responses:
+        "200":
+          description: Issue detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Issue"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Update an issue
+      operationId: updateIssue
+      tags: [Issues]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIssueInput"
+      responses:
+        "200":
+          description: Updated issue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Issue"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete an issue
+      operationId: deleteIssue
+      tags: [Issues]
+      responses:
+        "200":
+          description: Issue deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  slug: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/issues/{slug}/artifacts:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+    get:
+      summary: List artifacts for an issue
+      operationId: listIssueArtifacts
+      tags: [Issues]
+      responses:
+        "200":
+          description: List of artifacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Artifact"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/issues/{slug}/artifacts/upload:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+    post:
+      summary: Upload a file artifact to an issue
+      operationId: uploadIssueArtifact
+      tags: [Issues]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        "201":
+          description: Artifact uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/issues/{slug}/artifacts/create:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+    post:
+      summary: Create an empty text artifact for an issue
+      operationId: createIssueArtifact
+      tags: [Issues]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateArtifactInput"
+      responses:
+        "201":
+          description: Artifact created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/issues/{slug}/artifacts/{filename}:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+      - $ref: "#/components/parameters/filename"
+
+    get:
+      summary: Get issue artifact content
+      operationId: getIssueArtifactContent
+      tags: [Issues]
+      parameters:
+        - name: raw
+          in: query
+          schema: { type: boolean }
+          description: Force raw binary response
+      responses:
+        "200":
+          description: Artifact content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactContent"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Save issue artifact content
+      operationId: saveIssueArtifactContent
+      tags: [Issues]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveArtifactContentInput"
+      responses:
+        "200":
+          description: Artifact saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete an issue artifact
+      operationId: deleteIssueArtifact
+      tags: [Issues]
+      responses:
+        "200":
+          description: Artifact deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  slug: { type: string }
+                  filename: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Wiki ──────────────────────────────────────────────────────────────────
+  /api/wiki:
+    get:
+      summary: List wiki docs (paginated)
+      operationId: listWikiDocs
+      tags: [Wiki]
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, minimum: 1, maximum: 100 }
+          description: Items per page (default 50)
+      responses:
+        "200":
+          description: Paginated list of wiki docs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedWikiDocs"
+
+    post:
+      summary: Create a wiki doc (auto-generated slug)
+      operationId: createWikiDoc
+      tags: [Wiki]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveWikiDocInput"
+      responses:
+        "201":
+          description: Doc created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WikiDoc"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/wiki/reorder:
+    patch:
+      summary: Reorder wiki docs
+      operationId: reorderWikiDocs
+      tags: [Wiki]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slugs]
+              properties:
+                slugs:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/wiki/{slug}:
+    parameters:
+      - $ref: "#/components/parameters/slug"
+
+    get:
+      summary: Get a wiki doc by slug
+      operationId: getWikiDoc
+      tags: [Wiki]
+      responses:
+        "200":
+          description: Wiki doc detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WikiDoc"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Create or update a wiki doc at a specific slug
+      operationId: saveWikiDoc
+      tags: [Wiki]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveWikiDocInput"
+      responses:
+        "200":
+          description: Doc saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WikiDoc"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete a wiki doc
+      operationId: deleteWikiDoc
+      tags: [Wiki]
+      responses:
+        "200":
+          description: Doc deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  slug: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Roadmap ───────────────────────────────────────────────────────────────
+  /api/roadmap:
+    get:
+      summary: Get the full roadmap
+      operationId: getRoadmap
+      tags: [Roadmap]
+      responses:
+        "200":
+          description: Full roadmap with cards, rows, and columns
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roadmap"
+
+    put:
+      summary: Save the full roadmap (bulk update)
+      operationId: saveRoadmap
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Roadmap"
+      responses:
+        "200":
+          description: Updated roadmap
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roadmap"
+
+  /api/roadmap/cards:
+    post:
+      summary: Add a roadmap card
+      operationId: createRoadmapCard
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCardInput"
+      responses:
+        "201":
+          description: Card created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoadmapCard"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/roadmap/cards/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+
+    put:
+      summary: Update a roadmap card
+      operationId: updateRoadmapCard
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCardInput"
+      responses:
+        "200":
+          description: Updated card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoadmapCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete a roadmap card
+      operationId: deleteRoadmapCard
+      tags: [Roadmap]
+      responses:
+        "200":
+          description: Card deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  id: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/roadmap/cards/{id}/move:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      summary: Move a roadmap card
+      operationId: moveRoadmapCard
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveCardInput"
+      responses:
+        "200":
+          description: Moved card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoadmapCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/roadmap/rows:
+    post:
+      summary: Add a roadmap row
+      operationId: createRoadmapRow
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRowInput"
+      responses:
+        "201":
+          description: Row created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoadmapRow"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/roadmap/rows/reorder:
+    patch:
+      summary: Reorder roadmap rows
+      operationId: reorderRoadmapRows
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [labels]
+              properties:
+                labels:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/roadmap/rows/{label}:
+    parameters:
+      - name: label
+        in: path
+        required: true
+        schema: { type: string }
+
+    put:
+      summary: Update a roadmap row
+      operationId: updateRoadmapRow
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRowInput"
+      responses:
+        "200":
+          description: Updated row
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoadmapRow"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete a roadmap row
+      operationId: deleteRoadmapRow
+      tags: [Roadmap]
+      responses:
+        "200":
+          description: Row deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  label: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/roadmap/columns:
+    post:
+      summary: Add a roadmap column
+      operationId: createRoadmapColumn
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Column created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  columns:
+                    type: array
+                    items: { type: string }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/roadmap/columns/reorder:
+    patch:
+      summary: Reorder roadmap columns
+      operationId: reorderRoadmapColumns
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [names]
+              properties:
+                names:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/roadmap/columns/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+
+    put:
+      summary: Rename a roadmap column
+      operationId: updateRoadmapColumn
+      tags: [Roadmap]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Updated columns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  columns:
+                    type: array
+                    items: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      summary: Delete a roadmap column
+      operationId: deleteRoadmapColumn
+      tags: [Roadmap]
+      responses:
+        "200":
+          description: Column deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  name: { type: string }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Search ────────────────────────────────────────────────────────────────
+  /api/search:
+    get:
+      summary: Full-text search across wiki, features, issues, and roadmap
+      operationId: search
+      tags: [Search]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+          description: Search query string
+        - name: type
+          in: query
+          schema: { type: string }
+          description: Comma-separated entity types to search (wiki, feature, issue, roadmap)
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ── Git ───────────────────────────────────────────────────────────────────
+  /api/git:
+    get:
+      summary: Git status (branch, commit, dirty flag)
+      operationId: getGitStatus
+      tags: [Git]
+      responses:
+        "200":
+          description: Git status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitStatus"
+
+  # ── AI Chat ───────────────────────────────────────────────────────────────
+  /api/chat:
+    post:
+      summary: Stream an AI chat response
+      description: |
+        Sends messages to an LLM with project context. Returns a streaming UIMessageStream response.
+        The AI has tools to replace/edit wiki docs, generate roadmaps, and convert roadmap cards to features.
+      operationId: chat
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  items: { type: object }
+                  description: Array of UIMessage objects from the AI SDK
+                context:
+                  $ref: "#/components/schemas/ChatContext"
+                model:
+                  type: string
+                  description: "Model key (e.g. anthropic/claude-sonnet-4-5, openai/gpt-4o)"
+                  default: anthropic/claude-sonnet-4-5
+      responses:
+        "200":
+          description: Streaming UIMessageStream response
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ── AI Sessions ───────────────────────────────────────────────────────────
+  /api/ai-sessions/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        schema: { type: string }
+        description: Context key for the session group (URL-encoded)
+
+    get:
+      summary: List sessions for a context key
+      operationId: listSessions
+      tags: [Sessions]
+      responses:
+        "200":
+          description: Array of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+    put:
+      summary: Upsert a session
+      operationId: upsertSession
+      tags: [Sessions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertSessionInput"
+      responses:
+        "200":
+          description: Session saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  id: { type: string }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/ai-sessions/{key}/{id}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      summary: Delete a session
+      operationId: deleteSession
+      tags: [Sessions]
+      responses:
+        "200":
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Components
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+
+  # ── Parameters ────────────────────────────────────────────────────────────
+  parameters:
+    page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1, minimum: 1 }
+      description: Page number
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 25, minimum: 1, maximum: 100 }
+      description: Items per page
+    slug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string }
+    filename:
+      name: filename
+      in: path
+      required: true
+      schema: { type: string }
+
+  # ── Responses ─────────────────────────────────────────────────────────────
+  responses:
+    Ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean, example: true }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    ValidationError:
+      description: Validation error (422)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string, description: "Semicolon-separated list of field-level errors" }
+    Conflict:
+      description: Resource already exists (409)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+
+  # ── Schemas ───────────────────────────────────────────────────────────────
+  schemas:
+
+    # ── Enums ──────────────────────────────────────────────────────────────
+    FeatureStatus:
+      type: string
+      enum: [draft, deferred, ready, in-progress, review, done]
+
+    IssueStatus:
+      type: string
+      enum: [open, in-progress, closed]
+
+    IssueType:
+      type: string
+      enum: [bug, task, improvement, chore]
+
+    Priority:
+      type: string
+      enum: [critical, high, medium, low]
+
+    # ── Feature ────────────────────────────────────────────────────────────
+    Feature:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        status: { $ref: "#/components/schemas/FeatureStatus" }
+        priority: { $ref: "#/components/schemas/Priority" }
+        assignees:
+          type: array
+          items: { type: string }
+        points: { type: number, nullable: true }
+        sprint: { type: string, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        created: { type: string, description: ISO 8601 date }
+        modified: { type: string, description: ISO 8601 date }
+        roadmap_card: { type: string, nullable: true, description: Linked roadmap card ID }
+        body: { type: string }
+        order: { type: number }
+
+    PaginatedFeatures:
+      type: object
+      properties:
+        features:
+          type: array
+          items: { $ref: "#/components/schemas/Feature" }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        total_pages: { type: integer }
+
+    CreateFeatureInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        body: { type: string }
+        priority: { $ref: "#/components/schemas/Priority" }
+        roadmap_card_id: { type: string, description: Roadmap card to link }
+
+    UpdateFeatureInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        status: { $ref: "#/components/schemas/FeatureStatus" }
+        priority: { $ref: "#/components/schemas/Priority" }
+        assignees:
+          type: array
+          items: { type: string }
+        points: { type: number, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        body: { type: string }
+
+    # ── Issue ──────────────────────────────────────────────────────────────
+    Issue:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        status: { $ref: "#/components/schemas/IssueStatus" }
+        type: { $ref: "#/components/schemas/IssueType" }
+        priority: { $ref: "#/components/schemas/Priority" }
+        assignees:
+          type: array
+          items: { type: string }
+        points: { type: number, nullable: true }
+        sprint: { type: string, nullable: true }
+        feature: { type: string, nullable: true, description: Linked feature slug }
+        labels:
+          type: array
+          items: { type: string }
+        created: { type: string }
+        modified: { type: string }
+        body: { type: string }
+        order: { type: number }
+
+    PaginatedIssues:
+      type: object
+      properties:
+        issues:
+          type: array
+          items: { $ref: "#/components/schemas/Issue" }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        total_pages: { type: integer }
+
+    CreateIssueInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        body: { type: string }
+        type: { $ref: "#/components/schemas/IssueType" }
+        priority: { $ref: "#/components/schemas/Priority" }
+        feature: { type: string }
+
+    UpdateIssueInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        status: { $ref: "#/components/schemas/IssueStatus" }
+        type: { $ref: "#/components/schemas/IssueType" }
+        priority: { $ref: "#/components/schemas/Priority" }
+        assignees:
+          type: array
+          items: { type: string }
+        points: { type: number, nullable: true }
+        sprint: { type: string, nullable: true }
+        feature: { type: string, nullable: true }
+        labels:
+          type: array
+          items: { type: string }
+        body: { type: string }
+
+    # ── Wiki ───────────────────────────────────────────────────────────────
+    WikiDoc:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        icon: { type: string, nullable: true }
+        updated_at: { type: string, description: ISO 8601 date }
+        body: { type: string }
+        order: { type: number }
+        dirty: { type: boolean, description: Whether the doc has unsaved changes }
+
+    PaginatedWikiDocs:
+      type: object
+      properties:
+        docs:
+          type: array
+          items: { $ref: "#/components/schemas/WikiDoc" }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        total_pages: { type: integer }
+
+    SaveWikiDocInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        icon: { type: string, nullable: true }
+        body: { type: string, default: "" }
+
+    # ── Roadmap ────────────────────────────────────────────────────────────
+    Roadmap:
+      type: object
+      properties:
+        title: { type: string }
+        columns:
+          type: array
+          items: { type: string }
+        rows:
+          type: array
+          items: { $ref: "#/components/schemas/RoadmapRow" }
+        cards:
+          type: array
+          items: { $ref: "#/components/schemas/RoadmapCard" }
+        modified: { type: string, nullable: true }
+
+    RoadmapCard:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        notes: { type: string }
+        column: { type: string }
+        row: { type: string }
+        order: { type: number }
+        feature_slug: { type: string, nullable: true }
+
+    RoadmapRow:
+      type: object
+      properties:
+        label: { type: string }
+        color: { type: string, nullable: true }
+
+    CreateCardInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        notes: { type: string }
+        column: { type: string }
+        row: { type: string }
+        order: { type: number }
+
+    UpdateCardInput:
+      type: object
+      properties:
+        title: { type: string }
+        notes: { type: string }
+        column: { type: string }
+        row: { type: string }
+        order: { type: number }
+        feature_slug: { type: string, nullable: true }
+
+    MoveCardInput:
+      type: object
+      properties:
+        column: { type: string }
+        row: { type: string }
+        order: { type: number }
+
+    CreateRowInput:
+      type: object
+      required: [label]
+      properties:
+        label: { type: string, minLength: 1 }
+        color: { type: string, nullable: true }
+
+    UpdateRowInput:
+      type: object
+      properties:
+        label: { type: string }
+        color: { type: string, nullable: true }
+
+    # ── Reorder ────────────────────────────────────────────────────────────
+    ReorderInput:
+      type: object
+      required: [slugs]
+      properties:
+        slugs:
+          type: array
+          items: { type: string }
+        offset: { type: number, description: Starting offset for the order values }
+
+    # ── Artifacts ──────────────────────────────────────────────────────────
+    Artifact:
+      type: object
+      properties:
+        name: { type: string }
+        size: { type: number }
+        type: { type: string }
+
+    ArtifactContent:
+      type: object
+      properties:
+        name: { type: string }
+        content: { type: string }
+        type: { type: string }
+        mime_type: { type: string }
+        size: { type: number }
+
+    CreateArtifactInput:
+      type: object
+      required: [filename]
+      properties:
+        filename: { type: string, minLength: 1 }
+
+    SaveArtifactContentInput:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string }
+
+    # ── Search ─────────────────────────────────────────────────────────────
+    SearchResponse:
+      type: object
+      properties:
+        query: { type: string }
+        total: { type: integer }
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+
+    SearchResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [wiki, feature, issue, roadmap]
+        slug: { type: string }
+        title: { type: string }
+        snippet: { type: string }
+        status: { type: string }
+        assignee: { type: string }
+
+    # ── Git ─────────────────────────────────────────────────────────────────
+    GitStatus:
+      type: object
+      properties:
+        branch: { type: string, nullable: true }
+        commit: { type: string, nullable: true }
+        dirty: { type: boolean }
+
+    # ── Chat ───────────────────────────────────────────────────────────────
+    ChatContext:
+      type: object
+      nullable: true
+      properties:
+        type:
+          type: string
+          enum: [wiki_doc, roadmap, global]
+        slug: { type: string }
+        title: { type: string }
+        body: { type: string }
+
+    # ── Sessions ───────────────────────────────────────────────────────────
+    Session:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        saved_at: { type: number, description: Unix timestamp in milliseconds }
+        messages:
+          type: array
+          items: { type: object }
+
+    UpsertSessionInput:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string }
+        saved_at: { type: number }
+        messages:
+          type: array
+          items: { type: object }
+
+    # ── Status / Dashboard ─────────────────────────────────────────────────
+    StatusResponse:
+      type: object
+      properties:
+        project: { type: string }
+        feature_count: { type: integer }
+        by_status:
+          type: object
+          additionalProperties: { type: integer }
+        active_sprint: { type: string, nullable: true }
+        recent_docs:
+          type: array
+          items:
+            type: object
+            properties:
+              slug: { type: string }
+              title: { type: string }
+              description: { type: string, nullable: true }
+              icon: { type: string, nullable: true }
+              updated_at: { type: string }
+        top_features:
+          type: array
+          items:
+            type: object
+            properties:
+              slug: { type: string }
+              title: { type: string }
+              status: { $ref: "#/components/schemas/FeatureStatus" }
+              priority: { $ref: "#/components/schemas/Priority" }
+              assignees:
+                type: array
+                items: { type: string }
+              points: { type: number, nullable: true }
+              tags:
+                type: array
+                items: { type: string }
+              roadmap_card: { type: string, nullable: true }
+        open_issues:
+          type: array
+          items:
+            type: object
+            properties:
+              slug: { type: string }
+              title: { type: string }
+              status: { $ref: "#/components/schemas/IssueStatus" }
+              type: { $ref: "#/components/schemas/IssueType" }
+              priority: { $ref: "#/components/schemas/Priority" }
+              labels:
+                type: array
+                items: { type: string }
+              assignees:
+                type: array
+                items: { type: string }
+              points: { type: number, nullable: true }
+        team:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              role: { type: string }
+              initials: { type: string }
+        health:
+          type: object
+          properties:
+            passed: { type: integer }
+            warnings: { type: integer }
+            failed: { type: integer }
+            last_run: { type: string }
+            checks:
+              type: array
+              items:
+                type: object
+                properties:
+                  level:
+                    type: string
+                    enum: [pass, warn, fail]
+                  message: { type: string }
+        roadmap:
+          type: object
+          properties:
+            title: { type: string }
+            total_cards: { type: integer }
+            columns:
+              type: array
+              items: { type: string }
+            by_column:
+              type: object
+              additionalProperties: { type: integer }
+            row_count: { type: integer }

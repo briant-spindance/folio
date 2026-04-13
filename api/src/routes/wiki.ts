@@ -1,21 +1,40 @@
 import { Hono } from "hono"
 import { listWikiDocs, getWikiDoc, saveWikiDoc, deleteWikiDoc, slugifyTitle, uniqueSlug, reorderWikiDocs } from "../store/wiki.js"
+import { SaveWikiDocSchema, ReorderSlugsSchema, validateBody } from "../lib/validation.js"
+import { serializeWikiDoc } from "../lib/serialize.js"
 
 const router = new Hono()
 
-// GET /api/wiki
+// GET /api/wiki — paginated listing
 router.get("/", (c) => {
-  const docs = listWikiDocs()
-  return c.json(docs)
+  const url = new URL(c.req.url)
+  const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10) || 1)
+  const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get("limit") ?? "50", 10) || 50))
+
+  const allDocs = listWikiDocs()
+  const total = allDocs.length
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+  const safePage = Math.min(Math.max(1, page), totalPages)
+  const start = (safePage - 1) * limit
+  const paged = allDocs.slice(start, start + limit)
+
+  return c.json({
+    docs: paged.map(serializeWikiDoc),
+    total,
+    page: safePage,
+    limit,
+    total_pages: totalPages,
+  })
 })
 
 // PATCH /api/wiki/reorder — reorder docs
 router.patch("/reorder", async (c) => {
-  const body = await c.req.json<{ slugs?: string[] }>()
-  if (!Array.isArray(body.slugs)) {
-    return c.json({ error: "slugs array is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(ReorderSlugsSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  reorderWikiDocs(body.slugs)
+  reorderWikiDocs(parsed.data.slugs)
   return c.json({ ok: true })
 })
 
@@ -26,43 +45,43 @@ router.get("/:slug", (c) => {
   if (!doc) {
     return c.json({ error: "Document not found", slug }, 404)
   }
-  return c.json(doc)
+  return c.json(serializeWikiDoc(doc))
 })
 
 // PUT /api/wiki/:slug — create or update
 router.put("/:slug", async (c) => {
   const slug = c.req.param("slug")
-  const body = await c.req.json<{ title?: string; icon?: string | null; body?: string }>()
-
-  if (!body.title || typeof body.title !== "string") {
-    return c.json({ error: "title is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(SaveWikiDocSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
   const doc = saveWikiDoc(slug, {
-    title: body.title,
-    icon: body.icon ?? null,
-    body: body.body ?? "",
+    title: parsed.data.title,
+    icon: parsed.data.icon ?? null,
+    body: parsed.data.body,
   })
-  return c.json(doc)
+  return c.json(serializeWikiDoc(doc))
 })
 
 // POST /api/wiki — create new with auto-generated slug
 router.post("/", async (c) => {
-  const body = await c.req.json<{ title?: string; icon?: string | null; body?: string }>()
-
-  if (!body.title || typeof body.title !== "string") {
-    return c.json({ error: "title is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(SaveWikiDocSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
-  const baseSlug = slugifyTitle(body.title)
+  const baseSlug = slugifyTitle(parsed.data.title)
   const slug = uniqueSlug(baseSlug)
 
   const doc = saveWikiDoc(slug, {
-    title: body.title,
-    icon: body.icon ?? null,
-    body: body.body ?? "",
+    title: parsed.data.title,
+    icon: parsed.data.icon ?? null,
+    body: parsed.data.body,
   })
-  return c.json({ ...doc, slug }, 201)
+  return c.json({ ...serializeWikiDoc(doc), slug }, 201)
 })
 
 // DELETE /api/wiki/:slug

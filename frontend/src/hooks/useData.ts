@@ -50,7 +50,7 @@ import {
   createIssueArtifact as apiCreateIssueArtifact,
 } from "@/lib/api"
 import type { FetchFeaturesParams, FetchIssuesParams } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, SaveIssuePayload, PaginatedIssues, IssueArtifact, IssueArtifactDetail } from "@/lib/types"
+import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, SaveIssuePayload, PaginatedIssues, IssueArtifact, IssueArtifactDetail } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -69,10 +69,10 @@ export function useGitStatus() {
   })
 }
 
-export function useWikiDocs() {
-  return useQuery<WikiDocDetail[]>({
-    queryKey: ["wiki"],
-    queryFn: fetchWikiDocs,
+export function useWikiDocs(params: { page?: number; limit?: number } = {}) {
+  return useQuery<PaginatedDocs>({
+    queryKey: ["wiki", params],
+    queryFn: () => fetchWikiDocs(params),
     staleTime: 30_000,
   })
 }
@@ -320,7 +320,7 @@ export function useCreateFeature() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   return useMutation({
-    mutationFn: (data: { title: string; body?: string; priority?: string; roadmapCardId?: string }) =>
+    mutationFn: (data: { title: string; body?: string; priority?: string; roadmap_card_id?: string }) =>
       apiCreateFeature(data),
     onSuccess: (feature) => {
       qc.setQueryData(["features", feature.slug], feature)

@@ -17,6 +17,20 @@ import {
 } from "../store/features.js"
 import type { FeatureStatus, Priority } from "../store/features.js"
 import { updateCard } from "../store/roadmap.js"
+import {
+  CreateFeatureSchema,
+  UpdateFeatureSchema,
+  ReorderSchema,
+  CreateArtifactSchema,
+  SaveArtifactContentSchema,
+  validateBody,
+} from "../lib/validation.js"
+import {
+  serializeFeature,
+  serializePaginatedFeatures,
+  serializeFeatureArtifact,
+  serializeArtifactContent,
+} from "../lib/serialize.js"
 
 const router = new Hono()
 
@@ -46,10 +60,10 @@ router.get("/", (c) => {
     assignee = assigneeParam === "__unassigned__" ? null : assigneeParam
   }
 
-  const pointsMinParam = url.searchParams.get("pointsMin")
+  const pointsMinParam = url.searchParams.get("points_min")
   const pointsMin = pointsMinParam ? Number(pointsMinParam) : undefined
 
-  const pointsMaxParam = url.searchParams.get("pointsMax")
+  const pointsMaxParam = url.searchParams.get("points_max")
   const pointsMax = pointsMaxParam ? Number(pointsMaxParam) : undefined
 
   const tagsParam = url.searchParams.get("tags")
@@ -77,17 +91,18 @@ router.get("/", (c) => {
     dir,
   })
 
-  return c.json(result)
+  return c.json(serializePaginatedFeatures(result))
 })
 
 // PATCH /api/features/reorder — reorder features by slug array
 router.patch("/reorder", async (c) => {
-  const body = await c.req.json<{ slugs?: string[]; offset?: number }>()
-  if (!Array.isArray(body.slugs)) {
-    return c.json({ error: "slugs array is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(ReorderSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  const offset = typeof body.offset === "number" ? body.offset : 0
-  reorderFeatures(body.slugs, offset)
+  const offset = parsed.data.offset ?? 0
+  reorderFeatures(parsed.data.slugs, offset)
   return c.json({ ok: true })
 })
 
@@ -98,36 +113,31 @@ router.get("/:slug", (c) => {
   if (!feature) {
     return c.json({ error: "Feature not found", slug }, 404)
   }
-  return c.json(feature)
+  return c.json(serializeFeature(feature))
 })
 
 // POST /api/features
 router.post("/", async (c) => {
-  const body = await c.req.json<{
-    title?: string
-    body?: string
-    priority?: string
-    roadmapCardId?: string
-  }>()
-
-  if (!body.title || !body.title.trim()) {
-    return c.json({ error: "Title is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateFeatureSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
   try {
     const feature = createFeature({
-      title: body.title.trim(),
-      body: body.body,
-      priority: body.priority as Priority | undefined,
-      roadmapCardId: body.roadmapCardId,
+      title: parsed.data.title,
+      body: parsed.data.body,
+      priority: parsed.data.priority,
+      roadmapCardId: parsed.data.roadmap_card_id,
     })
 
     // If created from a roadmap card, link the card back to this feature
-    if (body.roadmapCardId) {
-      updateCard(body.roadmapCardId, { featureSlug: feature.slug })
+    if (parsed.data.roadmap_card_id) {
+      updateCard(parsed.data.roadmap_card_id, { featureSlug: feature.slug })
     }
 
-    return c.json(feature, 201)
+    return c.json(serializeFeature(feature), 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create feature"
     if (message.includes("already exists")) {
@@ -140,32 +150,28 @@ router.post("/", async (c) => {
 // PUT /api/features/:slug
 router.put("/:slug", async (c) => {
   const slug = c.req.param("slug")
-  const body = await c.req.json<{
-    title?: string
-    status?: string
-    priority?: string
-    assignees?: string[]
-    points?: number | null
-    tags?: string[]
-    body?: string
-  }>()
+  const body = await c.req.json()
+  const parsed = validateBody(UpdateFeatureSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
+  }
 
   try {
     const feature = updateFeature(slug, {
-      title: body.title,
-      status: body.status as FeatureStatus | undefined,
-      priority: body.priority as Priority | undefined,
-      assignees: body.assignees,
-      points: body.points,
-      tags: body.tags,
-      body: body.body,
+      title: parsed.data.title,
+      status: parsed.data.status,
+      priority: parsed.data.priority,
+      assignees: parsed.data.assignees,
+      points: parsed.data.points,
+      tags: parsed.data.tags,
+      body: parsed.data.body,
     })
 
     if (!feature) {
       return c.json({ error: "Feature not found", slug }, 404)
     }
 
-    return c.json(feature)
+    return c.json(serializeFeature(feature))
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to update feature"
     return c.json({ error: message }, 500)
@@ -189,7 +195,7 @@ router.get("/:slug/artifacts", (c) => {
   if (artifacts === null) {
     return c.json({ error: "Feature not found", slug }, 404)
   }
-  return c.json(artifacts)
+  return c.json(artifacts.map(serializeFeatureArtifact))
 })
 
 // POST /api/features/:slug/artifacts/upload — upload a file
@@ -214,7 +220,7 @@ router.post("/:slug/artifacts/upload", async (c) => {
     if (!artifact) {
       return c.json({ error: "Feature not found", slug }, 404)
     }
-    return c.json(artifact, 201)
+    return c.json(serializeFeatureArtifact(artifact), 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to upload file"
     return c.json({ error: message }, 500)
@@ -224,12 +230,13 @@ router.post("/:slug/artifacts/upload", async (c) => {
 // POST /api/features/:slug/artifacts/create — create a new empty text file
 router.post("/:slug/artifacts/create", async (c) => {
   const slug = c.req.param("slug")
-  const body = await c.req.json<{ filename?: string }>()
-
-  const filename = body.filename?.trim()
-  if (!filename) {
-    return c.json({ error: "filename is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateArtifactSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
+
+  const filename = parsed.data.filename
   if (filename === "FEATURE.md") {
     return c.json({ error: "Invalid filename" }, 400)
   }
@@ -245,7 +252,7 @@ router.post("/:slug/artifacts/create", async (c) => {
     if (!artifact) {
       return c.json({ error: "Feature not found", slug }, 404)
     }
-    return c.json(artifact, 201)
+    return c.json(serializeFeatureArtifact(artifact), 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create file"
     return c.json({ error: message }, 500)
@@ -280,24 +287,24 @@ router.get("/:slug/artifacts/:filename", (c) => {
   if (!artifact) {
     return c.json({ error: "Artifact not found", slug, filename }, 404)
   }
-  return c.json(artifact)
+  return c.json(serializeArtifactContent(artifact))
 })
 
 // PUT /api/features/:slug/artifacts/:filename — save artifact content
 router.put("/:slug/artifacts/:filename", async (c) => {
   const slug = c.req.param("slug")
   const filename = c.req.param("filename")
-  const body = await c.req.json<{ content?: string }>()
-
-  if (typeof body.content !== "string") {
-    return c.json({ error: "content is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(SaveArtifactContentSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
-  const artifact = saveArtifactContent(slug, filename, body.content)
+  const artifact = saveArtifactContent(slug, filename, parsed.data.content)
   if (!artifact) {
     return c.json({ error: "Feature not found or invalid filename", slug, filename }, 404)
   }
-  return c.json(artifact)
+  return c.json(serializeFeatureArtifact(artifact))
 })
 
 // DELETE /api/features/:slug/artifacts/:filename — delete an artifact

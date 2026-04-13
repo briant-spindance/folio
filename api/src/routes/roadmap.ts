@@ -15,58 +15,86 @@ import {
   deleteColumn,
   reorderColumns,
 } from "../store/roadmap.js"
+import {
+  CreateCardSchema,
+  UpdateCardSchema,
+  MoveCardSchema,
+  CreateRowSchema,
+  UpdateRowSchema,
+  ReorderLabelsSchema,
+  CreateColumnSchema,
+  ReorderNamesSchema,
+  validateBody,
+} from "../lib/validation.js"
+import { serializeRoadmap, serializeRoadmapCard } from "../lib/serialize.js"
 
 const router = new Hono()
 
 // GET /api/roadmap — get full roadmap
 router.get("/", (c) => {
   const roadmap = getRoadmap()
-  return c.json(roadmap)
+  return c.json(serializeRoadmap(roadmap))
 })
 
 // PUT /api/roadmap — save full roadmap (bulk update)
 router.put("/", async (c) => {
   const body = await c.req.json()
+  // For bulk update, transform feature_slug back to featureSlug in cards
+  if (body.cards && Array.isArray(body.cards)) {
+    body.cards = body.cards.map((card: Record<string, unknown>) => {
+      if ("feature_slug" in card) {
+        const { feature_slug, ...rest } = card
+        return { ...rest, featureSlug: feature_slug }
+      }
+      return card
+    })
+  }
   const roadmap = saveRoadmap(body)
-  return c.json(roadmap)
+  return c.json(serializeRoadmap(roadmap))
 })
 
 // ── Cards ───────────────────────────────────────────────────────────────────
 
 // POST /api/roadmap/cards — add a new card
 router.post("/cards", async (c) => {
-  const body = await c.req.json<{
-    title?: string
-    notes?: string
-    column?: string
-    row?: string
-    order?: number
-  }>()
-
-  if (!body.title || typeof body.title !== "string") {
-    return c.json({ error: "title is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateCardSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
   const card = addCard({
-    title: body.title,
-    notes: body.notes ?? "",
-    column: body.column ?? "now",
-    row: body.row ?? "",
-    order: body.order ?? 0,
+    title: parsed.data.title,
+    notes: parsed.data.notes ?? "",
+    column: parsed.data.column ?? "now",
+    row: parsed.data.row ?? "",
+    order: parsed.data.order ?? 0,
     featureSlug: null,
   })
-  return c.json(card, 201)
+  return c.json(serializeRoadmapCard(card), 201)
 })
 
 // PUT /api/roadmap/cards/:id — update a card
 router.put("/cards/:id", async (c) => {
   const id = c.req.param("id")
-  const body = await c.req.json<Partial<{ title: string; notes: string; column: string; row: string; order: number }>>()
-  const card = updateCard(id, body)
+  const body = await c.req.json()
+  const parsed = validateBody(UpdateCardSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
+  }
+
+  // Transform feature_slug to featureSlug for the store
+  const updates: Record<string, unknown> = { ...parsed.data }
+  if ("feature_slug" in updates) {
+    updates.featureSlug = updates.feature_slug
+    delete updates.feature_slug
+  }
+
+  const card = updateCard(id, updates)
   if (!card) {
     return c.json({ error: "Card not found", id }, 404)
   }
-  return c.json(card)
+  return c.json(serializeRoadmapCard(card))
 })
 
 // DELETE /api/roadmap/cards/:id — delete a card
@@ -82,31 +110,40 @@ router.delete("/cards/:id", (c) => {
 // PATCH /api/roadmap/cards/:id/move — move a card
 router.patch("/cards/:id/move", async (c) => {
   const id = c.req.param("id")
-  const body = await c.req.json<{ column?: string; row?: string; order?: number }>()
-  const card = moveCard(id, body)
+  const body = await c.req.json()
+  const parsed = validateBody(MoveCardSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
+  }
+  const card = moveCard(id, parsed.data)
   if (!card) {
     return c.json({ error: "Card not found", id }, 404)
   }
-  return c.json(card)
+  return c.json(serializeRoadmapCard(card))
 })
 
 // ── Rows ────────────────────────────────────────────────────────────────────
 
 // POST /api/roadmap/rows — add a row
 router.post("/rows", async (c) => {
-  const body = await c.req.json<{ label?: string; color?: string | null }>()
-  if (!body.label || typeof body.label !== "string") {
-    return c.json({ error: "label is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateRowSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  const row = addRow(body.label, body.color)
+  const row = addRow(parsed.data.label, parsed.data.color)
   return c.json(row, 201)
 })
 
 // PUT /api/roadmap/rows/:label — update a row (rename / change color)
 router.put("/rows/:label", async (c) => {
   const oldLabel = decodeURIComponent(c.req.param("label"))
-  const body = await c.req.json<{ label?: string; color?: string | null }>()
-  const row = updateRow(oldLabel, body)
+  const body = await c.req.json()
+  const parsed = validateBody(UpdateRowSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
+  }
+  const row = updateRow(oldLabel, parsed.data)
   if (!row) {
     return c.json({ error: "Row not found", label: oldLabel }, 404)
   }
@@ -125,11 +162,12 @@ router.delete("/rows/:label", (c) => {
 
 // PATCH /api/roadmap/rows/reorder — reorder rows
 router.patch("/rows/reorder", async (c) => {
-  const body = await c.req.json<{ labels?: string[] }>()
-  if (!Array.isArray(body.labels)) {
-    return c.json({ error: "labels array is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(ReorderLabelsSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  reorderRows(body.labels)
+  reorderRows(parsed.data.labels)
   return c.json({ ok: true })
 })
 
@@ -137,22 +175,24 @@ router.patch("/rows/reorder", async (c) => {
 
 // POST /api/roadmap/columns — add a column
 router.post("/columns", async (c) => {
-  const body = await c.req.json<{ name?: string }>()
-  if (!body.name || typeof body.name !== "string") {
-    return c.json({ error: "name is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateColumnSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  const columns = addColumn(body.name)
+  const columns = addColumn(parsed.data.name)
   return c.json({ columns }, 201)
 })
 
 // PUT /api/roadmap/columns/:name — rename a column
 router.put("/columns/:name", async (c) => {
   const oldName = decodeURIComponent(c.req.param("name"))
-  const body = await c.req.json<{ name?: string }>()
-  if (!body.name || typeof body.name !== "string") {
-    return c.json({ error: "name is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateColumnSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  const columns = updateColumn(oldName, body.name)
+  const columns = updateColumn(oldName, parsed.data.name)
   if (!columns) {
     return c.json({ error: "Column not found", name: oldName }, 404)
   }
@@ -171,11 +211,12 @@ router.delete("/columns/:name", (c) => {
 
 // PATCH /api/roadmap/columns/reorder — reorder columns
 router.patch("/columns/reorder", async (c) => {
-  const body = await c.req.json<{ names?: string[] }>()
-  if (!Array.isArray(body.names)) {
-    return c.json({ error: "names array is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(ReorderNamesSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  reorderColumns(body.names)
+  reorderColumns(parsed.data.names)
   return c.json({ ok: true })
 })
 

@@ -160,9 +160,9 @@ export function DocsDetail() {
           </div>
           <div className="docs-prose-meta-text">
             <span className="docs-prose-meta-title">{doc.title}</span>
-            {doc.updatedAt && (
+            {doc.updated_at && (
               <span className="docs-prose-meta-updated">
-                Last updated {formatUpdatedAt(doc.updatedAt)}
+                Last updated {formatUpdatedAt(doc.updated_at)}
               </span>
             )}
           </div>

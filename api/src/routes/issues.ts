@@ -16,6 +16,20 @@ import {
   isTextArtifact,
 } from "../store/issues.js"
 import type { IssueStatus, IssueType, Priority } from "../store/issues.js"
+import {
+  CreateIssueSchema,
+  UpdateIssueSchema,
+  ReorderSchema,
+  CreateArtifactSchema,
+  SaveArtifactContentSchema,
+  validateBody,
+} from "../lib/validation.js"
+import {
+  serializeIssue,
+  serializePaginatedIssues,
+  serializeIssueArtifact,
+  serializeIssueArtifactContent,
+} from "../lib/serialize.js"
 
 const router = new Hono()
 
@@ -57,10 +71,10 @@ router.get("/", (c) => {
     feature = featureParam === "__unlinked__" ? null : featureParam
   }
 
-  const pointsMinParam = url.searchParams.get("pointsMin")
+  const pointsMinParam = url.searchParams.get("points_min")
   const pointsMin = pointsMinParam ? Number(pointsMinParam) : undefined
 
-  const pointsMaxParam = url.searchParams.get("pointsMax")
+  const pointsMaxParam = url.searchParams.get("points_max")
   const pointsMax = pointsMaxParam ? Number(pointsMaxParam) : undefined
 
   const labelsParam = url.searchParams.get("labels")
@@ -90,17 +104,18 @@ router.get("/", (c) => {
     dir,
   })
 
-  return c.json(result)
+  return c.json(serializePaginatedIssues(result))
 })
 
 // PATCH /api/issues/reorder — reorder issues by slug array
 router.patch("/reorder", async (c) => {
-  const body = await c.req.json<{ slugs?: string[]; offset?: number }>()
-  if (!Array.isArray(body.slugs)) {
-    return c.json({ error: "slugs array is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(ReorderSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
-  const offset = typeof body.offset === "number" ? body.offset : 0
-  reorderIssues(body.slugs, offset)
+  const offset = parsed.data.offset ?? 0
+  reorderIssues(parsed.data.slugs, offset)
   return c.json({ ok: true })
 })
 
@@ -111,33 +126,27 @@ router.get("/:slug", (c) => {
   if (!issue) {
     return c.json({ error: "Issue not found", slug }, 404)
   }
-  return c.json(issue)
+  return c.json(serializeIssue(issue))
 })
 
 // POST /api/issues
 router.post("/", async (c) => {
-  const body = await c.req.json<{
-    title?: string
-    body?: string
-    type?: string
-    priority?: string
-    feature?: string
-  }>()
-
-  if (!body.title || !body.title.trim()) {
-    return c.json({ error: "Title is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateIssueSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
   try {
     const issue = createIssue({
-      title: body.title.trim(),
-      body: body.body,
-      type: body.type as IssueType | undefined,
-      priority: body.priority as Priority | undefined,
-      feature: body.feature,
+      title: parsed.data.title,
+      body: parsed.data.body,
+      type: parsed.data.type,
+      priority: parsed.data.priority,
+      feature: parsed.data.feature,
     })
 
-    return c.json(issue, 201)
+    return c.json(serializeIssue(issue), 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create issue"
     if (message.includes("already exists")) {
@@ -150,38 +159,31 @@ router.post("/", async (c) => {
 // PUT /api/issues/:slug
 router.put("/:slug", async (c) => {
   const slug = c.req.param("slug")
-  const body = await c.req.json<{
-    title?: string
-    status?: string
-    type?: string
-    priority?: string
-    assignees?: string[]
-    points?: number | null
-    sprint?: string | null
-    feature?: string | null
-    labels?: string[]
-    body?: string
-  }>()
+  const body = await c.req.json()
+  const parsed = validateBody(UpdateIssueSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
+  }
 
   try {
     const issue = updateIssue(slug, {
-      title: body.title,
-      status: body.status as IssueStatus | undefined,
-      type: body.type as IssueType | undefined,
-      priority: body.priority as Priority | undefined,
-      assignees: body.assignees,
-      points: body.points,
-      sprint: body.sprint,
-      feature: body.feature,
-      labels: body.labels,
-      body: body.body,
+      title: parsed.data.title,
+      status: parsed.data.status,
+      type: parsed.data.type,
+      priority: parsed.data.priority,
+      assignees: parsed.data.assignees,
+      points: parsed.data.points,
+      sprint: parsed.data.sprint,
+      feature: parsed.data.feature,
+      labels: parsed.data.labels,
+      body: parsed.data.body,
     })
 
     if (!issue) {
       return c.json({ error: "Issue not found", slug }, 404)
     }
 
-    return c.json(issue)
+    return c.json(serializeIssue(issue))
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to update issue"
     return c.json({ error: message }, 500)
@@ -205,7 +207,7 @@ router.get("/:slug/artifacts", (c) => {
   if (artifacts === null) {
     return c.json({ error: "Issue not found", slug }, 404)
   }
-  return c.json(artifacts)
+  return c.json(artifacts.map(serializeIssueArtifact))
 })
 
 // POST /api/issues/:slug/artifacts/upload — upload a file
@@ -230,7 +232,7 @@ router.post("/:slug/artifacts/upload", async (c) => {
     if (!artifact) {
       return c.json({ error: "Issue not found", slug }, 404)
     }
-    return c.json(artifact, 201)
+    return c.json(serializeIssueArtifact(artifact), 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to upload file"
     return c.json({ error: message }, 500)
@@ -240,12 +242,13 @@ router.post("/:slug/artifacts/upload", async (c) => {
 // POST /api/issues/:slug/artifacts/create — create a new empty text file
 router.post("/:slug/artifacts/create", async (c) => {
   const slug = c.req.param("slug")
-  const body = await c.req.json<{ filename?: string }>()
-
-  const filename = body.filename?.trim()
-  if (!filename) {
-    return c.json({ error: "filename is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(CreateArtifactSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
+
+  const filename = parsed.data.filename
   if (filename === "ISSUE.md") {
     return c.json({ error: "Invalid filename" }, 400)
   }
@@ -261,7 +264,7 @@ router.post("/:slug/artifacts/create", async (c) => {
     if (!artifact) {
       return c.json({ error: "Issue not found", slug }, 404)
     }
-    return c.json(artifact, 201)
+    return c.json(serializeIssueArtifact(artifact), 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create file"
     return c.json({ error: message }, 500)
@@ -296,24 +299,24 @@ router.get("/:slug/artifacts/:filename", (c) => {
   if (!artifact) {
     return c.json({ error: "Artifact not found", slug, filename }, 404)
   }
-  return c.json(artifact)
+  return c.json(serializeIssueArtifactContent(artifact))
 })
 
 // PUT /api/issues/:slug/artifacts/:filename — save artifact content
 router.put("/:slug/artifacts/:filename", async (c) => {
   const slug = c.req.param("slug")
   const filename = c.req.param("filename")
-  const body = await c.req.json<{ content?: string }>()
-
-  if (typeof body.content !== "string") {
-    return c.json({ error: "content is required" }, 400)
+  const body = await c.req.json()
+  const parsed = validateBody(SaveArtifactContentSchema, body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error }, 422)
   }
 
-  const artifact = saveArtifactContent(slug, filename, body.content)
+  const artifact = saveArtifactContent(slug, filename, parsed.data.content)
   if (!artifact) {
     return c.json({ error: "Issue not found or invalid filename", slug, filename }, 404)
   }
-  return c.json(artifact)
+  return c.json(serializeIssueArtifact(artifact))
 })
 
 // DELETE /api/issues/:slug/artifacts/:filename — delete an artifact

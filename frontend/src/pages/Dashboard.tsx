@@ -147,14 +147,14 @@ export function Dashboard() {
           }
         />
         <div className="docs-grid">
-          {data.recentDocs.map((doc) => (
+          {data.recent_docs.map((doc) => (
             <Link key={doc.slug} className="doc-tile" to={`/docs/${doc.slug}`}>
               <div className="doc-tile-icon">
                 {docIcon(doc.icon)}
               </div>
               <div className="doc-tile-text">
                 <span className="doc-tile-name">{doc.title}</span>
-                <span className="doc-tile-meta">{formatRelativeDate(doc.updatedAt)}</span>
+                <span className="doc-tile-meta">{formatRelativeDate(doc.updated_at)}</span>
               </div>
             </Link>
           ))}
@@ -181,7 +181,7 @@ export function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {data.topFeatures.map((f, i) => (
+            {data.top_features.map((f, i) => (
               <tr key={f.slug}>
                 <td>
                   <Link className="feature-name-cell" to={`/features/${f.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
@@ -217,7 +217,7 @@ export function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {data.openIssues.map((issue) => (
+            {data.open_issues.map((issue) => (
               <tr key={issue.slug}>
                 <td><Link className="issue-name" to={`/issues/${issue.slug}`} style={{ textDecoration: "none", color: "inherit" }}>{issue.title}</Link></td>
                 <td><StatusBadge status={issue.status} /></td>
@@ -253,11 +253,11 @@ export function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {data.recentDocs.slice(0, 5).map((doc) => (
+            {data.recent_docs.slice(0, 5).map((doc) => (
               <tr key={doc.slug} onClick={() => {}} style={{ cursor: "pointer" }}>
                 <td className="wiki-page-name">{doc.title}</td>
                 <td className="wiki-author">{doc.description ?? "—"}</td>
-                <td className="wiki-modified">{formatModified(doc.updatedAt)}</td>
+                <td className="wiki-modified">{formatModified(doc.updated_at)}</td>
               </tr>
             ))}
           </tbody>
@@ -303,7 +303,7 @@ export function Dashboard() {
             <span className="health-stat-value fail">{data.health.failed}</span>
             <span className="health-stat-label">failed</span>
           </div>
-          <span className="health-timestamp">{data.health.lastRun}</span>
+          <span className="health-timestamp">{data.health.last_run}</span>
         </div>
         <ul className="health-checks-list">
           {data.health.checks.map((check, i) => {

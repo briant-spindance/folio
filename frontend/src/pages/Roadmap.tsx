@@ -257,7 +257,7 @@ function CardModal({ card, onSave, onDelete, onClose, onCreateFeature, isCreatin
     }
   }
 
-  const hasFeature = !!card.featureSlug
+  const hasFeature = !!card.feature_slug
 
   return (
     <div className="roadmap-modal-overlay" onClick={onClose}>
@@ -265,9 +265,9 @@ function CardModal({ card, onSave, onDelete, onClose, onCreateFeature, isCreatin
         <div className="roadmap-modal-header">
           <span className="roadmap-modal-title">Edit Card</span>
           {hasFeature && (
-            <span className="roadmap-feature-badge" title={`Linked to feature: ${card.featureSlug}`}>
+            <span className="roadmap-feature-badge" title={`Linked to feature: ${card.feature_slug}`}>
               <IconFeature size={12} />
-              <span>{card.featureSlug}</span>
+              <span>{card.feature_slug}</span>
             </span>
           )}
           <div style={{ flex: 1 }} />
@@ -393,8 +393,8 @@ function SortableCard({ card, onEdit }: { card: RoadmapCard; onEdit: () => void 
         <span className="roadmap-card-title">{card.title}</span>
         {card.notes && <span className="roadmap-card-notes">{card.notes}</span>}
       </div>
-      {card.featureSlug && (
-        <div className="roadmap-card-feature-icon" title={`Feature: ${card.featureSlug}`}>
+      {card.feature_slug && (
+        <div className="roadmap-card-feature-icon" title={`Feature: ${card.feature_slug}`}>
           <IconFeature size={11} />
         </div>
       )}
@@ -1150,7 +1150,7 @@ export function RoadmapPage() {
       {
         title: editingCard.title,
         body: editingCard.notes || undefined,
-        roadmapCardId: editingCard.id,
+        roadmap_card_id: editingCard.id,
       },
       {
         onSuccess: () => {

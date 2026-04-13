@@ -22,7 +22,7 @@ export interface DocSummary {
   title: string
   description?: string | null
   icon?: string | null
-  updatedAt?: string | null
+  updated_at?: string | null
   order?: number
   dirty?: boolean
 }
@@ -32,10 +32,18 @@ export interface WikiDocDetail {
   title: string
   description: string | null
   icon: string | null
-  updatedAt: string | null
+  updated_at: string | null
   body: string
   order?: number
   dirty?: boolean
+}
+
+export interface PaginatedDocs {
+  docs: WikiDocDetail[]
+  total: number
+  page: number
+  limit: number
+  total_pages: number
 }
 
 export interface FeatureSummary {
@@ -46,7 +54,7 @@ export interface FeatureSummary {
   assignees?: string[]
   points?: number
   tags?: string[]
-  roadmapCard?: string | null
+  roadmap_card?: string | null
   order?: number
 }
 
@@ -61,7 +69,7 @@ export interface FeatureDetail {
   tags: string[]
   created: string | null
   modified: string | null
-  roadmapCard: string | null
+  roadmap_card: string | null
   body: string
   order?: number
 }
@@ -71,7 +79,7 @@ export interface PaginatedFeatures {
   total: number
   page: number
   limit: number
-  totalPages: number
+  total_pages: number
 }
 
 export interface SaveFeaturePayload {
@@ -94,7 +102,7 @@ export interface ArtifactDetail {
   name: string
   content: string
   type: string
-  mimeType: string
+  mime_type: string
   size: number
 }
 
@@ -132,7 +140,7 @@ export interface PaginatedIssues {
   total: number
   page: number
   limit: number
-  totalPages: number
+  total_pages: number
 }
 
 export interface SaveIssuePayload {
@@ -158,7 +166,7 @@ export interface IssueArtifactDetail {
   name: string
   content: string
   type: string
-  mimeType: string
+  mime_type: string
   size: number
 }
 
@@ -194,18 +202,18 @@ export interface HealthSummary {
   passed: number
   warnings: number
   failed: number
-  lastRun: string
+  last_run: string
   checks: HealthCheck[]
 }
 
 export interface StatusResponse {
   project: string
-  featureCount: number
-  byStatus: Record<string, number>
-  activeSprint?: string
-  recentDocs: DocSummary[]
-  topFeatures: FeatureSummary[]
-  openIssues: IssueSummary[]
+  feature_count: number
+  by_status: Record<string, number>
+  active_sprint?: string
+  recent_docs: DocSummary[]
+  top_features: FeatureSummary[]
+  open_issues: IssueSummary[]
   team: TeamMember[]
   health: HealthSummary
   roadmap?: RoadmapStatusSummary
@@ -222,7 +230,7 @@ export interface RoadmapCard {
   column: string
   row: string
   order: number
-  featureSlug: string | null
+  feature_slug: string | null
 }
 
 export interface RoadmapRow {
@@ -240,8 +248,8 @@ export interface Roadmap {
 
 export interface RoadmapStatusSummary {
   title: string
-  totalCards: number
+  total_cards: number
   columns: string[]
-  byColumn: Record<string, number>
-  rowCount: number
+  by_column: Record<string, number>
+  row_count: number
 }

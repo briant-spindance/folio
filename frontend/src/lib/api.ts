@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail } from "./types"
+import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -29,8 +29,12 @@ export function fetchGitStatus(): Promise<GitStatus> {
   return apiFetch<GitStatus>("/api/git")
 }
 
-export function fetchWikiDocs(): Promise<WikiDocDetail[]> {
-  return apiFetch<WikiDocDetail[]>("/api/wiki")
+export function fetchWikiDocs(params: { page?: number; limit?: number } = {}): Promise<PaginatedDocs> {
+  const qs = new URLSearchParams()
+  if (params.page) qs.set("page", String(params.page))
+  if (params.limit) qs.set("limit", String(params.limit))
+  const query = qs.toString()
+  return apiFetch<PaginatedDocs>(`/api/wiki${query ? `?${query}` : ""}`)
 }
 
 export function fetchWikiDoc(slug: string): Promise<WikiDocDetail> {
@@ -165,8 +169,8 @@ export function fetchFeatures(params: FetchFeaturesParams = {}): Promise<Paginat
   if (params.assignee !== undefined) {
     qs.set("assignee", params.assignee === null ? "__unassigned__" : params.assignee)
   }
-  if (params.pointsMin !== undefined) qs.set("pointsMin", String(params.pointsMin))
-  if (params.pointsMax !== undefined) qs.set("pointsMax", String(params.pointsMax))
+  if (params.pointsMin !== undefined) qs.set("points_min", String(params.pointsMin))
+  if (params.pointsMax !== undefined) qs.set("points_max", String(params.pointsMax))
   if (params.tags && params.tags.length > 0) qs.set("tags", params.tags.join(","))
   if (params.sort) qs.set("sort", params.sort)
   if (params.dir) qs.set("dir", params.dir)
@@ -186,7 +190,7 @@ export function createFeature(data: {
   title: string
   body?: string
   priority?: string
-  roadmapCardId?: string
+  roadmap_card_id?: string
 }): Promise<FeatureDetail> {
   return apiMutate<FeatureDetail>("/api/features", "POST", data)
 }
@@ -280,8 +284,8 @@ export function fetchIssues(params: FetchIssuesParams = {}): Promise<PaginatedIs
   if (params.feature !== undefined) {
     qs.set("feature", params.feature === null ? "__unlinked__" : params.feature)
   }
-  if (params.pointsMin !== undefined) qs.set("pointsMin", String(params.pointsMin))
-  if (params.pointsMax !== undefined) qs.set("pointsMax", String(params.pointsMax))
+  if (params.pointsMin !== undefined) qs.set("points_min", String(params.pointsMin))
+  if (params.pointsMax !== undefined) qs.set("points_max", String(params.pointsMax))
   if (params.labels && params.labels.length > 0) qs.set("labels", params.labels.join(","))
   if (params.sort) qs.set("sort", params.sort)
   if (params.dir) qs.set("dir", params.dir)

@@ -54,7 +54,7 @@ interface AIChatPanelProps {
 interface Session {
   id: string
   name: string
-  savedAt: number
+  saved_at: number
   messages: UIMessage[]
 }
 
@@ -191,7 +191,7 @@ export function AIChatPanel({
         const id = await apiSaveSession(contextKeyRef.current, {
           id: currentSessionIdRef.current,
           name: firstUserText(allMessages),
-          savedAt: Date.now(),
+          saved_at: Date.now(),
           messages: allMessages,
         })
         currentSessionIdRef.current = id
@@ -300,7 +300,7 @@ export function AIChatPanel({
       apiSaveSession(contextKey, {
         id: currentSessionIdRef.current,
         name: firstUserText(messages),
-        savedAt: Date.now(),
+        saved_at: Date.now(),
         messages,
       })
     }
@@ -314,7 +314,7 @@ export function AIChatPanel({
       apiSaveSession(contextKey, {
         id: currentSessionIdRef.current,
         name: firstUserText(messages),
-        savedAt: Date.now(),
+        saved_at: Date.now(),
         messages,
       })
     }
@@ -388,7 +388,7 @@ export function AIChatPanel({
                   {sessions.map((s) => (
                     <li key={s.id} className="ai-session-item" onClick={() => handleRestoreSession(s)}>
                       <div className="ai-session-item-name">{s.name}</div>
-                      <div className="ai-session-item-meta">{formatRelativeTime(s.savedAt)}</div>
+                      <div className="ai-session-item-meta">{formatRelativeTime(s.saved_at)}</div>
                       <button
                         className="ai-session-item-delete"
                         onClick={(e) => handleDeleteSession(e, s.id)}

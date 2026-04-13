@@ -705,7 +705,7 @@ export function IssuesList() {
 
   const issues = localOrder ?? data?.issues ?? []
   const total = data?.total ?? 0
-  const totalPages = data?.totalPages ?? 1
+  const totalPages = data?.total_pages ?? 1
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(String(event.active.id))

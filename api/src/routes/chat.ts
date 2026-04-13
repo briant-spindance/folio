@@ -384,8 +384,8 @@ chatRouter.post("/", async (c) => {
               return {
                 ok: true,
                 message: `Generated roadmap with ${rows.length} rows and ${cards.length} cards.`,
-                rowCount: saved.rows.length,
-                cardCount: saved.cards.length,
+                row_count: saved.rows.length,
+                card_count: saved.cards.length,
               }
             },
           }),
