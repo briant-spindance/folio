@@ -21,6 +21,8 @@ const IssuesEdit = lazy(() => import("@/pages/IssuesEdit").then(m => ({ default:
 const IssuesNew = lazy(() => import("@/pages/IssuesNew").then(m => ({ default: m.IssuesNew })))
 const IssueArtifactView = lazy(() => import("@/pages/IssueArtifactView").then(m => ({ default: m.IssueArtifactView })))
 const StubPage = lazy(() => import("@/pages/StubPage").then(m => ({ default: m.StubPage })))
+const HelpIndex = lazy(() => import("@/pages/HelpIndex").then(m => ({ default: m.HelpIndex })))
+const HelpArticle = lazy(() => import("@/pages/HelpArticle").then(m => ({ default: m.HelpArticle })))
 
 const queryClient = new QueryClient()
 
@@ -59,6 +61,8 @@ export default function App() {
               <Route path="/wiki" element={<StubPage title="Wiki" />} />
               <Route path="/review" element={<StubPage title="Review Tools" />} />
               <Route path="/configuration" element={<StubPage title="Configuration" />} />
+              <Route path="/help" element={<HelpIndex />} />
+              <Route path="/help/:slug" element={<HelpArticle />} />
             </Routes>
           </Suspense>
         </AppShell>
