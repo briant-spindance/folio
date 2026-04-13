@@ -10,6 +10,8 @@ dist/
 # build outputs
 frontend/dist/
 api/dist/
+commandline/forge
+commandline/cmd/forge/dist/
 
 # editor
 .DS_Store
