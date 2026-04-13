@@ -1,4 +1,6 @@
 export type FeatureStatus = "draft" | "ready" | "in-progress" | "review" | "done"
+export type IssueStatus = "open" | "in-progress" | "closed"
+export type IssueType = "bug" | "task" | "improvement" | "chore"
 
 export interface GitStatus {
   branch: string | null
@@ -99,8 +101,65 @@ export interface ArtifactDetail {
 export interface IssueSummary {
   slug: string
   title: string
-  status: "open" | "closed"
+  status: IssueStatus
+  type: IssueType
+  priority: IssuePriority
   labels?: string[]
+  assignees?: string[]
+  points?: number | null
+  feature?: string | null
+}
+
+export interface IssueDetail {
+  slug: string
+  title: string
+  status: IssueStatus
+  type: IssueType
+  priority: IssuePriority
+  assignees: string[]
+  points: number | null
+  sprint: string | null
+  feature: string | null
+  labels: string[]
+  created: string | null
+  modified: string | null
+  body: string
+  order?: number
+}
+
+export interface PaginatedIssues {
+  issues: IssueDetail[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface SaveIssuePayload {
+  title?: string
+  status?: IssueStatus
+  type?: IssueType
+  priority?: IssuePriority
+  assignees?: string[]
+  points?: number | null
+  sprint?: string | null
+  feature?: string | null
+  labels?: string[]
+  body?: string
+}
+
+export interface IssueArtifact {
+  name: string
+  size: number
+  type: string
+}
+
+export interface IssueArtifactDetail {
+  name: string
+  content: string
+  type: string
+  mimeType: string
+  size: number
 }
 
 export interface TeamMember {

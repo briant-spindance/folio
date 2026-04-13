@@ -13,6 +13,7 @@ import searchRouter from "./routes/search.js"
 import chatRouter from "./routes/chat.js"
 import sessionsRouter from "./routes/sessions.js"
 import roadmapRouter from "./routes/roadmap.js"
+import issuesRouter from "./routes/issues.js"
 
 // ---------------------------------------------------------------------------
 // Load .env from api/.env (simple key=value parser, no dependency needed)
@@ -44,6 +45,7 @@ app.route("/api/wiki", wikiRouter)
 app.route("/api/git", gitRouter)
 app.route("/api/search", searchRouter)
 app.route("/api/roadmap", roadmapRouter)
+app.route("/api/issues", issuesRouter)
 app.route("/api/chat", chatRouter)
 app.route("/api/ai-sessions", sessionsRouter)
 

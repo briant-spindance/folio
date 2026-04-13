@@ -23,7 +23,7 @@ const HEALTH_CHECKS = [
 router.get("/", (c) => {
   const features = listFeatures({ limit: 1000 }).features
   const docs = listWikiDocs()
-  const issues = listIssues()
+  const issues = listIssues({ limit: 1000 }).issues
   const team = listTeam()
   const roadmap = getRoadmap()
 
@@ -41,7 +41,7 @@ router.get("/", (c) => {
     activeSprint,
     recentDocs: docs.slice(0, 6).map(({ slug, title, description, icon, updatedAt }) => ({ slug, title, description, icon, updatedAt })),
     topFeatures: features.slice(0, 10).map(({ slug, title, status, priority, assignees, points, tags }) => ({ slug, title, status, priority, assignees, points, tags })),
-    openIssues: issues.filter(i => i.status === "open").map(({ slug, title, status, labels }) => ({ slug, title, status, labels })),
+    openIssues: issues.filter(i => i.status !== "closed").map(({ slug, title, status, type, priority, labels, assignees, points }) => ({ slug, title, status, type, priority, labels, assignees, points })),
     team: team.map(({ name, role }) => ({
       name,
       role,

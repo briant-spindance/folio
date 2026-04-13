@@ -36,9 +36,21 @@ import {
   deleteArtifact as apiDeleteArtifact,
   uploadArtifact as apiUploadArtifact,
   createArtifact as apiCreateArtifact,
+  fetchIssues,
+  fetchIssue,
+  createIssue as apiCreateIssue,
+  updateIssue as apiUpdateIssue,
+  deleteIssue as apiDeleteIssue,
+  fetchIssueArtifacts,
+  reorderIssues as apiReorderIssues,
+  fetchIssueArtifactContent,
+  saveIssueArtifactContent as apiSaveIssueArtifactContent,
+  deleteIssueArtifact as apiDeleteIssueArtifact,
+  uploadIssueArtifact as apiUploadIssueArtifact,
+  createIssueArtifact as apiCreateIssueArtifact,
 } from "@/lib/api"
-import type { FetchFeaturesParams } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail } from "@/lib/types"
+import type { FetchFeaturesParams, FetchIssuesParams } from "@/lib/api"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, SaveIssuePayload, PaginatedIssues, IssueArtifact, IssueArtifactDetail } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -414,6 +426,140 @@ export function useCreateArtifact(slug: string) {
     mutationFn: (filename: string) => apiCreateArtifact(slug, filename),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["features", slug, "artifacts"] })
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Issues
+// ---------------------------------------------------------------------------
+
+export function useIssues(params: FetchIssuesParams = {}) {
+  return useQuery<PaginatedIssues>({
+    queryKey: ["issues", params],
+    queryFn: () => fetchIssues(params),
+    staleTime: 30_000,
+  })
+}
+
+export function useIssue(slug: string) {
+  return useQuery<IssueDetail>({
+    queryKey: ["issues", slug],
+    queryFn: () => fetchIssue(slug),
+    staleTime: 30_000,
+    enabled: !!slug,
+  })
+}
+
+export function useCreateIssue() {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (data: { title: string; body?: string; type?: string; priority?: string; feature?: string }) =>
+      apiCreateIssue(data),
+    onSuccess: (issue) => {
+      qc.setQueryData(["issues", issue.slug], issue)
+      qc.invalidateQueries({ queryKey: ["issues"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+      navigate(`/issues/${issue.slug}`)
+    },
+  })
+}
+
+export function useSaveIssue(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: SaveIssuePayload) => apiUpdateIssue(slug, payload),
+    onSuccess: (issue) => {
+      qc.setQueryData(["issues", slug], issue)
+      qc.invalidateQueries({ queryKey: ["issues"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useDeleteIssue() {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (slug: string) => apiDeleteIssue(slug),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["issues"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+      navigate("/issues")
+    },
+  })
+}
+
+export function useIssueArtifacts(slug: string) {
+  return useQuery<IssueArtifact[]>({
+    queryKey: ["issues", slug, "artifacts"],
+    queryFn: () => fetchIssueArtifacts(slug),
+    staleTime: 30_000,
+    enabled: !!slug,
+  })
+}
+
+export function useReorderIssues() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ slugs, offset }: { slugs: string[]; offset: number }) =>
+      apiReorderIssues(slugs, offset),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["issues"] })
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
+
+export function useIssueArtifactContent(slug: string, filename: string) {
+  return useQuery<IssueArtifactDetail>({
+    queryKey: ["issues", slug, "artifacts", filename],
+    queryFn: () => fetchIssueArtifactContent(slug, filename),
+    staleTime: 30_000,
+    enabled: !!slug && !!filename,
+  })
+}
+
+export function useSaveIssueArtifact(slug: string, filename: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (content: string) => apiSaveIssueArtifactContent(slug, filename, content),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["issues", slug, "artifacts", filename] })
+      qc.invalidateQueries({ queryKey: ["issues", slug, "artifacts"] })
+    },
+  })
+}
+
+export function useDeleteIssueArtifact(slug: string) {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (filename: string) => apiDeleteIssueArtifact(slug, filename),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["issues", slug, "artifacts"] })
+      navigate(`/issues/${slug}`)
+    },
+  })
+}
+
+export function useUploadIssueArtifact(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => apiUploadIssueArtifact(slug, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["issues", slug, "artifacts"] })
+    },
+  })
+}
+
+export function useCreateIssueArtifact(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (filename: string) => apiCreateIssueArtifact(slug, filename),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["issues", slug, "artifacts"] })
     },
   })
 }

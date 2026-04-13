@@ -1,12 +1,28 @@
-import type { FeatureStatus } from "@/lib/types"
+import type { FeatureStatus, IssueStatus, IssueType } from "@/lib/types"
 
 interface StatusBadgeProps {
-  status: FeatureStatus | "open" | "closed"
+  status: FeatureStatus | IssueStatus
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const cls = `badge badge-${status}`
   return <span className={cls}>{status}</span>
+}
+
+interface IssueTypeBadgeProps {
+  type: IssueType
+}
+
+const TYPE_COLORS: Record<IssueType, string> = {
+  bug: "badge-bug",
+  task: "badge-task",
+  improvement: "badge-improvement",
+  chore: "badge-chore",
+}
+
+export function IssueTypeBadge({ type }: IssueTypeBadgeProps) {
+  const cls = `badge ${TYPE_COLORS[type] ?? "badge-label"}`
+  return <span className={cls}>{type}</span>
 }
 
 interface LabelBadgeProps {

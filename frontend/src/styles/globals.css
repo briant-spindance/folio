@@ -3623,6 +3623,12 @@ body.ai-resizing {
 .badge-priority-medium   { background: hsla(45, 93%, 47%, 0.15);   color: hsl(45, 80%, 35%); }
 .badge-priority-low      { background: hsla(210, 14%, 53%, 0.15);  color: hsl(210, 14%, 45%); }
 
+/* Issue type badges */
+.badge-bug         { background: hsla(0, 72%, 51%, 0.15);   color: hsl(0, 72%, 45%); }
+.badge-task        { background: hsla(199, 89%, 48%, 0.15); color: hsl(199, 80%, 40%); }
+.badge-improvement { background: hsla(142, 71%, 45%, 0.15); color: hsl(142, 71%, 35%); }
+.badge-chore       { background: hsla(220, 8%, 65%, 0.15);  color: var(--state-draft); }
+
 /* ================================================================
    FEATURES LIST PAGE
    ================================================================ */
@@ -4402,6 +4408,188 @@ body.ai-resizing {
 
 .feature-assignee-chip-remove:hover {
   color: var(--status-error);
+}
+
+/* ── Feature Picker (autocomplete) ── */
+
+.feature-picker-trigger {
+  min-height: 30px;
+  text-align: left;
+}
+
+.feature-picker-selected {
+  font-size: 0.8125rem;
+}
+
+.feature-picker-dropdown {
+  position: relative;
+}
+
+.feature-picker-dropdown-field {
+  position: relative;
+}
+
+.feature-picker-search {
+  display: block;
+  width: 100%;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--foreground);
+  outline: none;
+}
+
+.feature-picker-field-input {
+  display: block;
+  width: 100%;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  padding: 4px 8px;
+  padding-right: 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--foreground);
+  outline: none;
+  min-height: 32px;
+}
+
+.feature-picker-field-input:focus {
+  border-color: var(--primary);
+}
+
+.feature-picker-field-input::placeholder {
+  color: var(--foreground-muted);
+}
+
+.feature-picker-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.feature-picker-clear:hover {
+  color: var(--status-error);
+}
+
+.feature-picker-options {
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.feature-picker-options-portal {
+  z-index: 9999;
+}
+
+.feature-picker-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  border: none;
+  background: none;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.feature-picker-option:hover,
+.feature-picker-option-highlight {
+  background: var(--accent);
+}
+
+.feature-picker-option-active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.feature-picker-option-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feature-picker-option-slug {
+  font-size: 0.6875rem;
+  color: var(--foreground-muted);
+  flex-shrink: 0;
+}
+
+.feature-picker-empty {
+  display: block;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: var(--foreground-muted);
+}
+
+/* ── Feature: Linked Issues ── */
+
+.feature-linked-issues-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.feature-linked-issues-heading {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px 0;
+}
+
+.feature-linked-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feature-linked-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background 100ms;
+}
+
+.feature-linked-issue-row:hover {
+  background: var(--accent);
+}
+
+.feature-linked-issue-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Artifacts section ── */

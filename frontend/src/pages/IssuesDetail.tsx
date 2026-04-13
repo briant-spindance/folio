@@ -3,12 +3,14 @@ import { Link, useParams, useNavigate } from "react-router-dom"
 import { createPortal } from "react-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useFeature, useDeleteFeature, useSaveFeature, useFeatureArtifacts, useUploadArtifact, useDeleteArtifact, useCreateArtifact, useStatus, useIssues } from "@/hooks/useData"
+import { useIssue, useDeleteIssue, useSaveIssue, useIssueArtifacts, useUploadIssueArtifact, useDeleteIssueArtifact, useCreateIssueArtifact, useStatus } from "@/hooks/useData"
 import { StatusBadge, IssueTypeBadge } from "@/components/Badges"
 import { AssigneePicker } from "@/components/AssigneePicker"
-import type { FeatureStatus, IssuePriority } from "@/lib/types"
+import { FeaturePicker } from "@/components/FeaturePicker"
+import type { IssueStatus, IssueType, IssuePriority } from "@/lib/types"
 
-const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
+const STATUS_OPTIONS: IssueStatus[] = ["open", "in-progress", "closed"]
+const TYPE_OPTIONS: IssueType[] = ["bug", "task", "improvement", "chore"]
 const PRIORITY_OPTIONS: IssuePriority[] = ["critical", "high", "medium", "low"]
 
 function formatDate(dateStr?: string | null): string {
@@ -41,13 +43,12 @@ function headingRenderer(depth: 2 | 3 | 4) {
   }
 }
 
-// ── Inline‑editable field components ─────────────────────────────
+// ── Inline-editable field components ─────────────────────────────
 
 function InlineSelect<T extends string>({
   value,
   options,
   onSave,
-  renderValue,
 }: {
   value: T
   options: T[]
@@ -62,59 +63,10 @@ function InlineSelect<T extends string>({
     >
       {options.map((opt) => (
         <option key={opt} value={opt}>
-          {renderValue ? opt : opt}
+          {opt}
         </option>
       ))}
     </select>
-  )
-}
-
-function InlineText({
-  value,
-  placeholder,
-  onSave,
-}: {
-  value: string
-  placeholder?: string
-  onSave: (v: string | null) => void
-}) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(value)
-
-  if (!editing) {
-    return (
-      <button
-        className="feature-meta-inline-btn"
-        onClick={() => { setDraft(value); setEditing(true) }}
-      >
-        {value || <span className="text-muted">{placeholder ?? "—"}</span>}
-      </button>
-    )
-  }
-
-  return (
-    <input
-      className="feature-meta-inline-input"
-      autoFocus
-      value={draft}
-      placeholder={placeholder}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => {
-        setEditing(false)
-        const trimmed = draft.trim()
-        if (trimmed !== value) {
-          onSave(trimmed || null)
-        }
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          (e.target as HTMLInputElement).blur()
-        } else if (e.key === "Escape") {
-          setDraft(value)
-          setEditing(false)
-        }
-      }}
-    />
   )
 }
 
@@ -212,20 +164,18 @@ function ArtifactIcon({ type }: { type: string }) {
 
 // ── Page component ───────────────────────────────────────────────
 
-export function FeaturesDetail() {
+export function IssuesDetail() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const { data: feature, isLoading, error } = useFeature(slug ?? "")
-  const { mutate: deleteFeature, isPending: isDeleting } = useDeleteFeature()
-  const { mutate: saveFeature } = useSaveFeature(slug ?? "")
-  const { data: artifacts } = useFeatureArtifacts(slug ?? "")
-  const { data: linkedIssuesData } = useIssues({ feature: slug ?? "", limit: 50 })
-  const linkedIssues = linkedIssuesData?.issues ?? []
+  const { data: issue, isLoading, error } = useIssue(slug ?? "")
+  const { mutate: deleteIssue, isPending: isDeleting } = useDeleteIssue()
+  const { mutate: saveIssue } = useSaveIssue(slug ?? "")
+  const { data: artifacts } = useIssueArtifacts(slug ?? "")
   const { data: statusData } = useStatus()
   const teamMembers = statusData?.team?.map((t) => t.name) ?? []
-  const uploadMutation = useUploadArtifact(slug ?? "")
-  const createArtifactMutation = useCreateArtifact(slug ?? "")
-  const deleteArtifactMutation = useDeleteArtifact(slug ?? "")
+  const uploadMutation = useUploadIssueArtifact(slug ?? "")
+  const createArtifactMutation = useCreateIssueArtifact(slug ?? "")
+  const deleteArtifactMutation = useDeleteIssueArtifact(slug ?? "")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -248,7 +198,6 @@ export function FeaturesDetail() {
     }
   }, [uploadMutation])
 
-  // Position the add-file dropdown under the button
   useEffect(() => {
     if (!addMenuOpen || !addBtnRef.current) return
     const rect = addBtnRef.current.getBoundingClientRect()
@@ -258,7 +207,6 @@ export function FeaturesDetail() {
     })
   }, [addMenuOpen])
 
-  // Close add-file dropdown on outside click
   useEffect(() => {
     if (!addMenuOpen) return
     function handleClick(e: MouseEvent) {
@@ -271,7 +219,6 @@ export function FeaturesDetail() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [addMenuOpen])
 
-  // Focus the create-file input when modal opens
   useEffect(() => {
     if (createModalOpen) {
       setTimeout(() => createInputRef.current?.focus(), 0)
@@ -284,8 +231,8 @@ export function FeaturesDetail() {
       setCreateError("Filename is required")
       return
     }
-    if (filename === "FEATURE.md") {
-      setCreateError("Cannot use reserved name FEATURE.md")
+    if (filename === "ISSUE.md") {
+      setCreateError("Cannot use reserved name ISSUE.md")
       return
     }
     setCreateError("")
@@ -293,7 +240,7 @@ export function FeaturesDetail() {
       onSuccess: () => {
         setCreateModalOpen(false)
         setNewFilename("")
-        navigate(`/features/${slug}/artifacts/${encodeURIComponent(filename)}?edit`)
+        navigate(`/issues/${slug}/artifacts/${encodeURIComponent(filename)}?edit`)
       },
       onError: (err) => {
         setCreateError(err.message)
@@ -304,36 +251,35 @@ export function FeaturesDetail() {
   if (isLoading) {
     return <div style={{ color: "var(--foreground-muted)", padding: "40px", textAlign: "center" }}>Loading...</div>
   }
-  if (error || !feature) {
+  if (error || !issue) {
     return (
       <div className="card" style={{ padding: "40px", textAlign: "center" }}>
-        <p style={{ color: "var(--status-error)" }}>Feature not found.</p>
-        <Link to="/features" className="docs-back-link" style={{ justifyContent: "center", marginTop: "12px", marginBottom: 0 }}>
-          &larr; Back to features
+        <p style={{ color: "var(--status-error)" }}>Issue not found.</p>
+        <Link to="/issues" className="docs-back-link" style={{ justifyContent: "center", marginTop: "12px", marginBottom: 0 }}>
+          &larr; Back to issues
         </Link>
       </div>
     )
   }
 
-  // Strip leading whitespace, `# Title` line, and any blank lines after it
-  const body = feature.body.trimStart().replace(/^#\s+.+\n?/, "").trimStart()
+  const body = issue.body.trimStart().replace(/^#\s+.+\n?/, "").trimStart()
 
   return (
     <>
-      <Link to="/features" className="docs-back-link">
+      <Link to="/issues" className="docs-back-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m15 18-6-6 6-6" />
         </svg>
-        Features
+        Issues
       </Link>
 
       <div className="feature-detail">
         {/* ── Content area ──────────────────────────────────── */}
         <div className="feature-detail-content">
           <div className="feature-detail-header">
-            <h1 className="feature-detail-title">{feature.title}</h1>
+            <h1 className="feature-detail-title">{issue.title}</h1>
             <div className="feature-detail-actions">
-              <Link to={`/features/${slug}/edit`} className="btn btn-outline btn-sm">
+              <Link to={`/issues/${slug}/edit`} className="btn btn-outline btn-sm">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -345,8 +291,8 @@ export function FeaturesDetail() {
                 className="btn btn-danger btn-sm"
                 disabled={isDeleting}
                 onClick={() => {
-                  if (confirm(`Delete "${feature.title}"? This will remove the feature directory and all artifacts. This cannot be undone.`)) {
-                    deleteFeature(slug ?? "")
+                  if (confirm(`Delete "${issue.title}"? This will remove the issue directory and all artifacts. This cannot be undone.`)) {
+                    deleteIssue(slug ?? "")
                   }
                 }}
               >
@@ -361,22 +307,6 @@ export function FeaturesDetail() {
               </button>
             </div>
           </div>
-
-          {/* ── Linked Issues ─────────────────────────────────── */}
-          {linkedIssues.length > 0 && (
-            <div className="feature-linked-issues-card">
-              <h3 className="feature-linked-issues-heading">Linked Issues</h3>
-              <div className="feature-linked-issues-list">
-                {linkedIssues.map((issue) => (
-                  <Link key={issue.slug} to={`/issues/${issue.slug}`} className="feature-linked-issue-row">
-                    <StatusBadge status={issue.status} />
-                    <IssueTypeBadge type={issue.type} />
-                    <span className="feature-linked-issue-title">{issue.title}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="docs-prose-body">
             <ReactMarkdown
@@ -401,19 +331,30 @@ export function FeaturesDetail() {
           <div className="feature-meta-field">
             <span className="feature-meta-label">Status</span>
             <InlineSelect
-              value={feature.status}
+              value={issue.status}
               options={STATUS_OPTIONS}
-              onSave={(v) => saveFeature({ status: v })}
+              onSave={(v) => saveIssue({ status: v })}
             />
+          </div>
+
+          <div className="feature-meta-field">
+            <span className="feature-meta-label">Type</span>
+            <div className="feature-meta-value">
+              <InlineSelect
+                value={issue.type}
+                options={TYPE_OPTIONS}
+                onSave={(v) => saveIssue({ type: v })}
+              />
+            </div>
           </div>
 
           <div className="feature-meta-field">
             <span className="feature-meta-label">Priority</span>
             <div className="feature-meta-value">
               <InlineSelect
-                value={feature.priority}
+                value={issue.priority}
                 options={PRIORITY_OPTIONS}
-                onSave={(v) => saveFeature({ priority: v })}
+                onSave={(v) => saveIssue({ priority: v })}
               />
             </div>
           </div>
@@ -422,9 +363,9 @@ export function FeaturesDetail() {
             <span className="feature-meta-label">Assignees</span>
             <div className="feature-meta-value">
               <AssigneePicker
-                value={feature.assignees}
+                value={issue.assignees}
                 teamMembers={teamMembers}
-                onChange={(v) => saveFeature({ assignees: v })}
+                onChange={(v) => saveIssue({ assignees: v })}
               />
             </div>
           </div>
@@ -433,9 +374,9 @@ export function FeaturesDetail() {
             <span className="feature-meta-label">Points</span>
             <div className="feature-meta-value">
               <InlineNumber
-                value={feature.points}
+                value={issue.points}
                 placeholder="—"
-                onSave={(v) => saveFeature({ points: v })}
+                onSave={(v) => saveIssue({ points: v })}
               />
             </div>
           </div>
@@ -443,16 +384,40 @@ export function FeaturesDetail() {
           <div className="feature-meta-field">
             <span className="feature-meta-label">Sprint</span>
             <div className="feature-meta-value feature-meta-readonly">
-              {feature.sprint ?? <span className="text-muted">None</span>}
+              {issue.sprint ?? <span className="text-muted">None</span>}
             </div>
           </div>
 
-          {feature.tags.length > 0 && (
+          <div className="feature-meta-field">
+            <span className="feature-meta-label">Feature</span>
+            <div className="feature-meta-value" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <FeaturePicker
+                value={issue.feature}
+                onChange={(slug) => saveIssue({ feature: slug })}
+                mode="inline"
+              />
+              {issue.feature && (
+                <Link
+                  to={`/features/${issue.feature}`}
+                  style={{ color: "var(--accent)", display: "flex", alignItems: "center", flexShrink: 0 }}
+                  title={`Go to feature: ${issue.feature}`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {issue.labels.length > 0 && (
             <div className="feature-meta-field">
-              <span className="feature-meta-label">Tags</span>
+              <span className="feature-meta-label">Labels</span>
               <div className="feature-meta-tags">
-                {feature.tags.map((t) => (
-                  <span key={t} className="badge badge-label">{t}</span>
+                {issue.labels.map((l) => (
+                  <span key={l} className="badge badge-label">{l}</span>
                 ))}
               </div>
             </div>
@@ -463,14 +428,14 @@ export function FeaturesDetail() {
           <div className="feature-meta-field">
             <span className="feature-meta-label">Created</span>
             <div className="feature-meta-value feature-meta-readonly">
-              {formatDate(feature.created)}
+              {formatDate(issue.created)}
             </div>
           </div>
 
           <div className="feature-meta-field">
             <span className="feature-meta-label">Modified</span>
             <div className="feature-meta-value feature-meta-readonly">
-              {formatDate(feature.modified)}
+              {formatDate(issue.modified)}
             </div>
           </div>
         </aside>
@@ -501,7 +466,6 @@ export function FeaturesDetail() {
               style={{ display: "none" }}
               onChange={(e) => { handleFileUpload(e.target.files); setAddMenuOpen(false) }}
             />
-            {/* Add-file dropdown portal */}
             {addMenuOpen && addMenuPos && createPortal(
               <div
                 ref={addMenuRef}
@@ -551,7 +515,7 @@ export function FeaturesDetail() {
               {artifacts.map((a) => (
                 <div key={a.name} className="feature-sidebar-file-row">
                   <Link
-                    to={`/features/${slug}/artifacts/${encodeURIComponent(a.name)}`}
+                    to={`/issues/${slug}/artifacts/${encodeURIComponent(a.name)}`}
                     className="feature-sidebar-file-link"
                   >
                     <ArtifactIcon type={a.type} />

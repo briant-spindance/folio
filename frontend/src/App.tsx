@@ -12,6 +12,11 @@ import { FeaturesDetail } from "@/pages/FeaturesDetail"
 import { FeaturesEdit } from "@/pages/FeaturesEdit"
 import { FeaturesNew } from "@/pages/FeaturesNew"
 import { ArtifactView } from "@/pages/ArtifactView"
+import { IssuesList } from "@/pages/IssuesList"
+import { IssuesDetail } from "@/pages/IssuesDetail"
+import { IssuesEdit } from "@/pages/IssuesEdit"
+import { IssuesNew } from "@/pages/IssuesNew"
+import { IssueArtifactView } from "@/pages/IssueArtifactView"
 import { StubPage } from "@/pages/StubPage"
 
 const queryClient = new QueryClient()
@@ -33,8 +38,12 @@ export default function App() {
             <Route path="/features/:slug/edit" element={<FeaturesEdit />} />
             <Route path="/features/:slug/artifacts/:filename" element={<ArtifactView />} />
             <Route path="/features/:slug" element={<FeaturesDetail />} />
+            <Route path="/issues" element={<IssuesList />} />
+            <Route path="/issues/new" element={<IssuesNew />} />
+            <Route path="/issues/:slug/edit" element={<IssuesEdit />} />
+            <Route path="/issues/:slug/artifacts/:filename" element={<IssueArtifactView />} />
+            <Route path="/issues/:slug" element={<IssuesDetail />} />
             <Route path="/sprints" element={<StubPage title="Sprints" />} />
-            <Route path="/issues" element={<StubPage title="Issues" />} />
             <Route path="/wiki" element={<StubPage title="Wiki" />} />
             <Route path="/review" element={<StubPage title="Review Tools" />} />
             <Route path="/configuration" element={<StubPage title="Configuration" />} />

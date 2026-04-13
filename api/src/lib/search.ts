@@ -143,14 +143,17 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
 
   // --- Issues ---
   if (types.includes("issue")) {
-    for (const issue of listIssues()) {
+    for (const issue of listIssues({ limit: 1000 }).issues) {
       if (results.length >= limit) break
 
       const metaValues = [
         issue.slug,
         issue.title,
         issue.status,
-        issue.assignee ?? "",
+        issue.type,
+        ...issue.assignees,
+        issue.sprint ?? "",
+        issue.feature ?? "",
         ...issue.labels,
       ].filter(Boolean)
 
@@ -162,7 +165,7 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
           title: issue.title,
           snippet: makeSnippet(metaMatch, query),
           status: issue.status,
-          assignee: issue.assignee ?? undefined,
+          assignee: issue.assignees.length > 0 ? issue.assignees.join(", ") : undefined,
         })
         continue
       }
@@ -175,7 +178,7 @@ export function search(query: string, opts: SearchOptions = {}): SearchResponse 
           title: issue.title,
           snippet: makeSnippet(bodyLine.trim(), query),
           status: issue.status,
-          assignee: issue.assignee ?? undefined,
+          assignee: issue.assignees.length > 0 ? issue.assignees.join(", ") : undefined,
         })
       }
     }

@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail } from "./types"
+import type { StatusResponse, WikiDocDetail, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureSummary, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -246,4 +246,120 @@ export async function createArtifact(slug: string, filename: string): Promise<Fe
 
 export function getArtifactRawUrl(slug: string, filename: string): string {
   return `/api/features/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
+}
+
+// ---------------------------------------------------------------------------
+// Issues
+// ---------------------------------------------------------------------------
+
+export interface FetchIssuesParams {
+  page?: number
+  limit?: number
+  status?: string[]
+  type?: string[]
+  priority?: string[]
+  assignee?: string | null
+  feature?: string | null
+  pointsMin?: number
+  pointsMax?: number
+  labels?: string[]
+  sort?: string
+  dir?: string
+}
+
+export function fetchIssues(params: FetchIssuesParams = {}): Promise<PaginatedIssues> {
+  const qs = new URLSearchParams()
+  if (params.page) qs.set("page", String(params.page))
+  if (params.limit) qs.set("limit", String(params.limit))
+  if (params.status && params.status.length > 0) qs.set("status", params.status.join(","))
+  if (params.type && params.type.length > 0) qs.set("type", params.type.join(","))
+  if (params.priority && params.priority.length > 0) qs.set("priority", params.priority.join(","))
+  if (params.assignee !== undefined) {
+    qs.set("assignee", params.assignee === null ? "__unassigned__" : params.assignee)
+  }
+  if (params.feature !== undefined) {
+    qs.set("feature", params.feature === null ? "__unlinked__" : params.feature)
+  }
+  if (params.pointsMin !== undefined) qs.set("pointsMin", String(params.pointsMin))
+  if (params.pointsMax !== undefined) qs.set("pointsMax", String(params.pointsMax))
+  if (params.labels && params.labels.length > 0) qs.set("labels", params.labels.join(","))
+  if (params.sort) qs.set("sort", params.sort)
+  if (params.dir) qs.set("dir", params.dir)
+  const query = qs.toString()
+  return apiFetch<PaginatedIssues>(`/api/issues${query ? `?${query}` : ""}`)
+}
+
+export function reorderIssues(slugs: string[], offset: number = 0): Promise<{ ok: boolean }> {
+  return apiMutate<{ ok: boolean }>("/api/issues/reorder", "PATCH", { slugs, offset })
+}
+
+export function fetchIssue(slug: string): Promise<IssueDetail> {
+  return apiFetch<IssueDetail>(`/api/issues/${slug}`)
+}
+
+export function createIssue(data: {
+  title: string
+  body?: string
+  type?: string
+  priority?: string
+  feature?: string
+}): Promise<IssueDetail> {
+  return apiMutate<IssueDetail>("/api/issues", "POST", data)
+}
+
+export function updateIssue(slug: string, payload: SaveIssuePayload): Promise<IssueDetail> {
+  return apiMutate<IssueDetail>(`/api/issues/${slug}`, "PUT", payload)
+}
+
+export function deleteIssue(slug: string): Promise<{ ok: boolean; slug: string }> {
+  return apiMutate(`/api/issues/${slug}`, "DELETE")
+}
+
+export function fetchIssueArtifacts(slug: string): Promise<IssueArtifact[]> {
+  return apiFetch<IssueArtifact[]>(`/api/issues/${slug}/artifacts`)
+}
+
+export function fetchIssueArtifactContent(slug: string, filename: string): Promise<IssueArtifactDetail> {
+  return apiFetch<IssueArtifactDetail>(`/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}`)
+}
+
+export function saveIssueArtifactContent(
+  slug: string,
+  filename: string,
+  content: string
+): Promise<IssueArtifact> {
+  return apiMutate<IssueArtifact>(
+    `/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}`,
+    "PUT",
+    { content }
+  )
+}
+
+export function deleteIssueArtifact(
+  slug: string,
+  filename: string
+): Promise<{ ok: boolean; slug: string; filename: string }> {
+  return apiMutate(`/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}`, "DELETE")
+}
+
+export async function uploadIssueArtifact(slug: string, file: File): Promise<IssueArtifact> {
+  const formData = new FormData()
+  formData.append("file", file)
+  const res = await fetch(`/api/issues/${slug}/artifacts/upload`, {
+    method: "POST",
+    body: formData,
+  })
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(err.error ?? `Upload failed: ${res.status}`)
+  }
+  return res.json() as Promise<IssueArtifact>
+}
+
+export async function createIssueArtifact(slug: string, filename: string): Promise<IssueArtifact> {
+  return apiMutate<IssueArtifact>(`/api/issues/${slug}/artifacts/create`, "POST", { filename })
+}
+
+export function getIssueArtifactRawUrl(slug: string, filename: string): string {
+  return `/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
 }
