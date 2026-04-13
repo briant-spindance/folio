@@ -15,19 +15,10 @@ install:
 # ── Development ───────────────────────────────────────────────────
 
 # Start Go backend + Vite frontend dev server
-dev:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd commandline && go build -o folio ./cmd/folio/
+dev: build-go
     npx concurrently --names go,vite --prefix-colors cyan,magenta \
         "cd commandline && ./folio web --data ../testdata/folio --static ../frontend/dist" \
         "cd frontend && pnpm dev"
-
-# Start Node.js API + Vite frontend (legacy, for AI chat development)
-dev-api:
-    npx concurrently --names api,vite --prefix-colors cyan,magenta \
-        "pnpm --filter api dev" \
-        "VITE_API_PORT=3001 pnpm --filter frontend dev"
 
 # ── Building ──────────────────────────────────────────────────────
 
