@@ -2,6 +2,8 @@
 
 An experimental, local-first project management tool that stores features, plans, issues, and docs as markdown files on disk — designed for teams working with AI agents. Folio provides a web UI for managing context and a CLI for agent integration.
 
+![Folio Dashboard](public/filio_dashboard.png)
+
 ## Philosophy
 
 **Agile for agentic engineering.** Folio shares the principles of Scrum — transparency, inspection, and adaptation — and extends them to a world where AI agents are first-class participants in the development process.
