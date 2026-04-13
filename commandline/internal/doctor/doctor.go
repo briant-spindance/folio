@@ -67,16 +67,19 @@ func Run(paths *store.Paths) Result {
 	// 5. Wiki validation
 	checks = append(checks, checkWiki(paths)...)
 
-	// 6. Team validation
+	// 6. Project docs validation
+	checks = append(checks, checkProjectDocs(paths)...)
+
+	// 7. Team validation
 	checks = append(checks, checkTeam(paths)...)
 
-	// 7. Roadmap consistency
+	// 8. Roadmap consistency
 	checks = append(checks, checkRoadmap(paths, featureSlugs)...)
 
-	// 8. Duplicate slugs
+	// 9. Duplicate slugs
 	checks = append(checks, checkDuplicateSlugs(featureSlugs, issueSlugs)...)
 
-	// 9. Referential integrity
+	// 10. Referential integrity
 	checks = append(checks, checkRefs(paths, featureSlugs)...)
 
 	// Tally results.

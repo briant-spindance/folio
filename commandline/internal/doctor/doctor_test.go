@@ -412,6 +412,131 @@ Content.
 	}
 }
 
+// --- Project Docs Tests ---
+
+func writeProjectDoc(t *testing.T, dir, slug, content string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, "project-docs", slug+".md"), []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write project doc %s: %v", slug, err)
+	}
+}
+
+func TestProjectDocsAllValid(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeProjectDoc(t, dir, "api", `---
+title: REST API Specification
+order: 1
+---
+API docs.
+`)
+	writeProjectDoc(t, dir, "design", `---
+title: Design System
+order: 2
+---
+Design docs.
+`)
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if len(checks) != 1 || checks[0].Level != LevelPass {
+		t.Errorf("expected single pass check, got: %+v", checks)
+	}
+	if !containsStr(checks[0].Message, "2 project docs") {
+		t.Errorf("expected '2 project docs' in message, got: %s", checks[0].Message)
+	}
+}
+
+func TestProjectDocsNoFiles(t *testing.T) {
+	dir := setupDoctorDir(t)
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if len(checks) != 1 || checks[0].Level != LevelPass {
+		t.Errorf("expected pass for no project docs, got: %+v", checks)
+	}
+	if !containsStr(checks[0].Message, "No project docs") {
+		t.Errorf("expected 'No project docs' in message, got: %s", checks[0].Message)
+	}
+}
+
+func TestProjectDocsInvalidFrontmatter(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeProjectDoc(t, dir, "broken", `---
+{{invalid yaml
+---
+`)
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if !hasCheckWith(checks, LevelFail, "invalid frontmatter") {
+		t.Errorf("expected fail for invalid frontmatter, got: %+v", checks)
+	}
+}
+
+func TestProjectDocsMissingTitle(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeProjectDoc(t, dir, "no-title", `---
+order: 1
+---
+Content.
+`)
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if !hasCheckWith(checks, LevelWarn, "missing title") {
+		t.Errorf("expected warn for missing title, got: %+v", checks)
+	}
+}
+
+func TestProjectDocsUnreadable(t *testing.T) {
+	dir := setupDoctorDir(t)
+	docPath := filepath.Join(dir, "project-docs", "secret.md")
+	if err := os.WriteFile(docPath, []byte("content"), 0000); err != nil {
+		t.Fatalf("failed to write unreadable file: %v", err)
+	}
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if !hasCheckWith(checks, LevelFail, "cannot read file") {
+		t.Errorf("expected fail for unreadable file, got: %+v", checks)
+	}
+}
+
+func TestProjectDocsDuplicateOrder(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeProjectDoc(t, dir, "doc-a", `---
+title: Doc A
+order: 1
+---
+`)
+	writeProjectDoc(t, dir, "doc-b", `---
+title: Doc B
+order: 1
+---
+`)
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if !hasCheckWith(checks, LevelWarn, "Duplicate order") {
+		t.Errorf("expected warn for duplicate order, got: %+v", checks)
+	}
+}
+
+func TestProjectDocsOrderNotInteger(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeProjectDoc(t, dir, "bad-order", `---
+title: Bad Order
+order: "3"
+---
+`)
+	paths := store.NewPaths(dir)
+	checks := checkProjectDocs(paths)
+
+	if !hasCheckWith(checks, LevelWarn, "order' should be an integer") {
+		t.Errorf("expected warn for non-integer order, got: %+v", checks)
+	}
+}
+
 // --- Team Tests ---
 
 func TestTeamValid(t *testing.T) {
