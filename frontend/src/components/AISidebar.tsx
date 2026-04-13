@@ -203,7 +203,7 @@ function DocAISidebar({
 
   // Called after the full turn finishes — just refresh the wiki list for nav
   const handleWriteToolFinished: WriteToolFinishedCallback = useCallback(
-    async (_writeSlug: string, _writeTitle: string) => {
+    async () => {
       // Cache is already patched by doc-write data chunk; just refresh the list
       await qc.invalidateQueries({ queryKey: ["wiki"] })
       // Reset the turn snapshot in case doc-write never fired (e.g. tool error)

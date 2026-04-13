@@ -675,7 +675,7 @@ export function IssuesList() {
   const reorderMutation = useReorderIssues()
 
   const allDataQuery = useIssues({ page: 1, limit: 1000 })
-  const allIssues = allDataQuery.data?.issues ?? []
+  const allIssues = useMemo(() => allDataQuery.data?.issues ?? [], [allDataQuery.data?.issues])
 
   const allAssignees = useMemo(() => {
     const names = new Set<string>()

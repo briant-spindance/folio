@@ -631,7 +631,7 @@ export function FeaturesList() {
 
   // We also need an unfiltered query to get all assignees/tags for the filter popover
   const allDataQuery = useFeatures({ page: 1, limit: 1000 })
-  const allFeatures = allDataQuery.data?.features ?? []
+  const allFeatures = useMemo(() => allDataQuery.data?.features ?? [], [allDataQuery.data?.features])
 
   const allAssignees = useMemo(() => {
     const names = new Set<string>()

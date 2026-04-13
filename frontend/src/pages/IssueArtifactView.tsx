@@ -196,8 +196,10 @@ export function IssueArtifactView() {
 
   useEffect(() => {
     if (searchParams.has("edit") && artifact && isEditable && !editing) {
-      setEditContent(artifact.content)
-      setEditing(true)
+      queueMicrotask(() => {
+        setEditContent(artifact.content)
+        setEditing(true)
+      })
       searchParams.delete("edit")
       setSearchParams(searchParams, { replace: true })
     }

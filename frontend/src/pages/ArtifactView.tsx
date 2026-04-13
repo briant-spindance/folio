@@ -203,8 +203,10 @@ export function ArtifactView() {
   // Auto-enter edit mode when ?edit is in the URL (e.g. after creating a new file)
   useEffect(() => {
     if (searchParams.has("edit") && artifact && isEditable && !editing) {
-      setEditContent(artifact.content)
-      setEditing(true)
+      queueMicrotask(() => {
+        setEditContent(artifact.content)
+        setEditing(true)
+      })
       // Remove the ?edit param so refreshing doesn't re-trigger
       searchParams.delete("edit")
       setSearchParams(searchParams, { replace: true })

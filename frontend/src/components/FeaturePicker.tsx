@@ -50,8 +50,12 @@ export function FeaturePicker({
     : null
 
   // Reset highlight when filtered list changes
+  const prevSearchRef = useRef(search)
   useEffect(() => {
-    setHighlightIdx(-1)
+    if (prevSearchRef.current !== search) {
+      queueMicrotask(() => setHighlightIdx(-1))
+      prevSearchRef.current = search
+    }
   }, [search])
 
   // Recalculate dropdown position

@@ -47,13 +47,17 @@ function IconPicker({ value, onChange }: IconPickerProps) {
     return [...starts, ...contains].slice(0, MAX_RESULTS)
   }, [query])
 
-  // Focus search input when popover opens
+  // Reset query & focus search input when popover opens/closes
+  const prevOpenRef = useRef(open)
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpenRef.current) {
       setTimeout(() => searchRef.current?.focus(), 30)
-    } else {
-      setQuery("")
     }
+    if (!open && prevOpenRef.current) {
+      // Defer reset to avoid synchronous setState-in-effect
+      queueMicrotask(() => setQuery(""))
+    }
+    prevOpenRef.current = open
   }, [open])
 
   // Close on outside click

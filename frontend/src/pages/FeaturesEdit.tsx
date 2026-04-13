@@ -24,10 +24,12 @@ export function FeaturesEdit() {
 
   useEffect(() => {
     if (feature && !initialized.current) {
-      setStatus(feature.status)
-      setPriority(feature.priority)
-      setAssignees(feature.assignees)
-      setPoints(feature.points != null ? String(feature.points) : "")
+      queueMicrotask(() => {
+        setStatus(feature.status)
+        setPriority(feature.priority)
+        setAssignees(feature.assignees)
+        setPoints(feature.points != null ? String(feature.points) : "")
+      })
       initialized.current = true
     }
   }, [feature])

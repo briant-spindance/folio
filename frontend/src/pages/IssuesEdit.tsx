@@ -27,12 +27,14 @@ export function IssuesEdit() {
 
   useEffect(() => {
     if (issue && !initialized.current) {
-      setStatus(issue.status)
-      setType(issue.type)
-      setPriority(issue.priority)
-      setAssignees(issue.assignees)
-      setPoints(issue.points != null ? String(issue.points) : "")
-      setFeature(issue.feature ?? null)
+      queueMicrotask(() => {
+        setStatus(issue.status)
+        setType(issue.type)
+        setPriority(issue.priority)
+        setAssignees(issue.assignees)
+        setPoints(issue.points != null ? String(issue.points) : "")
+        setFeature(issue.feature ?? null)
+      })
       initialized.current = true
     }
   }, [issue])

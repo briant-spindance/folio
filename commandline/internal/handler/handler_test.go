@@ -506,7 +506,10 @@ func TestSessionEndpoints(t *testing.T) {
 	}
 
 	// List again
-	resp, _ = http.Get(ts.URL + "/api/ai-sessions/test-key")
+	resp, err = http.Get(ts.URL + "/api/ai-sessions/test-key")
+	if err != nil {
+		t.Fatalf("list after upsert: %v", err)
+	}
 	defer resp.Body.Close()
 	body, _ = io.ReadAll(resp.Body)
 	json.Unmarshal(body, &sessions)

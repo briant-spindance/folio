@@ -19,6 +19,7 @@ import dynamicIconImports from "lucide-react/dynamicIconImports"
 
 // ── kebab-case → PascalCase (kept for tests) ─────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function toPascalCase(kebab: string): string {
   return kebab
     .split("-")
@@ -57,9 +58,11 @@ export const DocIcon = memo(function DocIcon({
 
 // ── Public API: all searchable icon names ─────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function pascalToKebab(pascal: string): string {
   return pascal
     .replace(/([A-Z])/g, (_, c, i) => (i === 0 ? c.toLowerCase() : "-" + c.toLowerCase()))
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const allIconNames: string[] = Object.keys(dynamicIconImports).sort()
