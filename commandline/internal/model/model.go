@@ -145,6 +145,15 @@ type PaginatedWikiDocs struct {
 	TotalPages int       `json:"total_pages"`
 }
 
+// ProjectDoc represents a project document stored on disk (read-only).
+type ProjectDoc struct {
+	Slug  string  `json:"slug"`
+	Title string  `json:"title"`
+	Icon  *string `json:"icon"`
+	Body  string  `json:"body"`
+	Order int     `json:"order"`
+}
+
 // RoadmapCard represents a card on the roadmap board.
 type RoadmapCard struct {
 	ID          string  `json:"id"`

@@ -1,3 +1,8 @@
+---
+title: Search Implementation Plan
+order: 5
+---
+
 # Search Implementation Plan (Phase 1)
 
 In-memory substring search for the Forge web UI and CLI.

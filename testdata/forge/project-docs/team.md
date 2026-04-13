@@ -1,3 +1,8 @@
+---
+title: Team
+order: 6
+---
+
 # Team
 
 ## Purpose

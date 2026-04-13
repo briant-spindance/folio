@@ -1,6 +1,7 @@
 import type { Feature, PaginatedFeatures, FeatureArtifact, ArtifactContent } from "../store/features.js"
 import type { Issue, PaginatedIssues, IssueArtifact, ArtifactContent as IssueArtifactContent } from "../store/issues.js"
 import type { WikiDoc } from "../store/wiki.js"
+import type { ProjectDoc } from "../store/project-docs.js"
 import type { Roadmap, RoadmapCard, RoadmapRow } from "../store/roadmap.js"
 import type { ChatSession } from "../store/sessions.js"
 
@@ -120,6 +121,20 @@ export interface PaginatedWikiDocs {
   page: number
   limit: number
   total_pages: number
+}
+
+// ---------------------------------------------------------------------------
+// Project Docs
+// ---------------------------------------------------------------------------
+
+export function serializeProjectDoc(d: ProjectDoc) {
+  return {
+    slug: d.slug,
+    title: d.title,
+    icon: d.icon,
+    body: d.body,
+    order: d.order,
+  }
 }
 
 // ---------------------------------------------------------------------------

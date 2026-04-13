@@ -8,6 +8,7 @@ import { logger } from "hono/logger"
 import statusRouter from "./routes/status.js"
 import featuresRouter from "./routes/features.js"
 import wikiRouter from "./routes/wiki.js"
+import projectDocsRouter from "./routes/project-docs.js"
 import gitRouter from "./routes/git.js"
 import searchRouter from "./routes/search.js"
 import chatRouter from "./routes/chat.js"
@@ -42,6 +43,7 @@ app.use("*", cors({ origin: "*" }))
 app.route("/api/status", statusRouter)
 app.route("/api/features", featuresRouter)
 app.route("/api/wiki", wikiRouter)
+app.route("/api/project-docs", projectDocsRouter)
 app.route("/api/git", gitRouter)
 app.route("/api/search", searchRouter)
 app.route("/api/roadmap", roadmapRouter)

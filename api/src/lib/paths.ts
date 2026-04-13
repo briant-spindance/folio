@@ -19,4 +19,5 @@ export const paths = {
   config: path.join(dataRoot, "forge.yaml"),
   roadmap: path.join(dataRoot, "roadmap.md"),
   aiSessions: path.join(dataRoot, ".sessions"),
+  projectDocs: path.join(dataRoot, "project-docs"),
 }

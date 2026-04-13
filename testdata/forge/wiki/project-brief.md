@@ -1,9 +1,8 @@
 ---
-title: Project Brief
-modified: "2026-04-12"
 icon: book-open
+modified: "2026-04-13"
+title: Project Brief 2
 ---
-
 Forge is a lightweight, local-first project management tool for software teams working alongside AI agents. It stores all project state as Markdown and YAML files directly in your repository.
 
 ## Why Forge?
@@ -42,7 +41,7 @@ Forge's backend is built as a **single Go binary** that provides both CLI comman
 
 **Web Server**
 
- The binary also servers the Single Page Web App (SPA) for the user
+The binary also servers the Single Page Web App (SPA) for the user
 
 **Storage Layer**
 

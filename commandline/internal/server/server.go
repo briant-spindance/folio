@@ -23,6 +23,7 @@ func New(paths *store.Paths, frontendFS fs.FS) chi.Router {
 	teamStore := store.NewTeamStore(paths)
 	sessionStore := store.NewSessionStore(paths)
 	searchStore := store.NewSearchStore(featureStore, issueStore, wikiStore, roadmapStore)
+	projectDocStore := store.NewProjectDocStore(paths)
 
 	// Create handlers
 	statusHandler := handler.NewStatusHandler(featureStore, issueStore, wikiStore, teamStore, roadmapStore)
@@ -33,6 +34,7 @@ func New(paths *store.Paths, frontendFS fs.FS) chi.Router {
 	searchHandler := handler.NewSearchHandler(searchStore)
 	gitHandler := handler.NewGitHandler(paths.Root)
 	sessionsHandler := handler.NewSessionsHandler(sessionStore)
+	projectDocsHandler := handler.NewProjectDocsHandler(projectDocStore)
 
 	r := chi.NewRouter()
 
@@ -50,6 +52,7 @@ func New(paths *store.Paths, frontendFS fs.FS) chi.Router {
 	r.Mount("/api/features", featuresHandler.Routes())
 	r.Mount("/api/issues", issuesHandler.Routes())
 	r.Mount("/api/wiki", wikiHandler.Routes())
+	r.Mount("/api/project-docs", projectDocsHandler.Routes())
 	r.Mount("/api/roadmap", roadmapHandler.Routes())
 	r.Handle("/api/search", searchHandler)
 	r.Handle("/api/git", gitHandler)

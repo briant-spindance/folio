@@ -1,3 +1,8 @@
+---
+title: CLI Reference
+order: 3
+---
+
 # Forge — CLI Reference
 
 ## Overview

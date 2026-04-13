@@ -1,3 +1,8 @@
+---
+title: Design System & Frontend Architecture
+order: 4
+---
+
 # Forge — Design System & Frontend Architecture
 
 ## Overview
