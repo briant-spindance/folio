@@ -8,7 +8,7 @@ import { StatusBadge, IssueTypeBadge } from "@/components/Badges"
 import { AssigneePicker } from "@/components/AssigneePicker"
 import type { FeatureStatus, IssuePriority } from "@/lib/types"
 
-const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
+const STATUS_OPTIONS: FeatureStatus[] = ["draft", "deferred", "ready", "in-progress", "review", "done"]
 const PRIORITY_OPTIONS: IssuePriority[] = ["critical", "high", "medium", "low"]
 
 function formatDate(dateStr?: string | null): string {

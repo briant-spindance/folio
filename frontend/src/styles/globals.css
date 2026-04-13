@@ -417,6 +417,7 @@ body {
 }
 
 .badge-draft       { background: hsla(220, 8%, 65%, 0.15);  color: var(--state-draft); }
+.badge-deferred    { background: hsla(25, 70%, 50%, 0.15);   color: hsl(25, 60%, 42%); }
 .badge-ready       { background: hsla(199, 89%, 48%, 0.15); color: var(--state-ready); }
 .badge-in-progress { background: hsla(38, 92%, 50%, 0.15);  color: hsl(38, 80%, 40%); }
 .badge-review      { background: hsla(271, 76%, 53%, 0.15); color: var(--state-review); }

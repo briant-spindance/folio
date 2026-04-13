@@ -399,7 +399,7 @@ chatRouter.post("/", async (c) => {
             inputSchema: z.object({
               cardId: z.string().describe("The ID of the roadmap card to convert."),
               status: z
-                .enum(["draft", "ready", "in-progress", "review", "done"])
+                .enum(["draft", "deferred", "ready", "in-progress", "review", "done"])
                 .optional()
                 .describe("Initial status for the feature. Defaults to 'draft'."),
               priority: z

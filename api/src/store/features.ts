@@ -4,7 +4,7 @@ import matter from "gray-matter"
 import { parseFrontmatter } from "../lib/frontmatter.js"
 import { paths } from "../lib/paths.js"
 
-export type FeatureStatus = "draft" | "ready" | "in-progress" | "review" | "done"
+export type FeatureStatus = "draft" | "deferred" | "ready" | "in-progress" | "review" | "done"
 export type Priority = "critical" | "high" | "medium" | "low"
 
 export interface Feature {
@@ -25,7 +25,7 @@ export interface Feature {
 
 // Priority ordering for sorting (lower index = higher priority)
 const PRIORITY_ORDER: Priority[] = ["critical", "high", "medium", "low"]
-const STATUS_ORDER: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
+const STATUS_ORDER: FeatureStatus[] = ["draft", "deferred", "ready", "in-progress", "review", "done"]
 
 function normalizePriority(raw: unknown): Priority {
   const s = String(raw ?? "").toLowerCase()

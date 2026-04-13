@@ -1,4 +1,4 @@
-export type FeatureStatus = "draft" | "ready" | "in-progress" | "review" | "done"
+export type FeatureStatus = "draft" | "deferred" | "ready" | "in-progress" | "review" | "done"
 export type IssueStatus = "open" | "in-progress" | "closed"
 export type IssueType = "bug" | "task" | "improvement" | "chore"
 

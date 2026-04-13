@@ -5,7 +5,7 @@ import { AssigneePicker } from "@/components/AssigneePicker"
 import { useFeature, useSaveFeature, useStatus } from "@/hooks/useData"
 import type { SaveDocPayload, FeatureStatus, IssuePriority } from "@/lib/types"
 
-const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
+const STATUS_OPTIONS: FeatureStatus[] = ["draft", "deferred", "ready", "in-progress", "review", "done"]
 const PRIORITY_OPTIONS: IssuePriority[] = ["critical", "high", "medium", "low"]
 
 export function FeaturesEdit() {

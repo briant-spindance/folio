@@ -1,5 +1,5 @@
 project: forge-project
 version: "0.1.0"
 workflow:
-  states: [draft, ready, in-progress, review, done]
+  states: [draft, deferred, ready, in-progress, review, done]
   default: draft

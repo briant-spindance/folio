@@ -31,7 +31,7 @@ router.get("/", (c) => {
   const statusParam = url.searchParams.get("status")
   const status = statusParam
     ? statusParam.split(",").filter((s): s is FeatureStatus =>
-        ["draft", "ready", "in-progress", "review", "done"].includes(s))
+        ["draft", "deferred", "ready", "in-progress", "review", "done"].includes(s))
     : undefined
 
   const priorityParam = url.searchParams.get("priority")

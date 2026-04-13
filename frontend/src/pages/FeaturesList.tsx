@@ -26,7 +26,7 @@ import type { FeatureDetail, FeatureStatus, IssuePriority } from "@/lib/types"
 type SortField = "order" | "title" | "status" | "priority" | "modified"
 type SortDir = "asc" | "desc"
 
-const STATUS_OPTIONS: FeatureStatus[] = ["draft", "ready", "in-progress", "review", "done"]
+const STATUS_OPTIONS: FeatureStatus[] = ["draft", "deferred", "ready", "in-progress", "review", "done"]
 const PRIORITY_OPTIONS: IssuePriority[] = ["critical", "high", "medium", "low"]
 const PAGE_SIZES = [10, 25, 50, 100] as const
 
