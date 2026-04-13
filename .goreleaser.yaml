@@ -1,0 +1,84 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# Documentation: https://goreleaser.com
+
+version: 2
+
+project_name: folio
+
+before:
+  hooks:
+    # Build frontend and prepare embedded assets.
+    # This runs once before GoReleaser starts cross-compiling.
+    - pnpm install --frozen-lockfile
+    - pnpm --dir frontend build
+    - rm -rf commandline/cmd/folio/dist commandline/cmd/folio/skills commandline/cmd/folio/commands
+    - cp -r frontend/dist commandline/cmd/folio/dist
+    - cp -r skills commandline/cmd/folio/skills
+    - cp -r commands commandline/cmd/folio/commands
+    # Pre-compress frontend assets for smaller binary
+    - find commandline/cmd/folio/dist -type f \( -name "*.js" -o -name "*.css" -o -name "*.svg" \) -exec gzip -9 {} \;
+
+builds:
+  - id: folio
+    dir: commandline
+    main: ./cmd/folio/
+    binary: folio
+    env:
+      - CGO_ENABLED=0
+    tags:
+      - embed
+      - embed_skills
+      - embed_commands
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/briant-spindance/folio/cmd/folio/cmd.Version={{ .Version }}
+      - -X github.com/briant-spindance/folio/cmd/folio/cmd.Commit={{ .ShortCommit }}
+      - -X github.com/briant-spindance/folio/cmd/folio/cmd.Date={{ .Date }}
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: folio
+    builds:
+      - folio
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^Merge"
+  groups:
+    - title: New Features
+      regexp: "^Add"
+      order: 0
+    - title: Bug Fixes
+      regexp: "^Fix"
+      order: 1
+    - title: Performance
+      regexp: "^(Reduce|Optimize|Improve)"
+      order: 2
+    - title: Other
+      order: 999
+
+release:
+  github:
+    owner: briant-spindance
+    name: folio
+  draft: false
+  prerelease: auto
+  name_template: "{{ .Tag }}"
+
