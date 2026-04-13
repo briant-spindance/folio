@@ -18,6 +18,9 @@ coverage/
 # local scripts
 build-install.sh
 
+# AI tooling
+.opencode/
+
 # editor
 .DS_Store
 *.swp
