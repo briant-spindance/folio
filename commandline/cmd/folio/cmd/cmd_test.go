@@ -1270,7 +1270,7 @@ func TestInit(t *testing.T) {
 		"team.md",
 		".gitignore",
 		"roadmap.md",
-		filepath.Join("wiki", "project-brief.md"),
+		filepath.Join("project-docs", "project-brief.md"),
 		filepath.Join("features", "backlog.md"),
 		filepath.Join("reviews", "architecture", "REVIEW.md"),
 	}
@@ -1463,8 +1463,8 @@ func TestInitCreatesUsableDataDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("docs list failed after init: %v", err)
 	}
-	if !strings.Contains(out, "No project documents found") {
-		t.Errorf("expected empty docs list, got: %s", out)
+	if !strings.Contains(out, "project-brief") {
+		t.Errorf("expected project-brief in docs list, got: %s", out)
 	}
 }
 

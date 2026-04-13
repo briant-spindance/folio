@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useWikiDoc, useDeleteWikiDoc } from "@/hooks/useData"
+import { useProjectDoc } from "@/hooks/useData"
 import { DocIcon } from "@/lib/docIcons"
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -13,13 +13,6 @@ function slugifyHeading(text: string): string {
     .replace(/[^\w\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")
-}
-
-function formatUpdatedAt(dateStr?: string | null): string {
-  if (!dateStr) return ""
-  const date = new Date(dateStr)
-  if (isNaN(date.getTime())) return dateStr
-  return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
 }
 
 // ── Highlight helpers ─────────────────────────────────────────────
@@ -109,8 +102,7 @@ function headingRenderer(depth: 2 | 3 | 4) {
 export function DocsDetail() {
   const { slug } = useParams<{ slug: string }>()
   const [searchParams] = useSearchParams()
-  const { data: doc, isLoading, error } = useWikiDoc(slug ?? "")
-  const { mutate: deleteDoc, isPending: isDeleting } = useDeleteWikiDoc()
+  const { data: doc, isLoading, error } = useProjectDoc(slug ?? "")
   const contentRef = useRef<HTMLDivElement>(null)
 
   const searchQuery = searchParams.get("q") ?? ""
@@ -160,71 +152,6 @@ export function DocsDetail() {
           </div>
           <div className="docs-prose-meta-text">
             <span className="docs-prose-meta-title">{doc.title}</span>
-            {doc.updated_at && (
-              <span className="docs-prose-meta-updated">
-                Last updated {formatUpdatedAt(doc.updated_at)}
-              </span>
-            )}
-          </div>
-          {/* Edit / Delete actions */}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
-            <Link
-              to={`/docs/${slug}/edit`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                color: "var(--primary)",
-                textDecoration: "none",
-                padding: "4px 10px",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                background: "var(--surface)",
-                transition: "background 100ms, border-color 100ms",
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-              Edit
-            </Link>
-            <button
-              type="button"
-              disabled={isDeleting}
-              onClick={() => {
-                if (confirm(`Delete "${doc.title}"? This cannot be undone.`)) {
-                  deleteDoc(slug ?? "")
-                }
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                color: "var(--status-error)",
-                padding: "4px 10px",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                background: "var(--surface)",
-                fontFamily: "inherit",
-                cursor: "pointer",
-                transition: "background 100ms, border-color 100ms",
-                opacity: isDeleting ? 0.6 : 1,
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-                <path d="M9 6V4h6v2" />
-              </svg>
-              {isDeleting ? "Deleting…" : "Delete"}
-            </button>
           </div>
         </div>
 

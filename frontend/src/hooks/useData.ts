@@ -9,6 +9,8 @@ import {
   createWikiDoc as apiCreateWikiDoc,
   deleteWikiDoc as apiDeleteWikiDoc,
   reorderWikiDocs as apiReorderWikiDocs,
+  fetchProjectDocs,
+  fetchProjectDoc,
   fetchSearch,
   fetchRoadmap,
   saveRoadmap as apiSaveRoadmap,
@@ -49,7 +51,7 @@ import {
   createIssueArtifact as apiCreateIssueArtifact,
 } from "@/lib/api"
 import type { FetchFeaturesParams, FetchIssuesParams } from "@/lib/api"
-import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, SaveIssuePayload, PaginatedIssues, IssueArtifact, IssueArtifactDetail } from "@/lib/types"
+import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, SaveIssuePayload, PaginatedIssues, IssueArtifact, IssueArtifactDetail, ProjectDocList, ProjectDoc } from "@/lib/types"
 
 export function useStatus() {
   return useQuery<StatusResponse>({
@@ -132,6 +134,27 @@ export function useReorderWikiDocs() {
       qc.invalidateQueries({ queryKey: ["wiki"] })
       qc.invalidateQueries({ queryKey: ["status"] })
     },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Project Docs (read-only reference documents)
+// ---------------------------------------------------------------------------
+
+export function useProjectDocs() {
+  return useQuery<ProjectDocList>({
+    queryKey: ["project-docs"],
+    queryFn: fetchProjectDocs,
+    staleTime: 30_000,
+  })
+}
+
+export function useProjectDoc(slug: string) {
+  return useQuery<ProjectDoc>({
+    queryKey: ["project-docs", slug],
+    queryFn: () => fetchProjectDoc(slug),
+    staleTime: 30_000,
+    enabled: !!slug,
   })
 }
 

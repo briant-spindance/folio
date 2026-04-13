@@ -33,7 +33,7 @@ func New(paths *store.Paths, frontendFS fs.FS, logWriter ...io.Writer) chi.Route
 	projectDocStore := store.NewProjectDocStore(paths)
 
 	// Create handlers
-	statusHandler := handler.NewStatusHandler(paths, featureStore, issueStore, wikiStore, teamStore, roadmapStore)
+	statusHandler := handler.NewStatusHandler(paths, featureStore, issueStore, wikiStore, teamStore, roadmapStore, projectDocStore)
 	featuresHandler := handler.NewFeaturesHandler(featureStore, roadmapStore)
 	issuesHandler := handler.NewIssuesHandler(issueStore)
 	wikiHandler := handler.NewWikiHandler(wikiStore)

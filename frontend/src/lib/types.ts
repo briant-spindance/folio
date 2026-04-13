@@ -17,6 +17,18 @@ export interface SaveDocPayload {
 
 export type IssuePriority = "critical" | "high" | "medium" | "low"
 
+export interface ProjectDoc {
+  slug: string
+  title: string
+  icon?: string | null
+  body: string
+  order: number
+}
+
+export interface ProjectDocList {
+  docs: ProjectDoc[]
+}
+
 export interface DocSummary {
   slug: string
   title: string

@@ -1,4 +1,4 @@
-import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail } from "./types"
+import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail, ProjectDocList, ProjectDoc } from "./types"
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -61,6 +61,18 @@ export function fetchSearch(q: string, type?: string): Promise<SearchResponse> {
 
 export function reorderWikiDocs(slugs: string[]): Promise<{ ok: boolean }> {
   return apiMutate<{ ok: boolean }>("/api/wiki/reorder", "PATCH", { slugs })
+}
+
+// ---------------------------------------------------------------------------
+// Project Docs (read-only reference documents from project-docs/)
+// ---------------------------------------------------------------------------
+
+export function fetchProjectDocs(): Promise<ProjectDocList> {
+  return apiFetch<ProjectDocList>("/api/project-docs")
+}
+
+export function fetchProjectDoc(slug: string): Promise<ProjectDoc> {
+  return apiFetch<ProjectDoc>(`/api/project-docs/${slug}`)
 }
 
 // ---------------------------------------------------------------------------

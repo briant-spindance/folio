@@ -71,7 +71,7 @@ cards: []
 `,
 		},
 		{
-			Path: filepath.Join("wiki", "project-brief.md"),
+			Path: filepath.Join("project-docs", "project-brief.md"),
 			Content: `---
 title: Project Brief
 order: 0

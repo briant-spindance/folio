@@ -12,17 +12,18 @@ import (
 
 // StatusHandler handles GET /api/status.
 type StatusHandler struct {
-	paths    *store.Paths
-	features *store.FeatureStore
-	issues   *store.IssueStore
-	wiki     *store.WikiStore
-	team     *store.TeamStore
-	roadmap  *store.RoadmapStore
+	paths       *store.Paths
+	features    *store.FeatureStore
+	issues      *store.IssueStore
+	wiki        *store.WikiStore
+	team        *store.TeamStore
+	roadmap     *store.RoadmapStore
+	projectDocs *store.ProjectDocStore
 }
 
 // NewStatusHandler creates a new StatusHandler.
-func NewStatusHandler(paths *store.Paths, f *store.FeatureStore, i *store.IssueStore, w *store.WikiStore, t *store.TeamStore, r *store.RoadmapStore) *StatusHandler {
-	return &StatusHandler{paths: paths, features: f, issues: i, wiki: w, team: t, roadmap: r}
+func NewStatusHandler(paths *store.Paths, f *store.FeatureStore, i *store.IssueStore, w *store.WikiStore, t *store.TeamStore, r *store.RoadmapStore, pd *store.ProjectDocStore) *StatusHandler {
+	return &StatusHandler{paths: paths, features: f, issues: i, wiki: w, team: t, roadmap: r, projectDocs: pd}
 }
 
 func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	features := h.features.List(featureListAll())
-	docs := h.wiki.ListAll()
+	docs := h.projectDocs.List()
 	issues := h.issues.List(issueListAll())
 	team := h.team.List()
 	roadmap := h.roadmap.Get()
@@ -60,14 +61,8 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, d := range docs[:limit] {
 		entry := map[string]interface{}{
-			"slug":       d.Slug,
-			"title":      d.Title,
-			"updated_at": d.UpdatedAt,
-		}
-		if d.Description != nil {
-			entry["description"] = *d.Description
-		} else {
-			entry["description"] = nil
+			"slug":  d.Slug,
+			"title": d.Title,
 		}
 		if d.Icon != nil {
 			entry["icon"] = *d.Icon

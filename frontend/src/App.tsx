@@ -6,9 +6,7 @@ import { AppShell } from "@/components/AppShell"
 // ── Lazy-loaded page components (route-level code splitting) ─────
 const Dashboard = lazy(() => import("@/pages/Dashboard").then(m => ({ default: m.Dashboard })))
 const DocsList = lazy(() => import("@/pages/DocsList").then(m => ({ default: m.DocsList })))
-const DocsNew = lazy(() => import("@/pages/DocsNew").then(m => ({ default: m.DocsNew })))
 const DocsDetail = lazy(() => import("@/pages/DocsDetail").then(m => ({ default: m.DocsDetail })))
-const DocsEdit = lazy(() => import("@/pages/DocsEdit").then(m => ({ default: m.DocsEdit })))
 const RoadmapPage = lazy(() => import("@/pages/Roadmap").then(m => ({ default: m.RoadmapPage })))
 const FeaturesList = lazy(() => import("@/pages/FeaturesList").then(m => ({ default: m.FeaturesList })))
 const FeaturesDetail = lazy(() => import("@/pages/FeaturesDetail").then(m => ({ default: m.FeaturesDetail })))
@@ -43,8 +41,6 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/docs" element={<DocsList />} />
-              <Route path="/docs/new" element={<DocsNew />} />
-              <Route path="/docs/:slug/edit" element={<DocsEdit />} />
               <Route path="/docs/:slug" element={<DocsDetail />} />
               <Route path="/roadmap" element={<RoadmapPage />} />
               <Route path="/features" element={<FeaturesList />} />
