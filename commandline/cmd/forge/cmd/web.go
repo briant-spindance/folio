@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/briantol/forge/internal/logging"
 	forgemdns "github.com/briantol/forge/internal/mdns"
 	"github.com/briantol/forge/internal/server"
 	"github.com/briantol/forge/internal/store"
@@ -19,14 +20,12 @@ const defaultMDNSHost = "forge"
 
 var (
 	port      int
-	dataDir   string
 	staticDir string
 	mdnsHost  string
 )
 
 func init() {
-	webCmd.Flags().IntVar(&port, "port", 3001, "Port to listen on")
-	webCmd.Flags().StringVar(&dataDir, "data", "", "Path to the Forge data directory (overrides FORGE_DATA env var)")
+	webCmd.Flags().IntVar(&port, "port", 2600, "Port to listen on")
 	webCmd.Flags().StringVar(&staticDir, "static", "", "Path to the frontend dist directory (default: embedded)")
 	webCmd.Flags().StringVar(&mdnsHost, "mdns", "", "Enable mDNS discovery with optional hostname (default: forge.local when flag is present)")
 
@@ -46,12 +45,22 @@ var webCmd = &cobra.Command{
 }
 
 func runWeb(cmd *cobra.Command, args []string) error {
+	// Configure logging based on build mode.
+	isDev := !IsProduction
+	logWriter, logCloser, err := logging.Setup(isDev, logDir)
+	if err != nil {
+		return fmt.Errorf("failed to configure logging: %w", err)
+	}
+	if logCloser != nil {
+		defer logCloser.Close()
+	}
+
 	// Resolve data directory.
 	if dataDir != "" {
 		os.Setenv("FORGE_DATA", dataDir)
 	}
 
-	defaultRoot := filepath.Join(".", "testdata", "forge")
+	defaultRoot := filepath.Join(".", "forge")
 	paths := store.ResolvePaths(defaultRoot)
 
 	// Verify data directory exists.
@@ -62,8 +71,8 @@ func runWeb(cmd *cobra.Command, args []string) error {
 	// Resolve frontend filesystem.
 	frontendFS := resolveFrontendFS()
 
-	// Build the router.
-	r := server.New(paths, frontendFS)
+	// Build the router with the configured log writer.
+	r := server.New(paths, frontendFS, logWriter)
 
 	// Start mDNS if requested.
 	if mdnsHost != "" {
@@ -80,6 +89,9 @@ func runWeb(cmd *cobra.Command, args []string) error {
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("  Forge server running at http://localhost:%d\n", port)
 	fmt.Printf("  Data directory: %s\n", paths.Root)
+	if IsProduction {
+		fmt.Printf("  Logs: %s\n", logging.LogPath())
+	}
 
 	if err := http.ListenAndServe(addr, r); err != nil {
 		return fmt.Errorf("server error: %w", err)

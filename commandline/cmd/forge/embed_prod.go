@@ -11,3 +11,6 @@ import "embed"
 
 //go:embed all:dist
 var embeddedDist embed.FS
+
+// isEmbed indicates this is a production build (frontend embedded).
+const isEmbed = true

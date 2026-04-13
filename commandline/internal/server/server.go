@@ -2,8 +2,11 @@
 package server
 
 import (
+	"io"
 	"io/fs"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/briantol/forge/internal/handler"
@@ -14,7 +17,9 @@ import (
 )
 
 // New creates a new chi router with all routes mounted.
-func New(paths *store.Paths, frontendFS fs.FS) chi.Router {
+// The optional logWriter controls where request logs are written.
+// If nil, logs are written to os.Stderr.
+func New(paths *store.Paths, frontendFS fs.FS, logWriter ...io.Writer) chi.Router {
 	// Create stores
 	featureStore := store.NewFeatureStore(paths)
 	issueStore := store.NewIssueStore(paths)
@@ -38,8 +43,15 @@ func New(paths *store.Paths, frontendFS fs.FS) chi.Router {
 
 	r := chi.NewRouter()
 
-	// Middleware
-	r.Use(middleware.Logger)
+	// Middleware — configure request logger output.
+	var w io.Writer = os.Stderr
+	if len(logWriter) > 0 && logWriter[0] != nil {
+		w = logWriter[0]
+	}
+	r.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{
+		Logger:  log.New(w, "", log.LstdFlags),
+		NoColor: w != os.Stderr,
+	}))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

@@ -1,13 +1,13 @@
-.PHONY: build build-embed dev clean test
+.PHONY: build prod dev clean test
 
 # Build the binary without embedded frontend (dev mode)
 # Use --static flag to point to frontend/dist at runtime
 build:
 	go build -o forge ./cmd/forge/
 
-# Build the binary with embedded frontend (production)
-# Copies frontend/dist into the build context, then embeds it
-build-embed:
+# Build the production binary with embedded frontend
+# Copies frontend/dist into the build context, embeds it, then cleans up
+prod:
 	rm -rf cmd/forge/dist
 	cp -r ../frontend/dist cmd/forge/dist
 	go build -tags embed -o forge ./cmd/forge/
