@@ -1,40 +1,58 @@
 # Forge
 
-A lightweight, filesystem-based project management tool for agile teams. Forge provides a web UI on top of a simple directory of markdown files with YAML frontmatter, making project data readable and editable by both humans and AI agents.
+A project management tool that stores features, plans, issues, and docs as markdown files on disk — designed for teams working with AI agents. Forge provides a web UI for managing context and a CLI for agent integration.
 
-## Overview
+## Philosophy
 
-Forge stores all project data — features, issues, wiki pages, roadmaps, sprints, and team info — as plain markdown files on disk. No database required. The API reads and writes these files directly, and the frontend provides a rich interface for managing them.
+**Agile for agentic engineering.** Forge shares the principles of Scrum — transparency, inspection, and adaptation — and extends them to a world where AI agents are first-class participants in the development process.
 
-### Key Capabilities
+**Features, not user stories.** The core artifact in Forge is the *Feature*, composed of a `FEATURE.md` (what to build) and a `PLAN.md` (how to build it). This is a lightweight form of spec-driven development where each feature is co-owned by product, engineering, and design.
 
-- **Features** — Full CRUD with drag-and-drop reordering, inline-editable metadata, supporting file artifacts, and a paginated/filterable list view
-- **Issues** — Bug/task/improvement/chore tracking with status, priority, type, labels, assignees, points, and feature association
-- **Roadmap** — Kanban-style board with columns, rows, draggable cards, and feature linking
-- **Wiki** — Markdown knowledge base with a rich text editor (TipTap) and diff viewing
-- **Dashboard** — Overview of project status with quick links to features, issues, docs, and recent activity
-- **Search** — Full-text search across all entities
-- **AI Chat** — Integrated AI sidebar powered by Anthropic and OpenAI via the Vercel AI SDK
+**Three tiers of context.** Agentic development requires context, and that context should be colocated and versioned with the rest of a project:
 
-## Architecture
+- **Evergreen** — Long-lived project documents: purpose, personas, tech stack, design system, conventions (`project-docs/`)
+- **Development** — Task-level context: features with specs and plans, issues with reproduction steps and analysis (`features/`, `issues/`)
+- **Rolling knowledge** — Learnings, decisions, and notes that evolve over time (`wiki/`)
 
-Monorepo with two packages managed by pnpm workspaces:
+**Files, not databases.** All project data is stored as plain markdown files with YAML frontmatter. No database to set up, migrate, or back up. The filesystem is the source of truth, and your data is always readable, grep-able, and diffable.
+
+**Orthogonal by design.** Forge is not an IDE, not an agent harness, not version control, and not a communication tool. It is intended to complement these tools — not replace them. It works alongside git, editors, CI/CD, Slack, and whatever agent framework you prefer.
+
+**A single binary.** One Go binary provides a web interface for managing context documents and is designed to also serve as a CLI tool for agents.
+
+**Opinionated but customizable.** Forge includes sane defaults for organizing context (workflow states, directory structure, frontmatter schemas) but can be customized to fit your team's process.
+
+**Skills** *(future)*. Forge will be able to install skills into common agent tools (Claude Code, OpenCode, etc.) to give agents direct access to project context.
+
+## Data Model
+
+All data lives under a single project directory (`./forge` by default):
 
 ```
 forge/
-├── api/          # Hono + Node.js backend
-├── frontend/     # React 19 + Vite frontend
-└── testdata/     # Sample project data (used in dev)
+├── forge.yaml              # Project config (workflow states, etc.)
+├── team.md                 # Team roster (YAML frontmatter)
+├── roadmap.md              # Kanban board definition
+├── project-docs/           # Evergreen context
+│   ├── project-brief.md
+│   ├── design.md
+│   └── ...
+├── features/               # One directory per feature
+│   └── my-feature/
+│       ├── FEATURE.md      # Metadata in frontmatter + description
+│       ├── PLAN.md         # Implementation plan (optional)
+│       └── *.md|*.json|... # Supporting artifacts
+├── issues/                 # One directory per issue
+│   └── my-issue/
+│       ├── ISSUE.md        # Metadata in frontmatter + description
+│       └── ...             # Supporting artifacts
+└── wiki/                   # Rolling knowledge base
+    └── page-name.md
 ```
 
-### Backend (`api/`)
+## Frontend
 
-- **Framework:** [Hono](https://hono.dev/) with `@hono/node-server`
-- **Data layer:** Filesystem-based stores that read/write markdown files with YAML frontmatter (parsed by `gray-matter`)
-- **Port:** 3001 (default, configurable via `PORT` env var)
-- **Data directory:** Configurable via `FORGE_DATA` env var, defaults to `testdata/forge`
-
-### Frontend (`frontend/`)
+The web UI is a React single-page application embedded into the Go binary for production deployments.
 
 - **Framework:** React 19 with react-router-dom v7
 - **Build tool:** Vite 8
@@ -44,81 +62,89 @@ forge/
 - **Drag and drop:** dnd-kit
 - **UI components:** shadcn/ui primitives (Radix UI)
 
-### Data Model
-
-All data lives under a single project directory (`testdata/forge` in dev):
-
-```
-forge-data/
-├── forge.yaml              # Project config (workflow states, etc.)
-├── team.md                 # Team roster (YAML frontmatter)
-├── roadmap.md              # Kanban board definition
-├── features/               # One directory per feature
-│   └── my-feature/
-│       ├── FEATURE.md      # Title, status, priority, etc. in frontmatter
-│       └── *.md|*.json|... # Supporting artifacts
-├── issues/                 # One directory per issue
-│   └── my-issue/
-│       ├── ISSUE.md        # Title, status, type, priority, etc.
-│       └── ...             # Supporting artifacts
-├── wiki/                   # Markdown knowledge base
-│   └── page-name.md
-└── sprints/                # One directory per sprint
-    └── sprint-1/
-        └── SPRINT.md
-```
+In development, the frontend runs as a separate Vite dev server and proxies API requests to the Go backend.
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js** (v20+)
-- **pnpm** (v9+)
-
-### Installation
-
-```bash
-pnpm install
-```
+- **Go** 1.21+
+- **Node.js** 20+ and **pnpm** 9+ (for building the frontend)
 
 ### Development
 
-Run both the API and frontend concurrently:
+Build and run in dev mode (frontend served from disk, logs to console):
 
 ```bash
-pnpm dev
+cd commandline
+make dev
 ```
 
-This starts:
-- API server at `http://localhost:3001`
-- Frontend dev server at `http://localhost:5173` (proxies `/api` requests to the API)
+This builds the Go binary and starts the server at `http://localhost:2600`, pointing at `testdata/forge` for sample data and `frontend/dist` for the UI.
 
-You can also run them individually:
+### Production Build
+
+Build a single self-contained binary with the frontend embedded:
 
 ```bash
-pnpm api        # API only
-pnpm frontend   # Frontend only
+cd frontend && pnpm install && pnpm build && cd ..
+cd commandline
+make prod
 ```
 
-### Build
+The resulting `forge` binary can be deployed anywhere — no Node.js runtime required.
+
+### Running
 
 ```bash
-pnpm build
+forge web                           # Start on port 2600, data from ./forge
+forge web --port 8080               # Custom port
+forge web --data /path/to/project   # Custom data directory
+forge web --mdns                    # Advertise as forge.local via mDNS
+forge web --mdns=myproject          # Advertise as myproject.local
 ```
 
-Builds the frontend to `frontend/dist/`.
+### CLI Reference
+
+**Global flags** (available to all subcommands):
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--data` | Path to the Forge data directory | `./forge` (or `FORGE_DATA` env var) |
+| `--log-dir` | Override log file directory | `~/.local/forge/logs` (production only) |
+
+**`forge web` flags:**
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--port` | Port to listen on | `2600` |
+| `--static` | Path to frontend dist directory | Embedded (production) |
+| `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `forge.local` |
 
 ### Configuration
 
-Create an `api/.env` file for environment variables:
+Create a `forge.yaml` in your data directory:
 
-```env
-PORT=3001
-FORGE_DATA=testdata/forge
-ANTHROPIC_API_KEY=sk-...     # For AI chat (optional)
-OPENAI_API_KEY=sk-...        # For AI chat (optional)
+```yaml
+project: my-project
+version: "0.1.0"
+workflow:
+  states: [draft, deferred, ready, in-progress, review, done]
+  default: draft
 ```
+
+Set `FORGE_DATA` to point to your project data directory, or use `--data`:
+
+```bash
+export FORGE_DATA=/path/to/my-project
+forge web
+```
+
+### Logging
+
+- **Dev builds** (`make build`): Logs are written to the console (stderr).
+- **Production builds** (`make prod`): Logs are written to `~/.local/forge/logs/forge.log`. Override with `--log-dir`.
 
 ## License
 
-Copyright Mutually Human. All rights reserved.
+MIT — see [LICENSE](LICENSE).
