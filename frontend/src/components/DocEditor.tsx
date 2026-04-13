@@ -18,7 +18,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Markdown } from "tiptap-markdown"
 import type { SaveDocPayload } from "@/lib/types"
-import { docIcon, allIconNames } from "@/lib/docIcons"
+import { DocIcon, allIconNames } from "@/lib/docIcons"
 
 type EditorMode = "wysiwyg" | "raw"
 
@@ -80,7 +80,7 @@ function IconPicker({ value, onChange }: IconPickerProps) {
         onClick={() => setOpen((v) => !v)}
         aria-label="Change document icon"
       >
-        {docIcon(current, 18)}
+        <DocIcon name={current} size={18} />
       </button>
 
       {open && (
@@ -123,7 +123,7 @@ function IconPicker({ value, onChange }: IconPickerProps) {
                     setOpen(false)
                   }}
                 >
-                  {docIcon(name, 16)}
+                  <DocIcon name={name} size={16} />
                 </button>
               ))}
             </div>

@@ -30,8 +30,6 @@ export function toPascalCase(kebab: string): string {
 
 const validIcons = new Set<string>(Object.keys(dynamicIconImports))
 
-const Fallback = <FileText size={16} strokeWidth={1.75} />
-
 /**
  * DocIcon — renders a Lucide icon by kebab-case name.
  * Falls back to FileText for unknown/missing names.

@@ -1,53 +1,66 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AppShell } from "@/components/AppShell"
-import { Dashboard } from "@/pages/Dashboard"
-import { DocsList } from "@/pages/DocsList"
-import { DocsNew } from "@/pages/DocsNew"
-import { DocsDetail } from "@/pages/DocsDetail"
-import { DocsEdit } from "@/pages/DocsEdit"
-import { RoadmapPage } from "@/pages/Roadmap"
-import { FeaturesList } from "@/pages/FeaturesList"
-import { FeaturesDetail } from "@/pages/FeaturesDetail"
-import { FeaturesEdit } from "@/pages/FeaturesEdit"
-import { FeaturesNew } from "@/pages/FeaturesNew"
-import { ArtifactView } from "@/pages/ArtifactView"
-import { IssuesList } from "@/pages/IssuesList"
-import { IssuesDetail } from "@/pages/IssuesDetail"
-import { IssuesEdit } from "@/pages/IssuesEdit"
-import { IssuesNew } from "@/pages/IssuesNew"
-import { IssueArtifactView } from "@/pages/IssueArtifactView"
-import { StubPage } from "@/pages/StubPage"
+
+// ── Lazy-loaded page components (route-level code splitting) ─────
+const Dashboard = lazy(() => import("@/pages/Dashboard").then(m => ({ default: m.Dashboard })))
+const DocsList = lazy(() => import("@/pages/DocsList").then(m => ({ default: m.DocsList })))
+const DocsNew = lazy(() => import("@/pages/DocsNew").then(m => ({ default: m.DocsNew })))
+const DocsDetail = lazy(() => import("@/pages/DocsDetail").then(m => ({ default: m.DocsDetail })))
+const DocsEdit = lazy(() => import("@/pages/DocsEdit").then(m => ({ default: m.DocsEdit })))
+const RoadmapPage = lazy(() => import("@/pages/Roadmap").then(m => ({ default: m.RoadmapPage })))
+const FeaturesList = lazy(() => import("@/pages/FeaturesList").then(m => ({ default: m.FeaturesList })))
+const FeaturesDetail = lazy(() => import("@/pages/FeaturesDetail").then(m => ({ default: m.FeaturesDetail })))
+const FeaturesEdit = lazy(() => import("@/pages/FeaturesEdit").then(m => ({ default: m.FeaturesEdit })))
+const FeaturesNew = lazy(() => import("@/pages/FeaturesNew").then(m => ({ default: m.FeaturesNew })))
+const ArtifactView = lazy(() => import("@/pages/ArtifactView").then(m => ({ default: m.ArtifactView })))
+const IssuesList = lazy(() => import("@/pages/IssuesList").then(m => ({ default: m.IssuesList })))
+const IssuesDetail = lazy(() => import("@/pages/IssuesDetail").then(m => ({ default: m.IssuesDetail })))
+const IssuesEdit = lazy(() => import("@/pages/IssuesEdit").then(m => ({ default: m.IssuesEdit })))
+const IssuesNew = lazy(() => import("@/pages/IssuesNew").then(m => ({ default: m.IssuesNew })))
+const IssueArtifactView = lazy(() => import("@/pages/IssueArtifactView").then(m => ({ default: m.IssueArtifactView })))
+const StubPage = lazy(() => import("@/pages/StubPage").then(m => ({ default: m.StubPage })))
 
 const queryClient = new QueryClient()
+
+function PageLoader() {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", padding: "4rem 0", opacity: 0.5 }}>
+      Loading…
+    </div>
+  )
+}
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppShell>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/docs" element={<DocsList />} />
-            <Route path="/docs/new" element={<DocsNew />} />
-            <Route path="/docs/:slug/edit" element={<DocsEdit />} />
-            <Route path="/docs/:slug" element={<DocsDetail />} />
-            <Route path="/roadmap" element={<RoadmapPage />} />
-            <Route path="/features" element={<FeaturesList />} />
-            <Route path="/features/new" element={<FeaturesNew />} />
-            <Route path="/features/:slug/edit" element={<FeaturesEdit />} />
-            <Route path="/features/:slug/artifacts/:filename" element={<ArtifactView />} />
-            <Route path="/features/:slug" element={<FeaturesDetail />} />
-            <Route path="/issues" element={<IssuesList />} />
-            <Route path="/issues/new" element={<IssuesNew />} />
-            <Route path="/issues/:slug/edit" element={<IssuesEdit />} />
-            <Route path="/issues/:slug/artifacts/:filename" element={<IssueArtifactView />} />
-            <Route path="/issues/:slug" element={<IssuesDetail />} />
-            <Route path="/sprints" element={<StubPage title="Sprints" />} />
-            <Route path="/wiki" element={<StubPage title="Wiki" />} />
-            <Route path="/review" element={<StubPage title="Review Tools" />} />
-            <Route path="/configuration" element={<StubPage title="Configuration" />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/docs" element={<DocsList />} />
+              <Route path="/docs/new" element={<DocsNew />} />
+              <Route path="/docs/:slug/edit" element={<DocsEdit />} />
+              <Route path="/docs/:slug" element={<DocsDetail />} />
+              <Route path="/roadmap" element={<RoadmapPage />} />
+              <Route path="/features" element={<FeaturesList />} />
+              <Route path="/features/new" element={<FeaturesNew />} />
+              <Route path="/features/:slug/edit" element={<FeaturesEdit />} />
+              <Route path="/features/:slug/artifacts/:filename" element={<ArtifactView />} />
+              <Route path="/features/:slug" element={<FeaturesDetail />} />
+              <Route path="/issues" element={<IssuesList />} />
+              <Route path="/issues/new" element={<IssuesNew />} />
+              <Route path="/issues/:slug/edit" element={<IssuesEdit />} />
+              <Route path="/issues/:slug/artifacts/:filename" element={<IssueArtifactView />} />
+              <Route path="/issues/:slug" element={<IssuesDetail />} />
+              <Route path="/sprints" element={<StubPage title="Sprints" />} />
+              <Route path="/wiki" element={<StubPage title="Wiki" />} />
+              <Route path="/review" element={<StubPage title="Review Tools" />} />
+              <Route path="/configuration" element={<StubPage title="Configuration" />} />
+            </Routes>
+          </Suspense>
         </AppShell>
       </BrowserRouter>
     </QueryClientProvider>

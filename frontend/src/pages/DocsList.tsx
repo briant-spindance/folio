@@ -20,7 +20,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { useWikiDocs, useReorderWikiDocs } from "@/hooks/useData"
-import { docIcon } from "@/lib/docIcons"
+import { DocIcon } from "@/lib/docIcons"
 import type { WikiDocDetail } from "@/lib/types"
 
 function formatRelativeDate(dateStr?: string | null): string {
@@ -91,7 +91,7 @@ function SortableDocRow({ doc }: { doc: WikiDocDetail }) {
       </button>
       <Link className="docs-list-row" to={`/docs/${doc.slug}`}>
         <div className="docs-list-row-icon">
-          {docIcon(doc.icon, 18)}
+          <DocIcon name={doc.icon} size={18} />
         </div>
         <div className="docs-list-row-body">
           <span className="docs-list-row-title">
@@ -119,7 +119,7 @@ function DocRowOverlay({ doc }: { doc: WikiDocDetail }) {
       </button>
       <div className="docs-list-row">
         <div className="docs-list-row-icon">
-          {docIcon(doc.icon, 18)}
+          <DocIcon name={doc.icon} size={18} />
         </div>
         <div className="docs-list-row-body">
           <span className="docs-list-row-title">{doc.title}</span>

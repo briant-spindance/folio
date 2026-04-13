@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useWikiDoc, useDeleteWikiDoc } from "@/hooks/useData"
-import { docIcon } from "@/lib/docIcons"
+import { DocIcon } from "@/lib/docIcons"
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -156,7 +156,7 @@ export function DocsDetail() {
       <div className="docs-prose" ref={contentRef}>
         <div className="docs-prose-meta">
           <div className="docs-prose-icon">
-            {docIcon(doc.icon, 18)}
+            <DocIcon name={doc.icon} size={18} />
           </div>
           <div className="docs-prose-meta-text">
             <span className="docs-prose-meta-title">{doc.title}</span>

@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from "react"
+import { lazy, Suspense, useState, type ReactNode } from "react"
 import { Header } from "./Header"
 import { Sidebar } from "./Sidebar"
-import { AISidebar } from "./AISidebar"
 import { useGitStatus } from "@/hooks/useData"
+
+const AISidebar = lazy(() => import("./AISidebar").then(m => ({ default: m.AISidebar })))
 
 const STORAGE_KEY = "sidebar-collapsed"
 const AI_STORAGE_KEY = "ai-sidebar-open"
@@ -59,7 +60,11 @@ export function AppShell({ children, projectName = "folio-project" }: AppShellPr
       <main className="main">
         <div className="content">{children}</div>
       </main>
-      <AISidebar open={aiOpen} onClose={handleAiToggle} />
+      {aiOpen && (
+        <Suspense fallback={null}>
+          <AISidebar open={aiOpen} onClose={handleAiToggle} />
+        </Suspense>
+      )}
     </div>
   )
 }

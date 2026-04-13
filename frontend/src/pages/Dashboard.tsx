@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import { useStatus } from "@/hooks/useData"
 import { StatusBadge, LabelBadge } from "@/components/Badges"
 import { Card, CardHeader } from "@/components/Card"
-import { docIcon } from "@/lib/docIcons"
+import { DocIcon } from "@/lib/docIcons"
 
 // ── Icon helpers (inline SVGs matching lucide icons used in mockup) ──────────
 
@@ -156,7 +156,7 @@ export function Dashboard() {
             {data.recent_docs.map((doc) => (
               <Link key={doc.slug} className="doc-tile" to={`/docs/${doc.slug}`}>
                 <div className="doc-tile-icon">
-                  {docIcon(doc.icon)}
+                  <DocIcon name={doc.icon} />
                 </div>
                 <div className="doc-tile-text">
                   <span className="doc-tile-name">{doc.title}</span>
