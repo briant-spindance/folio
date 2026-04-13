@@ -1,14 +1,18 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/briant-spindance/folio/internal/doctor"
 	"github.com/briant-spindance/folio/internal/store"
 )
 
 // StatusHandler handles GET /api/status.
 type StatusHandler struct {
+	paths    *store.Paths
 	features *store.FeatureStore
 	issues   *store.IssueStore
 	wiki     *store.WikiStore
@@ -17,8 +21,8 @@ type StatusHandler struct {
 }
 
 // NewStatusHandler creates a new StatusHandler.
-func NewStatusHandler(f *store.FeatureStore, i *store.IssueStore, w *store.WikiStore, t *store.TeamStore, r *store.RoadmapStore) *StatusHandler {
-	return &StatusHandler{features: f, issues: i, wiki: w, team: t, roadmap: r}
+func NewStatusHandler(paths *store.Paths, f *store.FeatureStore, i *store.IssueStore, w *store.WikiStore, t *store.TeamStore, r *store.RoadmapStore) *StatusHandler {
+	return &StatusHandler{paths: paths, features: f, issues: i, wiki: w, team: t, roadmap: r}
 }
 
 func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -126,33 +130,21 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// health (hardcoded for now, matching TypeScript)
-	healthChecks := []map[string]interface{}{
-		{"level": "pass", "message": "Directory structure is valid"},
-		{"level": "pass", "message": "folio.yaml schema is valid"},
-		{"level": "pass", "message": "All features have valid frontmatter"},
-		{"level": "pass", "message": "All issues have valid frontmatter"},
-		{"level": "pass", "message": "Backlog order is valid"},
-		{"level": "pass", "message": "Sprint references are valid"},
-		{"level": "pass", "message": "No duplicate slugs found"},
-		{"level": "warn", "message": "2 features missing assignees"},
-		{"level": "warn", "message": "Sprint 2 has unresolved items"},
-		{"level": "fail", "message": "Backlog contains orphaned reference: \"deleted-feature\""},
+	// health — run real checks
+	healthResult := doctor.Run(h.paths)
+	healthChecks := make([]map[string]interface{}, 0, len(healthResult.Checks))
+	for _, c := range healthResult.Checks {
+		healthChecks = append(healthChecks, map[string]interface{}{
+			"level":   string(c.Level),
+			"message": c.Message,
+		})
 	}
 
-	passed := 0
-	warnings := 0
-	failed := 0
-	for _, c := range healthChecks {
-		switch c["level"] {
-		case "pass":
-			passed++
-		case "warn":
-			warnings++
-		case "fail":
-			failed++
-		}
-	}
+	lastRun := fmt.Sprintf("Last run: %s", time.Now().Format("Jan 2, 2006 at 3:04 PM"))
+
+	passed := healthResult.Passed
+	warnings := healthResult.Warnings
+	failed := healthResult.Failed
 
 	// roadmap summary
 	byColumn := map[string]int{}
@@ -176,7 +168,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"passed":   passed,
 			"warnings": warnings,
 			"failed":   failed,
-			"last_run": "Last run: Apr 10, 2026 at 2:32 PM",
+			"last_run": lastRun,
 			"checks":   healthChecks,
 		},
 		"roadmap": map[string]interface{}{

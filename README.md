@@ -60,6 +60,114 @@ folio/
 - **Issues** follow the same pattern under `issues/`. Each `ISSUE.md` has frontmatter for title, status (`open`, `in-progress`, `closed`), type (`bug`, `task`, `improvement`, `chore`), priority, assignees, and an optional link to a parent feature. The body holds the description, reproduction steps, or analysis.
 - **Wiki pages** are standalone markdown files in `wiki/` for rolling knowledge — architecture decisions, onboarding guides, retrospective notes. Each page has a title, optional icon, and auto-generated description.
 
+## CLI
+
+The `folio` binary provides both a web server and a set of commands for managing project data directly from the terminal — useful for scripting, CI, and AI agent integration. All commands support `--json` for machine-readable output.
+
+**Global flags** (available to all subcommands):
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--data` | Path to the Folio data directory | `./folio` (or `FOLIO_DATA` env var) |
+| `--log-dir` | Override log file directory | `~/.local/folio/logs` (production only) |
+
+### `folio init`
+
+Creates the `folio/` directory structure with default configuration, wiki page templates, and example content. Use `--force` to overwrite an existing directory.
+
+```bash
+folio init                          # Create folio/ in current directory
+folio init --data /path/to/project  # Create at a specific path
+```
+
+### `folio web`
+
+Starts the web server, serving the API and the embedded frontend SPA.
+
+```bash
+folio web                           # Start on port 2600, data from ./folio
+folio web --port 8080               # Custom port
+folio web --data /path/to/project   # Custom data directory
+folio web --mdns                    # Advertise as folio.local via mDNS
+folio web --mdns=myproject          # Advertise as myproject.local
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--port` | Port to listen on | `2600` |
+| `--static` | Path to frontend dist directory | Embedded (production) |
+| `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `folio.local` |
+
+### `folio features`
+
+CRUD commands for managing features. Alias: `folio feature`.
+
+```bash
+folio features list                              # List all features
+folio features list --status in-progress,review  # Filter by status
+folio features list --assignee Alice --sort priority
+folio features get my-feature                    # Show a single feature
+folio features create "My Feature" --priority high --body "Description here"
+folio features update my-feature --status in-progress --tags "backend,api"
+folio features delete my-feature
+```
+
+### `folio issues`
+
+CRUD commands for managing issues. Alias: `folio issue`.
+
+```bash
+folio issues list                                # List all issues
+folio issues list --type bug --status open       # Filter by type and status
+folio issues list --feature my-feature           # Issues linked to a feature
+folio issues get my-issue                        # Show a single issue
+folio issues create "Fix login bug" --type bug --priority high --feature user-auth
+folio issues update my-issue --status closed
+folio issues delete my-issue
+```
+
+### `folio docs`
+
+Read-only commands for viewing project documents.
+
+```bash
+folio docs list                     # List all project documents
+folio docs get project-brief        # Show a specific document
+```
+
+### `folio doctor`
+
+Runs health checks against the `folio/` directory to find structural issues, invalid frontmatter, broken references, and other problems. Exits with code 1 if any checks fail.
+
+```bash
+folio doctor                        # Run all health checks
+folio doctor --json                 # Machine-readable output
+folio doctor --data /path/to/project
+```
+
+Doctor validates:
+
+- **Directory structure** — required directories exist (`features/`, `issues/`, `wiki/`, etc.)
+- **Config** — `folio.yaml` exists, parses correctly, and has required fields
+- **Feature frontmatter** — all features have valid YAML frontmatter with valid status and priority values
+- **Issue frontmatter** — all issues have valid frontmatter with valid status, type, and priority values
+- **Wiki pages** — all wiki pages parse correctly and have titles
+- **Team file** — `team.md` parses correctly and members have names
+- **Roadmap consistency** — cards reference valid columns and rows
+- **Duplicate slugs** — no slug collisions between features and issues
+- **Referential integrity** — issue `feature` references and roadmap card `featureSlug` references point to existing features
+
+The same checks power the health panel in the web UI dashboard.
+
+### `folio version`
+
+Prints the folio version, commit hash, build date, and Go version.
+
+```bash
+folio version                       # Human-readable output
+folio version --json                # Machine-readable output
+```
+
 ## Frontend
 
 The web UI is a React single-page application embedded into the Go binary for production deployments.
@@ -125,33 +233,6 @@ Run `just` with no arguments to see all available recipes.
 ### Production Build
 
 `just build` produces a single self-contained Go binary with the frontend embedded. No Node.js runtime required at deploy time.
-
-### Running
-
-```bash
-folio web                           # Start on port 2600, data from ./folio
-folio web --port 8080               # Custom port
-folio web --data /path/to/project   # Custom data directory
-folio web --mdns                    # Advertise as folio.local via mDNS
-folio web --mdns=myproject          # Advertise as myproject.local
-```
-
-### CLI Reference
-
-**Global flags** (available to all subcommands):
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--data` | Path to the Folio data directory | `./folio` (or `FOLIO_DATA` env var) |
-| `--log-dir` | Override log file directory | `~/.local/folio/logs` (production only) |
-
-**`folio web` flags:**
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--port` | Port to listen on | `2600` |
-| `--static` | Path to frontend dist directory | Embedded (production) |
-| `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `folio.local` |
 
 ### Configuration
 

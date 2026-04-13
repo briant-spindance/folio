@@ -15,6 +15,9 @@ commandline/cmd/folio/dist/
 # coverage reports
 coverage/
 
+# local scripts
+build-install.sh
+
 # editor
 .DS_Store
 *.swp

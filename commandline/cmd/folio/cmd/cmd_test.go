@@ -81,6 +81,8 @@ func executeCmd(t *testing.T, args ...string) (string, error) {
 	featuresCreateCmd.Flags().VisitAll(func(f *pflag.Flag) { f.Changed = false })
 	issuesCreateCmd.Flags().VisitAll(func(f *pflag.Flag) { f.Changed = false })
 	initCmd.Flags().VisitAll(func(f *pflag.Flag) { f.Changed = false })
+	doctorCmd.Flags().VisitAll(func(f *pflag.Flag) { f.Changed = false })
+	versionCmd.Flags().VisitAll(func(f *pflag.Flag) { f.Changed = false })
 
 	return output, err
 }
@@ -1490,5 +1492,249 @@ func TestInitThenCreateFeature(t *testing.T) {
 	}
 	if !strings.Contains(out, "my-first-feature") {
 		t.Errorf("expected feature in list, got: %s", out)
+	}
+}
+
+// --- Doctor Tests ---
+
+// setupDoctorDir creates a fully valid folio data directory for doctor tests.
+func setupDoctorDir(t *testing.T) string {
+	t.Helper()
+	dir := setupTestDir(t)
+
+	// Add the extra directories doctor expects.
+	for _, d := range []string{"sprints"} {
+		if err := os.MkdirAll(filepath.Join(dir, d), 0755); err != nil {
+			t.Fatalf("failed to create directory %s: %v", d, err)
+		}
+	}
+
+	// Write valid folio.yaml.
+	if err := os.WriteFile(filepath.Join(dir, "folio.yaml"), []byte(`project: test-project
+version: "0.1.0"
+workflow:
+  states: [draft, ready, in-progress, done]
+  default: draft
+`), 0644); err != nil {
+		t.Fatalf("failed to write folio.yaml: %v", err)
+	}
+
+	// Write valid team.md.
+	if err := os.WriteFile(filepath.Join(dir, "team.md"), []byte(`---
+members:
+  - name: Alice
+    role: Developer
+---
+`), 0644); err != nil {
+		t.Fatalf("failed to write team.md: %v", err)
+	}
+
+	// Write valid roadmap.md.
+	if err := os.WriteFile(filepath.Join(dir, "roadmap.md"), []byte(`---
+title: Roadmap
+columns:
+  - now
+  - next
+  - later
+rows: []
+cards: []
+---
+`), 0644); err != nil {
+		t.Fatalf("failed to write roadmap.md: %v", err)
+	}
+
+	return dir
+}
+
+func TestDoctorHealthy(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeFeature(t, dir, "auth", `---
+title: Authentication
+status: draft
+priority: medium
+created: "2025-01-01"
+modified: "2025-01-01"
+---
+Body.
+`)
+
+	out, err := executeCmd(t, "--data", dir, "doctor")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Folio Doctor") {
+		t.Errorf("expected header, got: %s", out)
+	}
+	if !strings.Contains(out, "PASS") {
+		t.Errorf("expected at least one PASS, got: %s", out)
+	}
+	if strings.Contains(out, "FAIL") {
+		t.Errorf("expected no FAIL in healthy dir, got: %s", out)
+	}
+	if !strings.Contains(out, "0 failed") {
+		t.Errorf("expected '0 failed' in summary, got: %s", out)
+	}
+}
+
+func TestDoctorHealthyJSON(t *testing.T) {
+	dir := setupDoctorDir(t)
+
+	out, err := executeCmd(t, "--data", dir, "doctor", "--json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]interface{}
+	parseJSON(t, out, &result)
+
+	if result["failed"] != float64(0) {
+		t.Errorf("expected 0 failures, got %v", result["failed"])
+	}
+
+	checks, ok := result["checks"].([]interface{})
+	if !ok {
+		t.Fatalf("expected checks array, got: %v", result["checks"])
+	}
+	if len(checks) == 0 {
+		t.Error("expected at least one check")
+	}
+
+	// All checks should be pass level.
+	for _, c := range checks {
+		check := c.(map[string]interface{})
+		if check["level"] != "pass" {
+			t.Errorf("expected all pass checks, got: %v", check)
+		}
+	}
+}
+
+func TestDoctorWithFailures(t *testing.T) {
+	dir := setupDoctorDir(t)
+
+	// Remove a required directory.
+	os.RemoveAll(filepath.Join(dir, "wiki"))
+
+	_, err := executeCmd(t, "--data", dir, "doctor")
+	if err == nil {
+		t.Fatal("expected error when health checks fail")
+	}
+	if !strings.Contains(err.Error(), "health check(s) failed") {
+		t.Errorf("expected 'health check(s) failed' error, got: %v", err)
+	}
+}
+
+func TestDoctorWithWarnings(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeFeature(t, dir, "bad-status", `---
+title: Bad Feature
+status: banana
+priority: medium
+---
+`)
+
+	out, err := executeCmd(t, "--data", dir, "doctor")
+	if err != nil {
+		t.Fatalf("unexpected error (warnings should not cause failure): %v", err)
+	}
+	if !strings.Contains(out, "WARN") {
+		t.Errorf("expected WARN in output, got: %s", out)
+	}
+	if !strings.Contains(out, "banana") {
+		t.Errorf("expected invalid status 'banana' mentioned, got: %s", out)
+	}
+}
+
+func TestDoctorMissingDataDir(t *testing.T) {
+	_, err := executeCmd(t, "--data", "/nonexistent/path", "doctor")
+	if err == nil {
+		t.Fatal("expected error for missing data directory")
+	}
+	if !strings.Contains(err.Error(), "data directory does not exist") {
+		t.Errorf("expected data dir error, got: %v", err)
+	}
+}
+
+func TestDoctorWithBrokenRefs(t *testing.T) {
+	dir := setupDoctorDir(t)
+	writeIssue(t, dir, "orphan-issue", `---
+title: Orphan Issue
+status: open
+type: task
+feature: nonexistent-feature
+---
+`)
+
+	out, err := executeCmd(t, "--data", dir, "doctor")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "WARN") {
+		t.Errorf("expected WARN for broken reference, got: %s", out)
+	}
+	if !strings.Contains(out, "nonexistent-feature") {
+		t.Errorf("expected broken feature reference mentioned, got: %s", out)
+	}
+}
+
+func TestDoctorInitThenDoctor(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "folio")
+
+	// Init a new directory.
+	_, err := executeCmd(t, "--data", dir, "init")
+	if err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Doctor should pass on a freshly initialized directory.
+	out, err := executeCmd(t, "--data", dir, "doctor")
+	if err != nil {
+		t.Fatalf("doctor failed on init'd dir: %v", err)
+	}
+	if !strings.Contains(out, "0 failed") {
+		t.Errorf("expected '0 failed' on fresh init, got: %s", out)
+	}
+}
+
+// --- Version Tests ---
+
+func TestVersion(t *testing.T) {
+	out, err := executeCmd(t, "version")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "folio") {
+		t.Errorf("expected 'folio' in output, got: %s", out)
+	}
+	if !strings.Contains(out, "commit:") {
+		t.Errorf("expected 'commit:' in output, got: %s", out)
+	}
+	if !strings.Contains(out, "built:") {
+		t.Errorf("expected 'built:' in output, got: %s", out)
+	}
+	if !strings.Contains(out, "go:") {
+		t.Errorf("expected 'go:' in output, got: %s", out)
+	}
+}
+
+func TestVersionJSON(t *testing.T) {
+	out, err := executeCmd(t, "version", "--json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]interface{}
+	parseJSON(t, out, &result)
+
+	if _, ok := result["version"]; !ok {
+		t.Error("expected 'version' key in JSON output")
+	}
+	if _, ok := result["commit"]; !ok {
+		t.Error("expected 'commit' key in JSON output")
+	}
+	if _, ok := result["date"]; !ok {
+		t.Error("expected 'date' key in JSON output")
+	}
+	if _, ok := result["go_version"]; !ok {
+		t.Error("expected 'go_version' key in JSON output")
 	}
 }

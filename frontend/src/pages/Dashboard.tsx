@@ -146,19 +146,26 @@ export function Dashboard() {
             </Link>
           }
         />
-        <div className="docs-grid">
-          {data.recent_docs.map((doc) => (
-            <Link key={doc.slug} className="doc-tile" to={`/docs/${doc.slug}`}>
-              <div className="doc-tile-icon">
-                {docIcon(doc.icon)}
-              </div>
-              <div className="doc-tile-text">
-                <span className="doc-tile-name">{doc.title}</span>
-                <span className="doc-tile-meta">{formatRelativeDate(doc.updated_at)}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {data.recent_docs.length === 0 ? (
+          <div className="dashboard-empty">
+            <span>No project documents yet.</span>
+            <Link className="dashboard-empty-action" to="/docs">Add a document</Link>
+          </div>
+        ) : (
+          <div className="docs-grid">
+            {data.recent_docs.map((doc) => (
+              <Link key={doc.slug} className="doc-tile" to={`/docs/${doc.slug}`}>
+                <div className="doc-tile-icon">
+                  {docIcon(doc.icon)}
+                </div>
+                <div className="doc-tile-text">
+                  <span className="doc-tile-name">{doc.title}</span>
+                  <span className="doc-tile-meta">{formatRelativeDate(doc.updated_at)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* ── 2. Features ─────────────────────────────────── */}
@@ -171,31 +178,38 @@ export function Dashboard() {
             </Link>
           }
         />
-        <table className="features-table">
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>Status</th>
-              <th>Assignee</th>
-              <th>Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.top_features.map((f, i) => (
-              <tr key={f.slug}>
-                <td>
-                  <Link className="feature-name-cell" to={`/features/${f.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-                    <span className="feature-position">{i + 1}</span>
-                    <span className="feature-name">{f.title}</span>
-                  </Link>
-                </td>
-                <td><StatusBadge status={f.status} /></td>
-                <td className="feature-assignee">{f.assignees?.length ? f.assignees.join(", ") : "—"}</td>
-                <td className="feature-points">{f.points ?? "—"}</td>
+        {data.top_features.length === 0 ? (
+          <div className="dashboard-empty">
+            <span>No features yet.</span>
+            <Link className="dashboard-empty-action" to="/features">Create a feature</Link>
+          </div>
+        ) : (
+          <table className="features-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Status</th>
+                <th>Assignee</th>
+                <th>Points</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.top_features.map((f, i) => (
+                <tr key={f.slug}>
+                  <td>
+                    <Link className="feature-name-cell" to={`/features/${f.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                      <span className="feature-position">{i + 1}</span>
+                      <span className="feature-name">{f.title}</span>
+                    </Link>
+                  </td>
+                  <td><StatusBadge status={f.status} /></td>
+                  <td className="feature-assignee">{f.assignees?.length ? f.assignees.join(", ") : "—"}</td>
+                  <td className="feature-points">{f.points ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </Card>
 
       {/* ── 3. Open Issues ──────────────────────────────── */}
@@ -208,30 +222,37 @@ export function Dashboard() {
             </Link>
           }
         />
-        <table className="issues-table">
-          <thead>
-            <tr>
-              <th>Issue</th>
-              <th>Status</th>
-              <th>Labels</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.open_issues.map((issue) => (
-              <tr key={issue.slug}>
-                <td><Link className="issue-name" to={`/issues/${issue.slug}`} style={{ textDecoration: "none", color: "inherit" }}>{issue.title}</Link></td>
-                <td><StatusBadge status={issue.status} /></td>
-                <td>
-                  <div className="issue-labels">
-                    {issue.labels?.map((lbl) => (
-                      <LabelBadge key={lbl} label={lbl} />
-                    ))}
-                  </div>
-                </td>
+        {data.open_issues.length === 0 ? (
+          <div className="dashboard-empty">
+            <span>No open issues.</span>
+            <Link className="dashboard-empty-action" to="/issues">Create an issue</Link>
+          </div>
+        ) : (
+          <table className="issues-table">
+            <thead>
+              <tr>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Labels</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.open_issues.map((issue) => (
+                <tr key={issue.slug}>
+                  <td><Link className="issue-name" to={`/issues/${issue.slug}`} style={{ textDecoration: "none", color: "inherit" }}>{issue.title}</Link></td>
+                  <td><StatusBadge status={issue.status} /></td>
+                  <td>
+                    <div className="issue-labels">
+                      {issue.labels?.map((lbl) => (
+                        <LabelBadge key={lbl} label={lbl} />
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </Card>
 
       {/* ── 4. Recent Wiki Changes ──────────────────────── */}
@@ -244,40 +265,54 @@ export function Dashboard() {
             </Link>
           }
         />
-        <table className="wiki-table">
-          <thead>
-            <tr>
-              <th>Page</th>
-              <th>Changed by</th>
-              <th style={{ textAlign: "right" }}>Modified</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.recent_docs.slice(0, 5).map((doc) => (
-              <tr key={doc.slug} onClick={() => {}} style={{ cursor: "pointer" }}>
-                <td className="wiki-page-name">{doc.title}</td>
-                <td className="wiki-author">{doc.description ?? "—"}</td>
-                <td className="wiki-modified">{formatModified(doc.updated_at)}</td>
+        {data.recent_docs.length === 0 ? (
+          <div className="dashboard-empty">
+            <span>No wiki pages yet.</span>
+            <Link className="dashboard-empty-action" to="/wiki">Create a page</Link>
+          </div>
+        ) : (
+          <table className="wiki-table">
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th>Changed by</th>
+                <th style={{ textAlign: "right" }}>Modified</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.recent_docs.slice(0, 5).map((doc) => (
+                <tr key={doc.slug} onClick={() => {}} style={{ cursor: "pointer" }}>
+                  <td className="wiki-page-name">{doc.title}</td>
+                  <td className="wiki-author">{doc.description ?? "—"}</td>
+                  <td className="wiki-modified">{formatModified(doc.updated_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </Card>
 
       {/* ── 5. Team ─────────────────────────────────────── */}
       <Card>
         <CardHeader title={<><IconUsers />Team</>} />
-        <div className="team-grid">
-          {data.team.map((member) => (
-            <div key={member.name} className="team-member">
-              <div className="team-avatar">{member.initials}</div>
-              <div className="team-info">
-                <span className="team-name">{member.name}</span>
-                <span className="team-role">{member.role}</span>
+        {data.team.length === 0 ? (
+          <div className="dashboard-empty">
+            <span>No team members yet.</span>
+            <span>Add members to team.md to see them here.</span>
+          </div>
+        ) : (
+          <div className="team-grid">
+            {data.team.map((member) => (
+              <div key={member.name} className="team-member">
+                <div className="team-avatar">{member.initials}</div>
+                <div className="team-info">
+                  <span className="team-name">{member.name}</span>
+                  <span className="team-role">{member.role}</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* ── 6. Folio Health ─────────────────────────────── */}

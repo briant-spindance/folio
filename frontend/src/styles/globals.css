@@ -403,6 +403,31 @@ body {
   height: 11px;
 }
 
+/* ── Dashboard empty states ── */
+
+.dashboard-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--foreground-muted);
+  font-size: 0.8125rem;
+}
+
+.dashboard-empty-action {
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.dashboard-empty-action:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
 /* ================================================================
    BADGES — copied verbatim from dashboard-mockup.html
    ================================================================ */

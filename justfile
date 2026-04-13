@@ -26,15 +26,21 @@ dev: build-go
 build-frontend:
     cd frontend && pnpm build
 
+# Build version info
+version := `git describe --tags --always --dirty 2>/dev/null || echo "dev"`
+commit  := `git rev-parse --short HEAD 2>/dev/null || echo "unknown"`
+date    := `date -u +%Y-%m-%dT%H:%M:%SZ`
+ldflags := "-X github.com/briant-spindance/folio/cmd/folio/cmd.Version=" + version + " -X github.com/briant-spindance/folio/cmd/folio/cmd.Commit=" + commit + " -X github.com/briant-spindance/folio/cmd/folio/cmd.Date=" + date
+
 # Build the Go binary (dev mode, no embedded frontend)
 build-go:
-    cd commandline && go build -o folio ./cmd/folio/
+    cd commandline && go build -ldflags '{{ldflags}}' -o folio ./cmd/folio/
 
 # Full production build: frontend + Go binary with embedded frontend
 build: build-frontend
     cd commandline && rm -rf cmd/folio/dist
     cp -r frontend/dist commandline/cmd/folio/dist
-    cd commandline && go build -tags embed -o folio ./cmd/folio/
+    cd commandline && go build -tags embed -ldflags '{{ldflags}}' -o folio ./cmd/folio/
     rm -rf commandline/cmd/folio/dist
 
 # ── Testing ───────────────────────────────────────────────────────
