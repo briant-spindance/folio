@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/briantol/forge/internal/model"
+	"github.com/briantol/folio/internal/model"
 )
 
 const maxSessions = 20

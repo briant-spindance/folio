@@ -3,8 +3,8 @@ package store
 import (
 	"os"
 
-	"github.com/briantol/forge/internal/frontmatter"
-	"github.com/briantol/forge/internal/model"
+	"github.com/briantol/folio/internal/frontmatter"
+	"github.com/briantol/folio/internal/model"
 )
 
 // TeamStore provides read access to team members.

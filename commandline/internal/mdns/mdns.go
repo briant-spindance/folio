@@ -1,6 +1,6 @@
-// Package mdns provides mDNS service advertisement for the Forge server.
+// Package mdns provides mDNS service advertisement for the Folio server.
 // It allows the server to be discoverable on the local network via
-// multicast DNS (e.g., forge.local).
+// multicast DNS (e.g., folio.local).
 package mdns
 
 import (
@@ -15,8 +15,8 @@ import (
 // Advertise starts an mDNS responder that advertises an HTTP service
 // with the given hostname on the specified port.
 //
-// The hostname should be the bare name (e.g. "forge") or a .local name
-// (e.g. "forge.local"). The .local suffix is stripped before passing to
+// The hostname should be the bare name (e.g. "folio") or a .local name
+// (e.g. "folio.local"). The .local suffix is stripped before passing to
 // the mDNS library, which adds it automatically.
 //
 // Returns a shutdown function that stops the mDNS responder.
@@ -34,10 +34,10 @@ func Advertise(hostname string, port int) (shutdown func(), err error) {
 		name,           // instance name
 		"_http._tcp",   // service type
 		"",             // domain (empty = "local.")
-		name+".local.", // hostname FQDN (e.g. "forge.local.")
+		name+".local.", // hostname FQDN (e.g. "folio.local.")
 		port,           // port
 		ips,            // IPs to advertise
-		[]string{"Forge project management server"}, // TXT record
+		[]string{"Folio project management server"}, // TXT record
 	)
 	if err != nil {
 		return nil, fmt.Errorf("mdns: failed to create service: %w", err)

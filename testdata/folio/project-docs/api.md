@@ -3,11 +3,11 @@ title: REST API Specification
 order: 1
 ---
 
-# Forge — REST API Specification
+# Folio — REST API Specification
 
 ## Overview
 
-The Forge API is an HTTP JSON API served by the Go backend (`forge serve`). It provides the data layer between the React SPA frontend and the filesystem-based project structure. All endpoints read from and write to the `forge/` directory — the filesystem is the source of truth.
+The Folio API is an HTTP JSON API served by the Go backend (`folio serve`). It provides the data layer between the React SPA frontend and the filesystem-based project structure. All endpoints read from and write to the `folio/` directory — the filesystem is the source of truth.
 
 The API is consumed exclusively by the embedded web UI. It is not intended as a public API, but follows RESTful conventions to keep the interface predictable.
 
@@ -124,7 +124,7 @@ Get a single feature.
   "points": 5,
   "backlog_position": 2,
   "sprint": "sprint-3",
-  "path": "forge/features/oauth-integration/FEATURE.md",
+  "path": "folio/features/oauth-integration/FEATURE.md",
   "body": "## Summary\nIntegrate OAuth 2.0 for third-party login...",
   "artifacts": [
     { "name": "wireframe.png", "size": 245760 }
@@ -232,7 +232,7 @@ Upload a supporting artifact to the feature directory.
 {
   "name": "wireframe.png",
   "size": 245760,
-  "path": "forge/features/oauth-integration/wireframe.png"
+  "path": "folio/features/oauth-integration/wireframe.png"
 }
 ```
 
@@ -368,7 +368,7 @@ Get a single issue.
   "labels": ["bug", "security"],
   "linked_feature": "user-authentication",
   "sprint": "sprint-3",
-  "path": "forge/issues/login-timeout-on-slow-connections/ISSUE.md",
+  "path": "folio/issues/login-timeout-on-slow-connections/ISSUE.md",
   "body": "## Description\nUsers on slow connections experience login timeouts...",
   "artifacts": [],
   "created": "2026-04-05T14:00:00Z",
@@ -521,7 +521,7 @@ Get a single sprint with expanded feature and issue details.
   "capacity": 40,
   "points_committed": 34,
   "points_completed": 21,
-  "path": "forge/sprints/sprint-3/SPRINT.md",
+  "path": "folio/sprints/sprint-3/SPRINT.md",
   "body": "## Sprint Notes\n...",
   "features": [
     {
@@ -599,7 +599,7 @@ Get the sprint board view — items organized by workflow state columns.
 }
 ```
 
-Column keys are the workflow states from `forge.yaml`, in configured order.
+Column keys are the workflow states from `folio.yaml`, in configured order.
 
 ---
 
@@ -770,14 +770,14 @@ List all wiki pages.
   {
     "title": "Project Brief",
     "slug": "project-brief",
-    "path": "forge/wiki/project-brief.md",
+    "path": "folio/wiki/project-brief.md",
     "aliases": [],
     "last_modified": "2026-04-01T09:00:00Z"
   },
   {
     "title": "OAuth Integration Notes",
     "slug": "oauth-notes",
-    "path": "forge/wiki/oauth-notes.md",
+    "path": "folio/wiki/oauth-notes.md",
     "aliases": ["oauth"],
     "last_modified": "2026-04-05T14:00:00Z"
   }
@@ -798,7 +798,7 @@ Get a single wiki page. The `:slug` parameter can match either a page's filename
 {
   "title": "OAuth Integration Notes",
   "slug": "oauth-notes",
-  "path": "forge/wiki/oauth-notes.md",
+  "path": "folio/wiki/oauth-notes.md",
   "aliases": ["oauth"],
   "body": "## Overview\n\nOAuth integration details...\n\nSee [[technical-docs]] for implementation.",
   "outgoing_links": [
@@ -907,13 +907,13 @@ Get all pages that link to a specific wiki page.
   {
     "slug": "project-brief",
     "title": "Project Brief",
-    "path": "forge/wiki/project-brief.md",
+    "path": "folio/wiki/project-brief.md",
     "last_modified": "2026-04-01T09:00:00Z"
   },
   {
     "slug": "roadmap",
     "title": "Roadmap",
-    "path": "forge/wiki/roadmap.md",
+    "path": "folio/wiki/roadmap.md",
     "last_modified": "2026-04-03T11:00:00Z"
   }
 ]
@@ -937,12 +937,12 @@ List all review types.
 [
   {
     "type": "architecture",
-    "path": "forge/reviews/architecture/REVIEW.md",
+    "path": "folio/reviews/architecture/REVIEW.md",
     "description": "Architectural review checklist and guidance"
   },
   {
     "type": "security",
-    "path": "forge/reviews/security/REVIEW.md",
+    "path": "folio/reviews/security/REVIEW.md",
     "description": "Security review checklist"
   }
 ]
@@ -961,7 +961,7 @@ Get a review's guidance document.
 ```json
 {
   "type": "security",
-  "path": "forge/reviews/security/REVIEW.md",
+  "path": "folio/reviews/security/REVIEW.md",
   "body": "## Purpose\n\nEnsure the application meets security standards...\n\n## Checklist\n- [ ] Authentication flows reviewed\n..."
 }
 ```
@@ -1157,7 +1157,7 @@ Run health checks and cache the results.
 }
 ```
 
-If `checks` is omitted or empty, all checks are run. Results are written to `forge/.doctor-cache.json`.
+If `checks` is omitted or empty, all checks are run. Results are written to `folio/.doctor-cache.json`.
 
 **Response:** `200 OK`
 
@@ -1168,12 +1168,12 @@ If `checks` is omitted or empty, all checks are run. Results are written to `for
     {
       "name": "directory-structure",
       "status": "pass",
-      "message": "forge/ directory structure is valid"
+      "message": "folio/ directory structure is valid"
     },
     {
       "name": "config",
       "status": "pass",
-      "message": "forge.yaml is valid"
+      "message": "folio.yaml is valid"
     },
     {
       "name": "wiki",
@@ -1200,7 +1200,7 @@ If `checks` is omitted or empty, all checks are run. Results are written to `for
 
 Get cached health check results from the last run.
 
-**Response:** `200 OK` — Same shape as POST response, read from `forge/.doctor-cache.json`.
+**Response:** `200 OK` — Same shape as POST response, read from `folio/.doctor-cache.json`.
 
 **Response (no cached results):** `200 OK`
 
@@ -1328,7 +1328,7 @@ Get the project configuration.
 }
 ```
 
-The `raw` field contains the unprocessed `forge.yaml` content for the raw editor tab.
+The `raw` field contains the unprocessed `folio.yaml` content for the raw editor tab.
 
 ---
 
@@ -1387,7 +1387,7 @@ Full-text search across all project content.
       "type": "feature",
       "name": "User Authentication",
       "slug": "user-authentication",
-      "path": "forge/features/user-authentication/FEATURE.md",
+      "path": "folio/features/user-authentication/FEATURE.md",
       "status": "in-progress",
       "assignee": "Alice",
       "snippet": "...implement **authentication** using OAuth 2.0...",
@@ -1397,7 +1397,7 @@ Full-text search across all project content.
       "type": "issue",
       "name": "Login Timeout on Slow Connections",
       "slug": "login-timeout-on-slow-connections",
-      "path": "forge/issues/login-timeout-on-slow-connections/ISSUE.md",
+      "path": "folio/issues/login-timeout-on-slow-connections/ISSUE.md",
       "snippet": "...users experience **authentication** timeouts...",
       "line": 5
     }

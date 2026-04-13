@@ -5,7 +5,7 @@ icon: palette
 order: 2
 ---
 
-Forge uses a custom design token system built on Tailwind CSS v4 and shadcn/ui components.
+Folio uses a custom design token system built on Tailwind CSS v4 and shadcn/ui components.
 
 ## Color Tokens
 

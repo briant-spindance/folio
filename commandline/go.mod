@@ -1,4 +1,4 @@
-module github.com/briantol/forge
+module github.com/briantol/folio
 
 go 1.25.4
 

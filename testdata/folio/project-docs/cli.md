@@ -3,13 +3,13 @@ title: CLI Reference
 order: 3
 ---
 
-# Forge — CLI Reference
+# Folio — CLI Reference
 
 ## Overview
 
-The Forge CLI is a subcommand-based command-line interface for managing a Forge project structure. It is designed to be **agent-first** — optimized for use by AI coding agents — while remaining ergonomic for human users working in the terminal.
+The Folio CLI is a subcommand-based command-line interface for managing a Folio project structure. It is designed to be **agent-first** — optimized for use by AI coding agents — while remaining ergonomic for human users working in the terminal.
 
-The CLI operates directly on the filesystem. All commands read and write files under the `forge/` directory in the current project. There is no background process or database.
+The CLI operates directly on the filesystem. All commands read and write files under the `folio/` directory in the current project. There is no background process or database.
 
 ### Design Principles
 
@@ -24,11 +24,11 @@ These flags are available on all commands:
 
 | Flag             | Short | Type   | Default | Description                                    |
 |------------------|-------|--------|---------|------------------------------------------------|
-| `--dir`          | `-d`  | string | `.`     | Path to the project root (parent of `forge/`). |
+| `--dir`          | `-d`  | string | `.`     | Path to the project root (parent of `folio/`). |
 | `--json`         |       | bool   | false   | Output results as JSON instead of human-readable text. |
 | `--quiet`        | `-q`  | bool   | false   | Suppress non-essential output.                 |
 | `--help`         | `-h`  | bool   |         | Show help for the command.                     |
-| `--version`      | `-v`  | bool   |         | Show the Forge version.                        |
+| `--version`      | `-v`  | bool   |         | Show the Folio version.                        |
 
 ### Exit Codes
 
@@ -42,48 +42,48 @@ These flags are available on all commands:
 
 ---
 
-## `forge init`
+## `folio init`
 
-Scaffold a new `forge/` directory in the current project.
+Scaffold a new `folio/` directory in the current project.
 
 ### Synopsis
 
 ```
-forge init [--template <source>] [--force]
+folio init [--template <source>] [--force]
 ```
 
 ### Description
 
-Creates the `forge/` directory structure with default configuration, wiki page templates, and example content. If `forge/` already exists, the command exits with an error unless `--force` is specified.
+Creates the `folio/` directory structure with default configuration, wiki page templates, and example content. If `folio/` already exists, the command exits with an error unless `--force` is specified.
 
 ### Flags
 
 | Flag            | Type   | Default    | Description                                                    |
 |-----------------|--------|------------|----------------------------------------------------------------|
 | `--template`    | string | (built-in) | Template source: a git repo URL or local filesystem path.      |
-| `--force`       | bool   | false      | Overwrite existing `forge/` directory. Prompts for confirmation in TTY mode. |
+| `--force`       | bool   | false      | Overwrite existing `folio/` directory. Prompts for confirmation in TTY mode. |
 
 ### Examples
 
 ```bash
 # Initialize with the built-in default template
-forge init
+folio init
 
 # Initialize from a team template repo
-forge init --template https://github.com/acme/forge-template
+folio init --template https://github.com/acme/folio-template
 
 # Initialize from a local template directory
-forge init --template /path/to/template
+folio init --template /path/to/template
 
 # Re-initialize, overwriting existing content
-forge init --force
+folio init --force
 ```
 
 ### Output
 
 ```
-Initialized forge/ directory at /Users/dev/my-project/forge
-Created forge.yaml
+Initialized folio/ directory at /Users/dev/my-project/folio
+Created folio.yaml
 Created team.md
 Created wiki/project-brief.md
 Created wiki/roadmap.md
@@ -95,10 +95,10 @@ Created reviews/architecture/REVIEW.md
 
 ```json
 {
-  "path": "/Users/dev/my-project/forge",
+  "path": "/Users/dev/my-project/folio",
   "template": "built-in",
   "files_created": [
-    "forge.yaml",
+    "folio.yaml",
     "team.md",
     "wiki/project-brief.md",
     "wiki/roadmap.md",
@@ -110,23 +110,23 @@ Created reviews/architecture/REVIEW.md
 
 ---
 
-## `forge feature`
+## `folio feature`
 
-Manage features under `forge/features/`.
+Manage features under `folio/features/`.
 
-### `forge feature create`
+### `folio feature create`
 
 Create a new feature.
 
 #### Synopsis
 
 ```
-forge feature create <name> [--status <state>] [--assignee <name>] [--points <n>] [--body <markdown>] [--body-file <path>] [--add-to-backlog] [--sprint <slug>]
+folio feature create <name> [--status <state>] [--assignee <name>] [--points <n>] [--body <markdown>] [--body-file <path>] [--add-to-backlog] [--sprint <slug>]
 ```
 
 #### Description
 
-Creates a new directory under `forge/features/` with a `FEATURE.md` file. The directory name is derived from `<name>` by converting it to a lowercase slug (spaces to hyphens, special characters stripped).
+Creates a new directory under `folio/features/` with a `FEATURE.md` file. The directory name is derived from `<name>` by converting it to a lowercase slug (spaces to hyphens, special characters stripped).
 
 #### Arguments
 
@@ -152,10 +152,10 @@ If neither `--body` nor `--body-file` is provided, the `FEATURE.md` body is popu
 
 ```bash
 # Create a feature with defaults
-forge feature create "User Authentication"
+folio feature create "User Authentication"
 
 # Create with metadata and body
-forge feature create "OAuth Integration" \
+folio feature create "OAuth Integration" \
   --status ready \
   --assignee "Alice" \
   --points 5 \
@@ -163,14 +163,14 @@ forge feature create "OAuth Integration" \
   --add-to-backlog
 
 # Create with body from a file
-forge feature create "Payment Processing" --body-file /tmp/payment-spec.md
+folio feature create "Payment Processing" --body-file /tmp/payment-spec.md
 ```
 
 #### Output
 
 ```
 Created feature: OAuth Integration
-  Path: forge/features/oauth-integration/FEATURE.md
+  Path: folio/features/oauth-integration/FEATURE.md
   Status: ready
   Assignee: Alice
   Points: 5
@@ -183,7 +183,7 @@ Created feature: OAuth Integration
 {
   "name": "OAuth Integration",
   "slug": "oauth-integration",
-  "path": "forge/features/oauth-integration/FEATURE.md",
+  "path": "folio/features/oauth-integration/FEATURE.md",
   "status": "ready",
   "assignee": "Alice",
   "points": 5,
@@ -193,14 +193,14 @@ Created feature: OAuth Integration
 
 ---
 
-### `forge feature list`
+### `folio feature list`
 
 List all features.
 
 #### Synopsis
 
 ```
-forge feature list [--status <state>] [--assignee <name>] [--sprint <slug>] [--sort <field>]
+folio feature list [--status <state>] [--assignee <name>] [--sprint <slug>] [--sort <field>]
 ```
 
 #### Flags
@@ -216,13 +216,13 @@ forge feature list [--status <state>] [--assignee <name>] [--sprint <slug>] [--s
 
 ```bash
 # List all features
-forge feature list
+folio feature list
 
 # List features in progress
-forge feature list --status in-progress
+folio feature list --status in-progress
 
 # List features assigned to Alice, sorted by priority
-forge feature list --assignee Alice --sort priority
+folio feature list --assignee Alice --sort priority
 ```
 
 #### Output
@@ -260,14 +260,14 @@ Email Notifications     draft         Bob         3       —
 
 ---
 
-### `forge feature view`
+### `folio feature view`
 
 View a feature's details.
 
 #### Synopsis
 
 ```
-forge feature view <slug>
+folio feature view <slug>
 ```
 
 #### Arguments
@@ -279,7 +279,7 @@ forge feature view <slug>
 #### Examples
 
 ```bash
-forge feature view oauth-integration
+folio feature view oauth-integration
 ```
 
 #### Output
@@ -293,7 +293,7 @@ Assignee:  Alice
 Points:    5
 Priority:  #2
 Sprint:    Sprint 3
-Path:      forge/features/oauth-integration/FEATURE.md
+Path:      folio/features/oauth-integration/FEATURE.md
 
 ──────────────────────────────────────────
 
@@ -325,7 +325,7 @@ Artifacts:
   "points": 5,
   "backlog_position": 2,
   "sprint": "sprint-3",
-  "path": "forge/features/oauth-integration/FEATURE.md",
+  "path": "folio/features/oauth-integration/FEATURE.md",
   "body": "## Summary\n\nIntegrate OAuth 2.0 for third-party login support.\n\n## Acceptance Criteria\n\n- Users can log in via Google and GitHub\n- Existing accounts can link OAuth providers\n- Session management works identically to password auth",
   "artifacts": [
     {"name": "wireframe.png", "size": 24576},
@@ -336,14 +336,14 @@ Artifacts:
 
 ---
 
-### `forge feature edit`
+### `folio feature edit`
 
 Edit a feature's metadata or content.
 
 #### Synopsis
 
 ```
-forge feature edit <slug> [--name <name>] [--status <state>] [--assignee <name>] [--points <n>] [--body <markdown>] [--body-file <path>]
+folio feature edit <slug> [--name <name>] [--status <state>] [--assignee <name>] [--points <n>] [--body <markdown>] [--body-file <path>]
 ```
 
 #### Description
@@ -371,13 +371,13 @@ Updates the specified fields in the feature's `FEATURE.md` frontmatter and/or bo
 
 ```bash
 # Update status and assignee
-forge feature edit oauth-integration --status in-progress --assignee Bob
+folio feature edit oauth-integration --status in-progress --assignee Bob
 
 # Open in $EDITOR (TTY only)
-forge feature edit oauth-integration
+folio feature edit oauth-integration
 
 # Clear the assignee
-forge feature edit oauth-integration --assignee ""
+folio feature edit oauth-integration --assignee ""
 ```
 
 #### Output
@@ -390,14 +390,14 @@ Updated feature: OAuth Integration
 
 ---
 
-### `forge feature delete`
+### `folio feature delete`
 
 Delete a feature.
 
 #### Synopsis
 
 ```
-forge feature delete <slug> [--force]
+folio feature delete <slug> [--force]
 ```
 
 #### Description
@@ -420,35 +420,35 @@ Removes the feature directory and all its contents. Also removes the feature fro
 
 ```bash
 # Delete with confirmation prompt
-forge feature delete oauth-integration
+folio feature delete oauth-integration
 
 # Delete without confirmation
-forge feature delete oauth-integration --force
+folio feature delete oauth-integration --force
 ```
 
 #### Output
 
 ```
 Deleted feature: OAuth Integration
-  Removed: forge/features/oauth-integration/
+  Removed: folio/features/oauth-integration/
   Removed from backlog (was #2)
 ```
 
 ---
 
-### `forge feature status`
+### `folio feature status`
 
 Transition a feature to a new workflow state.
 
 #### Synopsis
 
 ```
-forge feature status <slug> <state>
+folio feature status <slug> <state>
 ```
 
 #### Description
 
-A shorthand for updating just the workflow status. Validates that the target state is a valid workflow state defined in `forge.yaml`.
+A shorthand for updating just the workflow status. Validates that the target state is a valid workflow state defined in `folio.yaml`.
 
 #### Arguments
 
@@ -460,7 +460,7 @@ A shorthand for updating just the workflow status. Validates that the target sta
 #### Examples
 
 ```bash
-forge feature status oauth-integration in-progress
+folio feature status oauth-integration in-progress
 ```
 
 #### Output
@@ -471,19 +471,19 @@ OAuth Integration: ready → in-progress
 
 ---
 
-### `forge feature assign`
+### `folio feature assign`
 
 Assign a feature to a team member.
 
 #### Synopsis
 
 ```
-forge feature assign <slug> <assignee>
+folio feature assign <slug> <assignee>
 ```
 
 #### Description
 
-A shorthand for updating just the assignee field. Use an empty string to unassign. The assignee value should correspond to a `name` defined in `forge/team.md`. `forge doctor` will warn if an assignee does not match any team member.
+A shorthand for updating just the assignee field. Use an empty string to unassign. The assignee value should correspond to a `name` defined in `folio/team.md`. `folio doctor` will warn if an assignee does not match any team member.
 
 #### Arguments
 
@@ -495,10 +495,10 @@ A shorthand for updating just the assignee field. Use an empty string to unassig
 #### Examples
 
 ```bash
-forge feature assign oauth-integration Bob
+folio feature assign oauth-integration Bob
 
 # Unassign
-forge feature assign oauth-integration ""
+folio feature assign oauth-integration ""
 ```
 
 #### Output
@@ -509,24 +509,24 @@ OAuth Integration: assigned to Bob
 
 ---
 
-## `forge backlog`
+## `folio backlog`
 
-Manage the feature backlog (`forge/features/backlog.md`).
+Manage the feature backlog (`folio/features/backlog.md`).
 
-### `forge backlog list`
+### `folio backlog list`
 
 Display the prioritized backlog.
 
 #### Synopsis
 
 ```
-forge backlog list
+folio backlog list
 ```
 
 #### Examples
 
 ```bash
-forge backlog list
+folio backlog list
 ```
 
 #### Output
@@ -565,14 +565,14 @@ PRIORITY  NAME                    STATUS        ASSIGNEE    POINTS
 
 ---
 
-### `forge backlog add`
+### `folio backlog add`
 
 Add a feature to the backlog.
 
 #### Synopsis
 
 ```
-forge backlog add <slug> [--position <n>]
+folio backlog add <slug> [--position <n>]
 ```
 
 #### Arguments
@@ -591,10 +591,10 @@ forge backlog add <slug> [--position <n>]
 
 ```bash
 # Add to the end of the backlog
-forge backlog add dashboard-analytics
+folio backlog add dashboard-analytics
 
 # Add at position 2
-forge backlog add dashboard-analytics --position 2
+folio backlog add dashboard-analytics --position 2
 ```
 
 #### Output
@@ -605,14 +605,14 @@ Added to backlog: Dashboard Analytics at position #2
 
 ---
 
-### `forge backlog remove`
+### `folio backlog remove`
 
 Remove a feature from the backlog without deleting the feature.
 
 #### Synopsis
 
 ```
-forge backlog remove <slug>
+folio backlog remove <slug>
 ```
 
 #### Arguments
@@ -624,7 +624,7 @@ forge backlog remove <slug>
 #### Examples
 
 ```bash
-forge backlog remove dashboard-analytics
+folio backlog remove dashboard-analytics
 ```
 
 #### Output
@@ -635,14 +635,14 @@ Removed from backlog: Dashboard Analytics (was #2)
 
 ---
 
-### `forge backlog reorder`
+### `folio backlog reorder`
 
 Move a feature to a new position in the backlog.
 
 #### Synopsis
 
 ```
-forge backlog reorder <slug> --position <n>
+folio backlog reorder <slug> --position <n>
 ```
 
 #### Arguments
@@ -661,7 +661,7 @@ forge backlog reorder <slug> --position <n>
 
 ```bash
 # Move a feature to the top of the backlog
-forge backlog reorder oauth-integration --position 1
+folio backlog reorder oauth-integration --position 1
 ```
 
 #### Output
@@ -672,20 +672,20 @@ Reordered backlog: OAuth Integration moved from #3 to #1
 
 ---
 
-### `forge backlog promote`
+### `folio backlog promote`
 
 Move a feature up one position in the backlog.
 
 #### Synopsis
 
 ```
-forge backlog promote <slug>
+folio backlog promote <slug>
 ```
 
 #### Examples
 
 ```bash
-forge backlog promote oauth-integration
+folio backlog promote oauth-integration
 ```
 
 #### Output
@@ -696,20 +696,20 @@ Promoted: OAuth Integration #3 → #2
 
 ---
 
-### `forge backlog demote`
+### `folio backlog demote`
 
 Move a feature down one position in the backlog.
 
 #### Synopsis
 
 ```
-forge backlog demote <slug>
+folio backlog demote <slug>
 ```
 
 #### Examples
 
 ```bash
-forge backlog demote oauth-integration
+folio backlog demote oauth-integration
 ```
 
 #### Output
@@ -720,23 +720,23 @@ Demoted: OAuth Integration #2 → #3
 
 ---
 
-## `forge sprint`
+## `folio sprint`
 
-Manage sprints under `forge/sprints/`.
+Manage sprints under `folio/sprints/`.
 
-### `forge sprint create`
+### `folio sprint create`
 
 Create a new sprint.
 
 #### Synopsis
 
 ```
-forge sprint create <name> --start <date> --end <date> [--goal <text>] [--capacity <n>]
+folio sprint create <name> --start <date> --end <date> [--goal <text>] [--capacity <n>]
 ```
 
 #### Description
 
-Creates a new directory under `forge/sprints/` with a `SPRINT.md` file. The directory name is derived from `<name>` by converting it to a lowercase slug. The sprint is created with status "planning".
+Creates a new directory under `folio/sprints/` with a `SPRINT.md` file. The directory name is derived from `<name>` by converting it to a lowercase slug. The sprint is created with status "planning".
 
 #### Arguments
 
@@ -757,10 +757,10 @@ Creates a new directory under `forge/sprints/` with a `SPRINT.md` file. The dire
 
 ```bash
 # Create a sprint
-forge sprint create "Sprint 3" --start 2026-04-14 --end 2026-04-25
+folio sprint create "Sprint 3" --start 2026-04-14 --end 2026-04-25
 
 # Create with goal and capacity
-forge sprint create "Sprint 3" \
+folio sprint create "Sprint 3" \
   --start 2026-04-14 \
   --end 2026-04-25 \
   --goal "Ship OAuth integration and resolve critical upload bugs" \
@@ -771,7 +771,7 @@ forge sprint create "Sprint 3" \
 
 ```
 Created sprint: Sprint 3
-  Path: forge/sprints/sprint-3/SPRINT.md
+  Path: folio/sprints/sprint-3/SPRINT.md
   Status: planning
   Dates: 2026-04-14 — 2026-04-25 (11 days)
   Goal: Ship OAuth integration and resolve critical upload bugs
@@ -784,7 +784,7 @@ Created sprint: Sprint 3
 {
   "name": "Sprint 3",
   "slug": "sprint-3",
-  "path": "forge/sprints/sprint-3/SPRINT.md",
+  "path": "folio/sprints/sprint-3/SPRINT.md",
   "status": "planning",
   "start_date": "2026-04-14",
   "end_date": "2026-04-25",
@@ -797,14 +797,14 @@ Created sprint: Sprint 3
 
 ---
 
-### `forge sprint list`
+### `folio sprint list`
 
 List all sprints.
 
 #### Synopsis
 
 ```
-forge sprint list [--status <state>] [--sort <field>]
+folio sprint list [--status <state>] [--sort <field>]
 ```
 
 #### Flags
@@ -818,10 +818,10 @@ forge sprint list [--status <state>] [--sort <field>]
 
 ```bash
 # List all sprints
-forge sprint list
+folio sprint list
 
 # List only active sprints
-forge sprint list --status active
+folio sprint list --status active
 ```
 
 #### Output
@@ -855,14 +855,14 @@ Sprint 4    planning    2026-04-28 — 2026-05-09    —                        
 
 ---
 
-### `forge sprint view`
+### `folio sprint view`
 
 View sprint details and assigned work items.
 
 #### Synopsis
 
 ```
-forge sprint view <slug>
+folio sprint view <slug>
 ```
 
 #### Arguments
@@ -874,7 +874,7 @@ forge sprint view <slug>
 #### Examples
 
 ```bash
-forge sprint view sprint-3
+folio sprint view sprint-3
 ```
 
 #### Output
@@ -888,7 +888,7 @@ Dates:     2026-04-14 — 2026-04-25 (4 days remaining)
 Goal:      Ship OAuth integration and resolve critical upload bugs
 Capacity:  40 points
 Progress:  21 / 40 points (52%)
-Path:      forge/sprints/sprint-3/SPRINT.md
+Path:      folio/sprints/sprint-3/SPRINT.md
 
 ──────────────────────────────────────────
 
@@ -962,19 +962,19 @@ Issues:
 
 ---
 
-### `forge sprint edit`
+### `folio sprint edit`
 
 Edit a sprint's metadata.
 
 #### Synopsis
 
 ```
-forge sprint edit <slug> [--name <name>] [--start <date>] [--end <date>] [--goal <text>] [--capacity <n>]
+folio sprint edit <slug> [--name <name>] [--start <date>] [--end <date>] [--goal <text>] [--capacity <n>]
 ```
 
 #### Description
 
-Updates the specified fields in the sprint's `SPRINT.md` frontmatter. Only the provided flags are updated; all other fields are preserved. Does not modify the features/issues lists (use `forge sprint add` / `forge sprint remove` for that).
+Updates the specified fields in the sprint's `SPRINT.md` frontmatter. Only the provided flags are updated; all other fields are preserved. Does not modify the features/issues lists (use `folio sprint add` / `folio sprint remove` for that).
 
 #### Arguments
 
@@ -996,10 +996,10 @@ Updates the specified fields in the sprint's `SPRINT.md` frontmatter. Only the p
 
 ```bash
 # Extend a sprint by 2 days
-forge sprint edit sprint-3 --end 2026-04-27
+folio sprint edit sprint-3 --end 2026-04-27
 
 # Update the goal
-forge sprint edit sprint-3 --goal "Ship OAuth and stabilize uploads"
+folio sprint edit sprint-3 --goal "Ship OAuth and stabilize uploads"
 ```
 
 #### Output
@@ -1011,14 +1011,14 @@ Updated sprint: Sprint 3
 
 ---
 
-### `forge sprint delete`
+### `folio sprint delete`
 
 Delete a sprint.
 
 #### Synopsis
 
 ```
-forge sprint delete <slug> [--force]
+folio sprint delete <slug> [--force]
 ```
 
 #### Description
@@ -1040,32 +1040,32 @@ Removes the sprint directory. Does **not** delete any features or issues assigne
 #### Examples
 
 ```bash
-forge sprint delete sprint-1 --force
+folio sprint delete sprint-1 --force
 ```
 
 #### Output
 
 ```
 Deleted sprint: Sprint 1
-  Removed: forge/sprints/sprint-1/
+  Removed: folio/sprints/sprint-1/
   Note: 3 features and 1 issue were assigned to this sprint (not deleted)
 ```
 
 ---
 
-### `forge sprint add`
+### `folio sprint add`
 
 Add a feature or issue to a sprint.
 
 #### Synopsis
 
 ```
-forge sprint add <sprint-slug> <entity-slug> [--type <feature|issue>]
+folio sprint add <sprint-slug> <entity-slug> [--type <feature|issue>]
 ```
 
 #### Description
 
-Adds a feature or issue to the sprint's `SPRINT.md` frontmatter (features or issues list). If `--type` is not specified, Forge auto-detects by checking if the slug exists under `forge/features/` or `forge/issues/`. If it exists in both (unlikely but possible), `--type` is required.
+Adds a feature or issue to the sprint's `SPRINT.md` frontmatter (features or issues list). If `--type` is not specified, Forge auto-detects by checking if the slug exists under `folio/features/` or `folio/issues/`. If it exists in both (unlikely but possible), `--type` is required.
 
 #### Arguments
 
@@ -1084,10 +1084,10 @@ Adds a feature or issue to the sprint's `SPRINT.md` frontmatter (features or iss
 
 ```bash
 # Add a feature (auto-detected)
-forge sprint add sprint-3 oauth-integration
+folio sprint add sprint-3 oauth-integration
 
 # Add an issue explicitly
-forge sprint add sprint-3 login-timeout-on-slow-connections --type issue
+folio sprint add sprint-3 login-timeout-on-slow-connections --type issue
 ```
 
 #### Output
@@ -1099,14 +1099,14 @@ Added to Sprint 3: OAuth Integration (feature)
 
 ---
 
-### `forge sprint remove`
+### `folio sprint remove`
 
 Remove a feature or issue from a sprint.
 
 #### Synopsis
 
 ```
-forge sprint remove <sprint-slug> <entity-slug> [--type <feature|issue>]
+folio sprint remove <sprint-slug> <entity-slug> [--type <feature|issue>]
 ```
 
 #### Description
@@ -1129,7 +1129,7 @@ Removes a feature or issue from the sprint's `SPRINT.md` frontmatter. Does not d
 #### Examples
 
 ```bash
-forge sprint remove sprint-3 payment-processing
+folio sprint remove sprint-3 payment-processing
 ```
 
 #### Output
@@ -1141,14 +1141,14 @@ Removed from Sprint 3: Payment Processing (feature)
 
 ---
 
-### `forge sprint start`
+### `folio sprint start`
 
 Set a sprint's status to "active".
 
 #### Synopsis
 
 ```
-forge sprint start <slug>
+folio sprint start <slug>
 ```
 
 #### Description
@@ -1164,7 +1164,7 @@ Transitions the sprint from "planning" to "active". If another sprint is already
 #### Examples
 
 ```bash
-forge sprint start sprint-3
+folio sprint start sprint-3
 ```
 
 #### Output
@@ -1184,14 +1184,14 @@ Error: Sprint 2 is currently active. Complete it first or use --force.
 
 ---
 
-### `forge sprint complete`
+### `folio sprint complete`
 
 Set a sprint's status to "completed".
 
 #### Synopsis
 
 ```
-forge sprint complete <slug>
+folio sprint complete <slug>
 ```
 
 #### Description
@@ -1207,7 +1207,7 @@ Transitions the sprint from "active" to "completed". If the sprint contains item
 #### Examples
 
 ```bash
-forge sprint complete sprint-3
+folio sprint complete sprint-3
 ```
 
 #### Output
@@ -1221,14 +1221,14 @@ Completed sprint: Sprint 3
 
 ---
 
-### `forge sprint board`
+### `folio sprint board`
 
 Display a text-based kanban board for a sprint.
 
 #### Synopsis
 
 ```
-forge sprint board <slug>
+folio sprint board <slug>
 ```
 
 #### Description
@@ -1244,7 +1244,7 @@ Renders a compact kanban board in the terminal, showing sprint items grouped by 
 #### Examples
 
 ```bash
-forge sprint board sprint-3
+folio sprint board sprint-3
 ```
 
 #### Output
@@ -1265,7 +1265,7 @@ DRAFT          READY               IN PROGRESS         REVIEW              DONE
 
 #### JSON Output (`--json`)
 
-Returns the same data as `forge sprint view --json`, with items grouped by status:
+Returns the same data as `folio sprint view --json`, with items grouped by status:
 
 ```json
 {
@@ -1290,18 +1290,18 @@ Returns the same data as `forge sprint view --json`, with items grouped by statu
 
 ---
 
-## `forge issue`
+## `folio issue`
 
-Manage issues under `forge/issues/`.
+Manage issues under `folio/issues/`.
 
-### `forge issue create`
+### `folio issue create`
 
 Create a new issue.
 
 #### Synopsis
 
 ```
-forge issue create <name> [--status <state>] [--assignee <name>] [--labels <labels>] [--feature <slug>] [--sprint <slug>] [--body <markdown>] [--body-file <path>]
+folio issue create <name> [--status <state>] [--assignee <name>] [--labels <labels>] [--feature <slug>] [--sprint <slug>] [--body <markdown>] [--body-file <path>]
 ```
 
 #### Arguments
@@ -1326,10 +1326,10 @@ forge issue create <name> [--status <state>] [--assignee <name>] [--labels <labe
 
 ```bash
 # Create a simple issue
-forge issue create "Login timeout on slow connections"
+folio issue create "Login timeout on slow connections"
 
 # Create with full metadata
-forge issue create "Missing validation on file upload" \
+folio issue create "Missing validation on file upload" \
   --status open \
   --assignee Alice \
   --labels "bug,security" \
@@ -1341,7 +1341,7 @@ forge issue create "Missing validation on file upload" \
 
 ```
 Created issue: Missing Validation on File Upload
-  Path: forge/issues/missing-validation-on-file-upload/ISSUE.md
+  Path: folio/issues/missing-validation-on-file-upload/ISSUE.md
   Status: open
   Assignee: Alice
   Labels: bug, security
@@ -1354,7 +1354,7 @@ Created issue: Missing Validation on File Upload
 {
   "name": "Missing Validation on File Upload",
   "slug": "missing-validation-on-file-upload",
-  "path": "forge/issues/missing-validation-on-file-upload/ISSUE.md",
+  "path": "folio/issues/missing-validation-on-file-upload/ISSUE.md",
   "status": "open",
   "assignee": "Alice",
   "labels": ["bug", "security"],
@@ -1364,14 +1364,14 @@ Created issue: Missing Validation on File Upload
 
 ---
 
-### `forge issue list`
+### `folio issue list`
 
 List all issues.
 
 #### Synopsis
 
 ```
-forge issue list [--status <state>] [--assignee <name>] [--label <label>] [--feature <slug>] [--sprint <slug>] [--sort <field>]
+folio issue list [--status <state>] [--assignee <name>] [--label <label>] [--feature <slug>] [--sprint <slug>] [--sort <field>]
 ```
 
 #### Flags
@@ -1389,13 +1389,13 @@ forge issue list [--status <state>] [--assignee <name>] [--label <label>] [--fea
 
 ```bash
 # List all issues
-forge issue list
+folio issue list
 
 # List open bugs
-forge issue list --status open --label bug
+folio issue list --status open --label bug
 
 # List issues for a specific feature
-forge issue list --feature user-authentication
+folio issue list --feature user-authentication
 ```
 
 #### Output
@@ -1409,14 +1409,14 @@ Broken CSS on Settings Page             closed    Bob         ui              �
 
 ---
 
-### `forge issue view`
+### `folio issue view`
 
 View an issue's details.
 
 #### Synopsis
 
 ```
-forge issue view <slug>
+folio issue view <slug>
 ```
 
 #### Arguments
@@ -1436,7 +1436,7 @@ Assignee:        Alice
 Labels:          bug, security
 Linked Feature:  User Authentication
 Sprint:          Sprint 3
-Path:            forge/issues/missing-validation-on-file-upload/ISSUE.md
+Path:            folio/issues/missing-validation-on-file-upload/ISSUE.md
 
 ──────────────────────────────────────────
 
@@ -1457,14 +1457,14 @@ Uploads should be limited to 50MB and restricted to allowed file types.
 
 ---
 
-### `forge issue edit`
+### `folio issue edit`
 
 Edit an issue's metadata or content.
 
 #### Synopsis
 
 ```
-forge issue edit <slug> [--name <name>] [--status <state>] [--assignee <name>] [--labels <labels>] [--feature <slug>] [--body <markdown>] [--body-file <path>]
+folio issue edit <slug> [--name <name>] [--status <state>] [--assignee <name>] [--labels <labels>] [--feature <slug>] [--body <markdown>] [--body-file <path>]
 ```
 
 #### Description
@@ -1493,10 +1493,10 @@ Updates the specified fields in the issue's `ISSUE.md` frontmatter and/or body. 
 
 ```bash
 # Close an issue
-forge issue edit missing-validation-on-file-upload --status closed
+folio issue edit missing-validation-on-file-upload --status closed
 
 # Update labels
-forge issue edit missing-validation-on-file-upload --labels "bug,security,critical"
+folio issue edit missing-validation-on-file-upload --labels "bug,security,critical"
 ```
 
 #### Output
@@ -1508,14 +1508,14 @@ Updated issue: Missing Validation on File Upload
 
 ---
 
-### `forge issue delete`
+### `folio issue delete`
 
 Delete an issue.
 
 #### Synopsis
 
 ```
-forge issue delete <slug> [--force]
+folio issue delete <slug> [--force]
 ```
 
 #### Description
@@ -1537,30 +1537,30 @@ Removes the issue directory and all its contents. Prompts for confirmation in TT
 #### Examples
 
 ```bash
-forge issue delete broken-css-on-settings-page --force
+folio issue delete broken-css-on-settings-page --force
 ```
 
 #### Output
 
 ```
 Deleted issue: Broken CSS on Settings Page
-  Removed: forge/issues/broken-css-on-settings-page/
+  Removed: folio/issues/broken-css-on-settings-page/
 ```
 
 ---
 
-## `forge wiki`
+## `folio wiki`
 
-Manage wiki pages under `forge/wiki/`. Wiki pages are flat markdown files with optional YAML frontmatter for `title` and `aliases`. Pages can reference each other using `[[wikilinks]]`.
+Manage wiki pages under `folio/wiki/`. Wiki pages are flat markdown files with optional YAML frontmatter for `title` and `aliases`. Pages can reference each other using `[[wikilinks]]`.
 
-### `forge wiki create`
+### `folio wiki create`
 
 Create a new wiki page.
 
 #### Synopsis
 
 ```
-forge wiki create <name> [--title <title>] [--alias <alias>]... [--body <markdown>] [--body-file <path>]
+folio wiki create <name> [--title <title>] [--alias <alias>]... [--body <markdown>] [--body-file <path>]
 ```
 
 #### Arguments
@@ -1586,23 +1586,23 @@ If `--title` or `--alias` is provided, YAML frontmatter is written. Otherwise, t
 
 ```bash
 # Create a page with inline content
-forge wiki create "API Guidelines" --body "## REST Conventions\n\nAll endpoints follow REST naming conventions."
+folio wiki create "API Guidelines" --body "## REST Conventions\n\nAll endpoints follow REST naming conventions."
 
 # Create with a custom title and alias
-forge wiki create "OAuth Integration Notes" \
+folio wiki create "OAuth Integration Notes" \
   --title "OAuth Notes" \
   --alias oauth \
   --body "## Overview\n\nSee [[technical-docs]] for implementation details."
 
 # Create from a file
-forge wiki create "Architecture Overview" --body-file /tmp/architecture.md
+folio wiki create "Architecture Overview" --body-file /tmp/architecture.md
 ```
 
 #### Output
 
 ```
 Created wiki page: API Guidelines
-  Path: forge/wiki/api-guidelines.md
+  Path: folio/wiki/api-guidelines.md
 ```
 
 #### JSON Output (`--json`)
@@ -1611,21 +1611,21 @@ Created wiki page: API Guidelines
 {
   "title": "API Guidelines",
   "slug": "api-guidelines",
-  "path": "forge/wiki/api-guidelines.md",
+  "path": "folio/wiki/api-guidelines.md",
   "aliases": []
 }
 ```
 
 ---
 
-### `forge wiki list`
+### `folio wiki list`
 
 List all wiki pages.
 
 #### Synopsis
 
 ```
-forge wiki list [--sort <field>]
+folio wiki list [--sort <field>]
 ```
 
 #### Flags
@@ -1637,7 +1637,7 @@ forge wiki list [--sort <field>]
 #### Examples
 
 ```bash
-forge wiki list
+folio wiki list
 ```
 
 #### Output
@@ -1660,14 +1660,14 @@ Roadmap               —             2025-01-12 13:20
   {
     "title": "API Guidelines",
     "slug": "api-guidelines",
-    "path": "forge/wiki/api-guidelines.md",
+    "path": "folio/wiki/api-guidelines.md",
     "aliases": [],
     "last_modified": "2025-01-15T14:32:00Z"
   },
   {
     "title": "OAuth Notes",
     "slug": "oauth-notes",
-    "path": "forge/wiki/oauth-notes.md",
+    "path": "folio/wiki/oauth-notes.md",
     "aliases": ["oauth"],
     "last_modified": "2025-01-13T10:00:00Z"
   }
@@ -1676,14 +1676,14 @@ Roadmap               —             2025-01-12 13:20
 
 ---
 
-### `forge wiki view`
+### `folio wiki view`
 
 View a wiki page.
 
 #### Synopsis
 
 ```
-forge wiki view <slug>
+folio wiki view <slug>
 ```
 
 #### Arguments
@@ -1695,10 +1695,10 @@ forge wiki view <slug>
 #### Examples
 
 ```bash
-forge wiki view api-guidelines
+folio wiki view api-guidelines
 
 # View by alias
-forge wiki view oauth
+folio wiki view oauth
 ```
 
 #### Output
@@ -1707,7 +1707,7 @@ forge wiki view oauth
 API Guidelines
 ══════════════
 
-Path: forge/wiki/api-guidelines.md
+Path: folio/wiki/api-guidelines.md
 
 ──────────────────────────────────────────
 
@@ -1730,7 +1730,7 @@ Backlinks:
 {
   "title": "API Guidelines",
   "slug": "api-guidelines",
-  "path": "forge/wiki/api-guidelines.md",
+  "path": "folio/wiki/api-guidelines.md",
   "aliases": [],
   "body": "## REST Conventions\n\nAll endpoints follow REST naming conventions.\n\nSee [[technical-docs]] for implementation details.",
   "outgoing_links": [
@@ -1746,14 +1746,14 @@ Backlinks:
 
 ---
 
-### `forge wiki edit`
+### `folio wiki edit`
 
 Edit a wiki page.
 
 #### Synopsis
 
 ```
-forge wiki edit <slug> [--title <title>] [--alias <alias>]... [--body <markdown>] [--body-file <path>]
+folio wiki edit <slug> [--title <title>] [--alias <alias>]... [--body <markdown>] [--body-file <path>]
 ```
 
 #### Description
@@ -1779,29 +1779,29 @@ Updates the page's frontmatter and/or body. Only the provided flags are updated;
 
 ```bash
 # Update body from a file
-forge wiki edit api-guidelines --body-file /tmp/updated-api-guidelines.md
+folio wiki edit api-guidelines --body-file /tmp/updated-api-guidelines.md
 
 # Add an alias
-forge wiki edit oauth-notes --alias oauth --alias oauth-integration
+folio wiki edit oauth-notes --alias oauth --alias oauth-integration
 ```
 
 #### Output
 
 ```
 Updated wiki page: API Guidelines
-  Path: forge/wiki/api-guidelines.md
+  Path: folio/wiki/api-guidelines.md
 ```
 
 ---
 
-### `forge wiki delete`
+### `folio wiki delete`
 
 Delete a wiki page.
 
 #### Synopsis
 
 ```
-forge wiki delete <slug> [--force]
+folio wiki delete <slug> [--force]
 ```
 
 #### Arguments
@@ -1823,14 +1823,14 @@ Removes the wiki page file. If other pages contain `[[wikilinks]]` pointing to t
 #### Examples
 
 ```bash
-forge wiki delete api-guidelines --force
+folio wiki delete api-guidelines --force
 ```
 
 #### Output
 
 ```
 Deleted wiki page: API Guidelines
-  Removed: forge/wiki/api-guidelines.md
+  Removed: folio/wiki/api-guidelines.md
   ⚠ 2 pages have broken links to this page:
     - OAuth Notes (oauth-notes)
     - Project Brief (project-brief)
@@ -1838,14 +1838,14 @@ Deleted wiki page: API Guidelines
 
 ---
 
-### `forge wiki backlinks`
+### `folio wiki backlinks`
 
 List all pages that link to a specific wiki page.
 
 #### Synopsis
 
 ```
-forge wiki backlinks <slug>
+folio wiki backlinks <slug>
 ```
 
 #### Arguments
@@ -1857,7 +1857,7 @@ forge wiki backlinks <slug>
 #### Examples
 
 ```bash
-forge wiki backlinks technical-docs
+folio wiki backlinks technical-docs
 ```
 
 #### Output
@@ -1877,13 +1877,13 @@ OAuth Notes           oauth-notes           [[technical-docs|tech docs]]
   {
     "slug": "api-guidelines",
     "title": "API Guidelines",
-    "path": "forge/wiki/api-guidelines.md",
+    "path": "folio/wiki/api-guidelines.md",
     "last_modified": "2025-01-15T14:32:00Z"
   },
   {
     "slug": "oauth-notes",
     "title": "OAuth Notes",
-    "path": "forge/wiki/oauth-notes.md",
+    "path": "folio/wiki/oauth-notes.md",
     "last_modified": "2025-01-13T10:00:00Z"
   }
 ]
@@ -1891,24 +1891,24 @@ OAuth Notes           oauth-notes           [[technical-docs|tech docs]]
 
 ---
 
-## `forge review`
+## `folio review`
 
-Manage review guidance under `forge/reviews/`.
+Manage review guidance under `folio/reviews/`.
 
-### `forge review list`
+### `folio review list`
 
 List available review types.
 
 #### Synopsis
 
 ```
-forge review list
+folio review list
 ```
 
 #### Examples
 
 ```bash
-forge review list
+folio review list
 ```
 
 #### Output
@@ -1927,12 +1927,12 @@ Usability       Usability review guidelines
 [
   {
     "type": "architecture",
-    "path": "forge/reviews/architecture/REVIEW.md",
+    "path": "folio/reviews/architecture/REVIEW.md",
     "description": "Architectural review checklist and guidance"
   },
   {
     "type": "design",
-    "path": "forge/reviews/design/REVIEW.md",
+    "path": "folio/reviews/design/REVIEW.md",
     "description": "Design review process and standards"
   }
 ]
@@ -1940,14 +1940,14 @@ Usability       Usability review guidelines
 
 ---
 
-### `forge review view`
+### `folio review view`
 
 View a review's guidance document.
 
 #### Synopsis
 
 ```
-forge review view <type>
+folio review view <type>
 ```
 
 #### Arguments
@@ -1959,7 +1959,7 @@ forge review view <type>
 #### Examples
 
 ```bash
-forge review view security
+folio review view security
 ```
 
 #### Output
@@ -1968,7 +1968,7 @@ forge review view security
 Security Review
 ═══════════════
 
-Path: forge/reviews/security/REVIEW.md
+Path: folio/reviews/security/REVIEW.md
 
 ──────────────────────────────────────────
 
@@ -1989,19 +1989,19 @@ Ensure the application meets security standards before release.
 
 ---
 
-### `forge review create`
+### `folio review create`
 
 Create a new review type.
 
 #### Synopsis
 
 ```
-forge review create <type> [--body <markdown>] [--body-file <path>]
+folio review create <type> [--body <markdown>] [--body-file <path>]
 ```
 
 #### Description
 
-Creates a new review type directory under `forge/reviews/` with a `REVIEW.md` file. If a review type with the same name already exists, exits with a validation error.
+Creates a new review type directory under `folio/reviews/` with a `REVIEW.md` file. If a review type with the same name already exists, exits with a validation error.
 
 #### Arguments
 
@@ -2022,20 +2022,20 @@ If neither `--body` nor `--body-file` is provided, `REVIEW.md` is populated with
 
 ```bash
 # Create with default template
-forge review create performance
+folio review create performance
 
 # Create with inline body
-forge review create accessibility --body "## Purpose\nEnsure WCAG 2.1 AA compliance.\n\n## Checklist\n- [ ] Color contrast verified"
+folio review create accessibility --body "## Purpose\nEnsure WCAG 2.1 AA compliance.\n\n## Checklist\n- [ ] Color contrast verified"
 
 # Create from a file
-forge review create compliance --body-file /tmp/compliance-review.md
+folio review create compliance --body-file /tmp/compliance-review.md
 ```
 
 #### Output
 
 ```
 Created review: Performance
-  Path: forge/reviews/performance/REVIEW.md
+  Path: folio/reviews/performance/REVIEW.md
 ```
 
 #### JSON Output (`--json`)
@@ -2043,20 +2043,20 @@ Created review: Performance
 ```json
 {
   "type": "performance",
-  "path": "forge/reviews/performance/REVIEW.md"
+  "path": "folio/reviews/performance/REVIEW.md"
 }
 ```
 
 ---
 
-### `forge review edit`
+### `folio review edit`
 
 Edit a review's guidance document.
 
 #### Synopsis
 
 ```
-forge review edit <type> [--body <markdown>] [--body-file <path>]
+folio review edit <type> [--body <markdown>] [--body-file <path>]
 ```
 
 #### Description
@@ -2080,29 +2080,29 @@ Updates the `REVIEW.md` for the specified review type. If no flags are provided 
 
 ```bash
 # Open in $EDITOR
-forge review edit security
+folio review edit security
 
 # Replace body from a file
-forge review edit security --body-file /tmp/updated-security-review.md
+folio review edit security --body-file /tmp/updated-security-review.md
 ```
 
 #### Output
 
 ```
 Updated review: Security
-  Path: forge/reviews/security/REVIEW.md
+  Path: folio/reviews/security/REVIEW.md
 ```
 
 ---
 
-### `forge review delete`
+### `folio review delete`
 
 Delete a review type.
 
 #### Synopsis
 
 ```
-forge review delete <type> [--force]
+folio review delete <type> [--force]
 ```
 
 #### Description
@@ -2125,17 +2125,17 @@ Removes the review type directory and its contents. Prompts for confirmation in 
 
 ```bash
 # Delete with confirmation
-forge review delete performance
+folio review delete performance
 
 # Force delete
-forge review delete performance --force
+folio review delete performance --force
 ```
 
 #### Output
 
 ```
 Deleted review: Performance
-  Removed: forge/reviews/performance/
+  Removed: folio/reviews/performance/
 ```
 
 #### JSON Output (`--json`)
@@ -2143,30 +2143,30 @@ Deleted review: Performance
 ```json
 {
   "type": "performance",
-  "path": "forge/reviews/performance/",
+  "path": "folio/reviews/performance/",
   "deleted": true
 }
 ```
 
 ---
 
-## `forge team`
+## `folio team`
 
-Manage team members defined in `forge/team.md`.
+Manage team members defined in `folio/team.md`.
 
-### `forge team list`
+### `folio team list`
 
 List all team members.
 
 #### Synopsis
 
 ```
-forge team list
+folio team list
 ```
 
 #### Description
 
-Reads `forge/team.md` and displays all team members. If `team.md` does not exist, exits with an error and suggests running `forge init` or creating the file manually.
+Reads `folio/team.md` and displays all team members. If `team.md` does not exist, exits with an error and suggests running `folio init` or creating the file manually.
 
 #### Output
 
@@ -2207,19 +2207,19 @@ Dan Lee           pumpking      danl
 
 ---
 
-### `forge team add`
+### `folio team add`
 
 Add a team member.
 
 #### Synopsis
 
 ```
-forge team add <name> [--role <role>] [--github <handle>]
+folio team add <name> [--role <role>] [--github <handle>]
 ```
 
 #### Description
 
-Adds a new member to `forge/team.md`. If a member with the same name already exists, exits with a validation error. If `team.md` does not exist, creates it.
+Adds a new member to `folio/team.md`. If a member with the same name already exists, exits with a validation error. If `team.md` does not exist, creates it.
 
 #### Arguments
 
@@ -2238,10 +2238,10 @@ Adds a new member to `forge/team.md`. If a member with the same name already exi
 
 ```bash
 # Add a team member with all fields
-forge team add "Alice Johnson" --role engineer --github alicej
+folio team add "Alice Johnson" --role engineer --github alicej
 
 # Add with just a name
-forge team add "Eve Martinez"
+folio team add "Eve Martinez"
 ```
 
 #### Output
@@ -2264,19 +2264,19 @@ Added team member: Alice Johnson
 
 ---
 
-### `forge team remove`
+### `folio team remove`
 
 Remove a team member.
 
 #### Synopsis
 
 ```
-forge team remove <name> [--force]
+folio team remove <name> [--force]
 ```
 
 #### Description
 
-Removes a member from `forge/team.md`. If the member is currently assigned to any features or issues, prints a warning listing the affected entities and exits unless `--force` is specified. In TTY mode, prompts for confirmation before removal.
+Removes a member from `folio/team.md`. If the member is currently assigned to any features or issues, prints a warning listing the affected entities and exits unless `--force` is specified. In TTY mode, prompts for confirmation before removal.
 
 #### Arguments
 
@@ -2294,10 +2294,10 @@ Removes a member from `forge/team.md`. If the member is currently assigned to an
 
 ```bash
 # Remove a team member
-forge team remove "Eve Martinez"
+folio team remove "Eve Martinez"
 
 # Force removal (even if assigned to features/issues)
-forge team remove "Bob Smith" --force
+folio team remove "Bob Smith" --force
 ```
 
 #### Output
@@ -2333,19 +2333,19 @@ Remove anyway? [y/N]
 
 ---
 
-## `forge doctor`
+## `folio doctor`
 
-Run health checks on the `forge/` directory.
+Run health checks on the `folio/` directory.
 
 ### Synopsis
 
 ```
-forge doctor [--check <name>]
+folio doctor [--check <name>]
 ```
 
 ### Description
 
-Validates the integrity and completeness of the `forge/` directory structure. Runs all built-in health checks by default, or a specific check if `--check` is provided.
+Validates the integrity and completeness of the `folio/` directory structure. Runs all built-in health checks by default, or a specific check if `--check` is provided.
 
 ### Flags
 
@@ -2357,36 +2357,36 @@ Validates the integrity and completeness of the `forge/` directory structure. Ru
 
 | Check Name               | Description                                                          |
 |--------------------------|----------------------------------------------------------------------|
-| `directory-structure`    | `forge/` directory exists with expected subdirectories.              |
-| `config`                 | `forge.yaml` exists and is valid YAML.                                |
+| `directory-structure`    | `folio/` directory exists with expected subdirectories.              |
+| `config`                 | `folio.yaml` exists and is valid YAML.                                |
 | `wiki`                   | Core wiki pages are present (e.g., `project-brief.md`).            |
 | `feature-integrity`     | All feature directories contain a `FEATURE.md` with valid frontmatter. |
 | `issue-integrity`       | All issue directories contain an `ISSUE.md` with valid frontmatter.  |
 | `backlog-consistency`   | `backlog.md` references only existing features, no duplicates.       |
 | `sprint-integrity`     | All sprint directories contain a `SPRINT.md` with valid frontmatter.  |
 | `sprint-consistency`   | Sprints reference only existing features/issues, dates are valid, at most one sprint is active. |
-| `workflow-states`       | Feature statuses match the states defined in `forge.yaml`.           |
-| `broken-links`          | Internal markdown links within `forge/` resolve to existing files.   |
+| `workflow-states`       | Feature statuses match the states defined in `folio.yaml`.           |
+| `broken-links`          | Internal markdown links within `folio/` resolve to existing files.   |
 | `team-consistency`      | All `assignee` values in features and issues match a `name` in `team.md`. Warns if `team.md` is missing. |
 
 ### Examples
 
 ```bash
 # Run all health checks
-forge doctor
+folio doctor
 
 # Run a specific check
-forge doctor --check backlog-consistency
+folio doctor --check backlog-consistency
 ```
 
 ### Output
 
 ```
-Forge Health Check
+Folio Health Check
 ══════════════════
 
-✓ directory-structure    forge/ directory structure is valid
-✓ config                 forge.yaml is valid
+✓ directory-structure    folio/ directory structure is valid
+✓ config                 folio.yaml is valid
 ⚠ wiki                   Missing recommended wiki page: personas.md
 ✓ feature-integrity      All 5 features have valid FEATURE.md files
 ✓ issue-integrity        All 3 issues have valid ISSUE.md files
@@ -2408,12 +2408,12 @@ Results: 7 passed, 2 warnings, 1 failed
     {
       "name": "directory-structure",
       "status": "pass",
-      "message": "forge/ directory structure is valid"
+      "message": "folio/ directory structure is valid"
     },
     {
       "name": "config",
       "status": "pass",
-      "message": "forge.yaml is valid"
+      "message": "folio.yaml is valid"
     },
     {
       "name": "wiki",
@@ -2461,7 +2461,7 @@ Results: 7 passed, 2 warnings, 1 failed
 
 ### Result Persistence
 
-After each run, `forge doctor` writes the results to `forge/.doctor-cache.json`. This file is intended for machine consumption by the web UI and should be added to `.gitignore`. The cached results include:
+After each run, `folio doctor` writes the results to `folio/.doctor-cache.json`. This file is intended for machine consumption by the web UI and should be added to `.gitignore`. The cached results include:
 
 ```json
 {
@@ -2471,18 +2471,18 @@ After each run, `forge doctor` writes the results to `forge/.doctor-cache.json`.
 }
 ```
 
-The web UI reads this file to display the "Forge Health" card on the dashboard and the full results at `/reviews/health`. If the cache file does not exist (e.g., `forge doctor` has never been run), the UI displays a prompt to run it. The web UI can also trigger a health check run via the API, which executes the same logic and updates the cache.
+The web UI reads this file to display the "Folio Health" card on the dashboard and the full results at `/reviews/health`. If the cache file does not exist (e.g., `folio doctor` has never been run), the UI displays a prompt to run it. The web UI can also trigger a health check run via the API, which executes the same logic and updates the cache.
 
 ---
 
-## `forge status`
+## `folio status`
 
 Display a quick project summary.
 
 ### Synopsis
 
 ```
-forge status
+folio status
 ```
 
 ### Description
@@ -2492,7 +2492,7 @@ Prints a high-level overview of the project's current state in a single command.
 ### Examples
 
 ```bash
-forge status
+folio status
 ```
 
 ### Output
@@ -2565,23 +2565,23 @@ If no VCS is detected, the "Branch" line is omitted. If no sprint is active, the
 
 ---
 
-## `forge config`
+## `folio config`
 
-View and modify project configuration (`forge/forge.yaml`).
+View and modify project configuration (`folio/folio.yaml`).
 
-### `forge config view`
+### `folio config view`
 
 Display the current configuration.
 
 #### Synopsis
 
 ```
-forge config view [--key <key>]
+folio config view [--key <key>]
 ```
 
 #### Description
 
-Prints the full `forge.yaml` configuration, or a specific key's value if `--key` is provided. Keys use dot notation for nested values (e.g., `workflow.states`).
+Prints the full `folio.yaml` configuration, or a specific key's value if `--key` is provided. Keys use dot notation for nested values (e.g., `workflow.states`).
 
 #### Flags
 
@@ -2593,10 +2593,10 @@ Prints the full `forge.yaml` configuration, or a specific key's value if `--key`
 
 ```bash
 # View full configuration
-forge config view
+folio config view
 
 # View a specific key
-forge config view --key workflow.states
+folio config view --key workflow.states
 ```
 
 #### Output (full)
@@ -2605,7 +2605,7 @@ forge config view --key workflow.states
 Forge Configuration
 ═══════════════════
 
-Path: forge/forge.yaml
+Path: folio/folio.yaml
 
 workflow:
   states:
@@ -2650,19 +2650,19 @@ workflow.states: draft, ready, in-progress, review, done
 
 ---
 
-### `forge config set`
+### `folio config set`
 
 Set a configuration value.
 
 #### Synopsis
 
 ```
-forge config set <key> <value>
+folio config set <key> <value>
 ```
 
 #### Description
 
-Updates a value in `forge.yaml`. Keys use dot notation for nested values. For list values, provide a comma-separated string. Validates the configuration after writing and rolls back on error.
+Updates a value in `folio.yaml`. Keys use dot notation for nested values. For list values, provide a comma-separated string. Validates the configuration after writing and rolls back on error.
 
 #### Arguments
 
@@ -2675,16 +2675,16 @@ Updates a value in `forge.yaml`. Keys use dot notation for nested values. For li
 
 ```bash
 # Update workflow states
-forge config set workflow.states "draft,ready,in-progress,review,qa,done"
+folio config set workflow.states "draft,ready,in-progress,review,qa,done"
 
 # Update template source
-forge config set template.source "https://github.com/acme/forge-template"
+folio config set template.source "https://github.com/acme/folio-template"
 ```
 
 #### Output
 
 ```
-Updated forge.yaml:
+Updated folio.yaml:
   workflow.states: draft, ready, in-progress, review, done → draft, ready, in-progress, review, qa, done
 ```
 
@@ -2701,14 +2701,14 @@ Use --force to apply anyway.
 
 ---
 
-## `forge search`
+## `folio search`
 
 Search across all project content.
 
 ### Synopsis
 
 ```
-forge search <query> [--type <entity-type>] [--limit <n>]
+folio search <query> [--type <entity-type>] [--limit <n>]
 ```
 
 ### Description
@@ -2732,13 +2732,13 @@ Performs a full-text search across all wiki pages, features, issues, sprints, an
 
 ```bash
 # Search everywhere
-forge search "OAuth"
+folio search "OAuth"
 
 # Search only features and issues
-forge search "authentication" --type feature --type issue
+folio search "authentication" --type feature --type issue
 
 # Limit results
-forge search "validation" --limit 5
+folio search "validation" --limit 5
 ```
 
 ### Output
@@ -2746,18 +2746,18 @@ forge search "validation" --limit 5
 ```
 Search results for "OAuth" (4 matches)
 
-[feature] OAuth Integration (forge/features/oauth-integration/FEATURE.md)
+[feature] OAuth Integration (folio/features/oauth-integration/FEATURE.md)
   Status: in-progress | Assignee: Bob
   ...Integrate OAuth 2.0 for third-party login support...
 
-[feature] User Authentication (forge/features/user-authentication/FEATURE.md)
+[feature] User Authentication (folio/features/user-authentication/FEATURE.md)
   Status: review | Assignee: Alice
   ...consider OAuth as an alternative to password-based auth...
 
-[wiki] Technical Docs (forge/wiki/technical-docs.md)
+[wiki] Technical Docs (folio/wiki/technical-docs.md)
   ...OAuth 2.0 flow diagram and token refresh strategy...
 
-[issue] Missing Validation on File Upload (forge/issues/missing-validation-on-file-upload/ISSUE.md)
+[issue] Missing Validation on File Upload (folio/issues/missing-validation-on-file-upload/ISSUE.md)
   Status: open | Assignee: Alice
   ...OAuth tokens should also be validated on upload endpoints...
 ```
@@ -2773,7 +2773,7 @@ Search results for "OAuth" (4 matches)
       "type": "feature",
       "name": "OAuth Integration",
       "slug": "oauth-integration",
-      "path": "forge/features/oauth-integration/FEATURE.md",
+      "path": "folio/features/oauth-integration/FEATURE.md",
       "status": "in-progress",
       "assignee": "Bob",
       "snippet": "Integrate OAuth 2.0 for third-party login support",
@@ -2783,7 +2783,7 @@ Search results for "OAuth" (4 matches)
       "type": "feature",
       "name": "User Authentication",
       "slug": "user-authentication",
-      "path": "forge/features/user-authentication/FEATURE.md",
+      "path": "folio/features/user-authentication/FEATURE.md",
       "status": "review",
       "assignee": "Alice",
       "snippet": "consider OAuth as an alternative to password-based auth",
@@ -2793,7 +2793,7 @@ Search results for "OAuth" (4 matches)
       "type": "wiki",
       "name": "Technical Docs",
       "slug": "technical-docs",
-      "path": "forge/wiki/technical-docs.md",
+      "path": "folio/wiki/technical-docs.md",
       "snippet": "OAuth 2.0 flow diagram and token refresh strategy",
       "line": 47
     },
@@ -2801,7 +2801,7 @@ Search results for "OAuth" (4 matches)
       "type": "issue",
       "name": "Missing Validation on File Upload",
       "slug": "missing-validation-on-file-upload",
-      "path": "forge/issues/missing-validation-on-file-upload/ISSUE.md",
+      "path": "folio/issues/missing-validation-on-file-upload/ISSUE.md",
       "status": "open",
       "assignee": "Alice",
       "snippet": "OAuth tokens should also be validated on upload endpoints",
@@ -2813,19 +2813,19 @@ Search results for "OAuth" (4 matches)
 
 ---
 
-## `forge serve`
+## `folio serve`
 
 Start the web UI server.
 
 ### Synopsis
 
 ```
-forge serve [--port <n>] [--host <addr>] [--open]
+folio serve [--port <n>] [--host <addr>] [--open]
 ```
 
 ### Description
 
-Starts a local HTTP server that serves the Forge web UI. The UI is embedded in the binary and requires no additional dependencies. The server reads and writes files under `forge/` in the project directory.
+Starts a local HTTP server that serves the Folio web UI. The UI is embedded in the binary and requires no additional dependencies. The server reads and writes files under `folio/` in the project directory.
 
 ### Flags
 
@@ -2839,19 +2839,19 @@ Starts a local HTTP server that serves the Forge web UI. The UI is embedded in t
 
 ```bash
 # Start with defaults
-forge serve
+folio serve
 
 # Start on a custom port and open the browser
-forge serve --port 8080 --open
+folio serve --port 8080 --open
 
 # Bind to all interfaces (for network access)
-forge serve --host 0.0.0.0 --port 4040
+folio serve --host 0.0.0.0 --port 4040
 ```
 
 ### Output
 
 ```
-Forge server running at http://127.0.0.1:4040
+Folio server running at http://127.0.0.1:4040
 Press Ctrl+C to stop
 ```
 

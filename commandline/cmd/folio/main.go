@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/briantol/forge/cmd/forge/cmd"
+	"github.com/briantol/folio/cmd/folio/cmd"
 )
 
 func main() {

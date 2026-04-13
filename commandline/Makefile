@@ -3,19 +3,19 @@
 # Build the binary without embedded frontend (dev mode)
 # Use --static flag to point to frontend/dist at runtime
 build:
-	go build -o forge ./cmd/forge/
+	go build -o folio ./cmd/folio/
 
 # Build the production binary with embedded frontend
 # Copies frontend/dist into the build context, embeds it, then cleans up
 prod:
-	rm -rf cmd/forge/dist
-	cp -r ../frontend/dist cmd/forge/dist
-	go build -tags embed -o forge ./cmd/forge/
-	rm -rf cmd/forge/dist
+	rm -rf cmd/folio/dist
+	cp -r ../frontend/dist cmd/folio/dist
+	go build -tags embed -o folio ./cmd/folio/
+	rm -rf cmd/folio/dist
 
 # Run in dev mode pointing at testdata
 dev: build
-	./forge web --data ../testdata/forge --static ../frontend/dist
+	./folio web --data ../testdata/folio --static ../frontend/dist
 
 # Run tests
 test:
@@ -23,5 +23,5 @@ test:
 
 # Clean build artifacts
 clean:
-	rm -f forge
-	rm -rf cmd/forge/dist
+	rm -f folio
+	rm -rf cmd/folio/dist

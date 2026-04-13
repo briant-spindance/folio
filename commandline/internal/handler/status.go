@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/briantol/forge/internal/store"
+	"github.com/briantol/folio/internal/store"
 )
 
 // StatusHandler handles GET /api/status.
@@ -129,7 +129,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// health (hardcoded for now, matching TypeScript)
 	healthChecks := []map[string]interface{}{
 		{"level": "pass", "message": "Directory structure is valid"},
-		{"level": "pass", "message": "forge.yaml schema is valid"},
+		{"level": "pass", "message": "folio.yaml schema is valid"},
 		{"level": "pass", "message": "All features have valid frontmatter"},
 		{"level": "pass", "message": "All issues have valid frontmatter"},
 		{"level": "pass", "message": "Backlog order is valid"},
@@ -164,7 +164,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"project":       "forge-project",
+		"project":       "folio-project",
 		"feature_count": len(features.Features),
 		"by_status":     byStatus,
 		"active_sprint": activeSprint,

@@ -9,7 +9,7 @@ const router = new Hono()
 
 const HEALTH_CHECKS = [
   { level: "pass", message: "Directory structure is valid" },
-  { level: "pass", message: "forge.yaml schema is valid" },
+  { level: "pass", message: "folio.yaml schema is valid" },
   { level: "pass", message: "All features have valid frontmatter" },
   { level: "pass", message: "All issues have valid frontmatter" },
   { level: "pass", message: "Backlog order is valid" },
@@ -35,7 +35,7 @@ router.get("/", (c) => {
   const activeSprint = features.find((f) => f.sprint)?.sprint ?? undefined
 
   return c.json({
-    project: "forge-project",
+    project: "folio-project",
     feature_count: features.length,
     by_status: byStatus,
     active_sprint: activeSprint,

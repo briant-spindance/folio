@@ -1,5 +1,5 @@
 {
-  "name": "forge",
+  "name": "folio",
   "private": true,
   "devDependencies": {
     "concurrently": "^9.1.2"

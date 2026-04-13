@@ -9,5 +9,5 @@ import "embed"
 // For now, we embed a minimal placeholder. The actual embed directive
 // referencing the frontend dist is in the main package.
 
-// Placeholder to satisfy the package import. The real FS is in cmd/forge/main.go.
+// Placeholder to satisfy the package import. The real FS is in cmd/folio/main.go.
 var FrontendFS embed.FS

@@ -5,7 +5,7 @@ icon: plug
 order: 3
 ---
 
-The Forge API is a JSON REST API served at /api by the Go binary. 2 3
+The Folio API is a JSON REST API served at /api by the Go binary. 2 3
 
 ## Base URL
 

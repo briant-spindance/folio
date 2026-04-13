@@ -3,7 +3,7 @@ icon: book-open
 modified: "2026-04-13"
 title: Project Brief 2
 ---
-Forge is a lightweight, local-first project management tool for software teams working alongside AI agents. It stores all project state as Markdown and YAML files directly in your repository.
+Folio is a lightweight, local-first project management tool for software teams working alongside AI agents. It stores all project state as Markdown and YAML files directly in your repository.
 
 ## Why Forge?
 
@@ -11,7 +11,7 @@ Modern development with AI agents requires project context to be **file-native**
 
 ## Guiding Principles
 
-- **Files over databases** — all state lives in `forge/` as plain text
+- **Files over databases** — all state lives in `folio/` as plain text
 - **CLI-first** — every operation available as a shell command
 - **AI-native** — designed so LLMs can read and write project state
 - **Convention over configuration** — sensible defaults, minimal setup
@@ -30,14 +30,14 @@ Forge's backend is built as a **single Go binary** that provides both CLI comman
 **CLI Layer**
 
 - Built with [Cobra](https://github.com/spf13/cobra) for command structure
-- All project operations available as subcommands (`forge feature create`, `forge wiki edit`, etc.)
+- All project operations available as subcommands (`folio feature create`, `folio wiki edit`, etc.)
 - Direct filesystem operations for maximum speed and simplicity
 
 **API Server**
 
 - JSON REST API served at `/api` using Go's standard `net/http` package
 - Single binary serves both static UI assets and API endpoints
-- Reads and writes to `forge/` directory in the repository root
+- Reads and writes to `folio/` directory in the repository root
 
 **Web Server**
 
@@ -47,7 +47,7 @@ The binary also servers the Single Page Web App (SPA) for the user
 
 - File-based persistence using Markdown and YAML
 - No database required — all state is human-readable and git-friendly
-- Structured directory layout under `forge/` for features, wiki, sprints, etc.
+- Structured directory layout under `folio/` for features, wiki, sprints, etc.
 
 ### Design Philosophy
 

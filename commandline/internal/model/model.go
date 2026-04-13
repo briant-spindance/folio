@@ -1,4 +1,4 @@
-// Package model defines all domain types for the Forge project management tool.
+// Package model defines all domain types for the Folio project management tool.
 package model
 
 // FeatureStatus represents the workflow state of a feature.

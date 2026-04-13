@@ -3,11 +3,11 @@ title: Design System & Frontend Architecture
 order: 4
 ---
 
-# Forge — Design System & Frontend Architecture
+# Folio — Design System & Frontend Architecture
 
 ## Overview
 
-This document defines the visual design system, component architecture, and frontend technology stack for the Forge web UI. It serves as the reference for the demo build and carries forward into the production version.
+This document defines the visual design system, component architecture, and frontend technology stack for the Folio web UI. It serves as the reference for the demo build and carries forward into the production version.
 
 Forge's UI is a project management tool used by mixed teams — product owners, designers, engineers, and AI agents. The design must feel **professional and calm**, not flashy. It should get out of the way and let the content (markdown, metadata, boards) be the focus.
 
@@ -153,7 +153,7 @@ Used for workflow badges, health checks, and alerts.
 
 #### Workflow State Colors
 
-Each workflow state gets a distinct color for badges and board columns. These are customizable via `forge.yaml` in the future but have sensible defaults.
+Each workflow state gets a distinct color for badges and board columns. These are customizable via `folio.yaml` in the future but have sensible defaults.
 
 | State          | Color Token              | Light Value (HSL)        | Visual                    |
 |----------------|--------------------------|--------------------------|---------------------------|
@@ -215,7 +215,7 @@ Based on a 4px grid:
 
 ## Component Patterns
 
-All components are built from shadcn/ui primitives. Below are the Forge-specific patterns and how they compose the primitives.
+All components are built from shadcn/ui primitives. Below are the Folio-specific patterns and how they compose the primitives.
 
 ### Badges
 
@@ -448,7 +448,7 @@ All screens from the UI spec, with their primary components and layout patterns.
 | Feature Status Dist.     | Card, horizontal bar chart or badge groups   |
 | Active Sprint            | Card (large), progress bar, status badges    |
 | Recent Issues            | Card, compact table                          |
-| Forge Health             | Card, pass/warn/fail badges                  |
+| Folio Health             | Card, pass/warn/fail badges                  |
 | VCS Status               | Card, text, commit hash mono                 |
 
 Layout: 2-column grid on `lg+`, single column below. Cards stack vertically.
@@ -611,7 +611,7 @@ All text/background combinations must meet **WCAG 2.1 AA** (4.5:1 for normal tex
 ## File Structure (Demo)
 
 ```
-forge-ui/
+folio-ui/
 ├── index.html
 ├── vite.config.ts
 ├── tailwind.config.ts
@@ -625,7 +625,7 @@ forge-ui/
 │   ├── globals.css                 # Tailwind imports, CSS custom properties
 │   ├── lib/
 │   │   ├── utils.ts                # cn() helper, shared utilities
-│   │   └── api.ts                  # API client for forge serve backend
+│   │   └── api.ts                  # API client for folio serve backend
 │   ├── hooks/
 │   │   ├── use-theme.ts            # Dark/light mode toggle
 │   │   └── use-chat.ts             # Vercel AI SDK chat hook wrapper

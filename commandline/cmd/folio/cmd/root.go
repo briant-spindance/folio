@@ -1,4 +1,4 @@
-// Package cmd implements the Forge CLI using Cobra.
+// Package cmd implements the Folio CLI using Cobra.
 package cmd
 
 import (
@@ -21,16 +21,16 @@ var (
 	logDir  string
 )
 
-// rootCmd is the base command for the Forge CLI.
+// rootCmd is the base command for the Folio CLI.
 var rootCmd = &cobra.Command{
-	Use:   "forge",
-	Short: "Forge - filesystem-based project management",
-	Long:  "Forge is a project management tool for agile teams that stores all data as plain markdown files.",
+	Use:   "folio",
+	Short: "Folio - filesystem-based project management",
+	Long:  "Folio is a project management tool for agile teams that stores all data as plain markdown files.",
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&dataDir, "data", "", "Path to the Forge data directory (overrides FORGE_DATA env var)")
-	rootCmd.PersistentFlags().StringVar(&logDir, "log-dir", "", "Override log file directory (default: ~/.local/forge/logs)")
+	rootCmd.PersistentFlags().StringVar(&dataDir, "data", "", "Path to the Folio data directory (overrides FOLIO_DATA env var)")
+	rootCmd.PersistentFlags().StringVar(&logDir, "log-dir", "", "Override log file directory (default: ~/.local/folio/logs)")
 }
 
 // Execute runs the root command.

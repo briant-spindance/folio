@@ -1,4 +1,4 @@
-// Package store provides filesystem-backed data stores for Forge entities.
+// Package store provides filesystem-backed data stores for Folio entities.
 package store
 
 import (
@@ -29,16 +29,16 @@ func NewPaths(root string) *Paths {
 		Issues:      filepath.Join(root, "issues"),
 		Sprints:     filepath.Join(root, "sprints"),
 		Team:        filepath.Join(root, "team.md"),
-		Config:      filepath.Join(root, "forge.yaml"),
+		Config:      filepath.Join(root, "folio.yaml"),
 		Roadmap:     filepath.Join(root, "roadmap.md"),
 		AISessions:  filepath.Join(root, ".sessions"),
 		ProjectDocs: filepath.Join(root, "project-docs"),
 	}
 }
 
-// ResolvePaths resolves the data root from FORGE_DATA env var or a default.
+// ResolvePaths resolves the data root from FOLIO_DATA env var or a default.
 func ResolvePaths(defaultRoot string) *Paths {
-	root := os.Getenv("FORGE_DATA")
+	root := os.Getenv("FOLIO_DATA")
 	if root == "" {
 		root = defaultRoot
 	}

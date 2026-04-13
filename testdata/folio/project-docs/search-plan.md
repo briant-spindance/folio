@@ -5,12 +5,12 @@ order: 5
 
 # Search Implementation Plan (Phase 1)
 
-In-memory substring search for the Forge web UI and CLI.
+In-memory substring search for the Folio web UI and CLI.
 
 ## Overview
 
 Phase 1 implements scan-on-demand substring matching across all project
-content. The search engine reads markdown files from the `forge/` directory,
+content. The search engine reads markdown files from the `folio/` directory,
 parses YAML frontmatter, and performs case-insensitive substring matching
 against filenames, frontmatter values, and markdown body text. No persistent
 index or external dependencies beyond the Go standard library and `gopkg.in/yaml.v3`.
@@ -18,7 +18,7 @@ index or external dependencies beyond the Go standard library and `gopkg.in/yaml
 The search package is consumed by two surfaces:
 
 - **API** — `GET /api/search?q=<query>&type=<filter>&limit=<n>`
-- **CLI** — `forge search <query> [--type <type>] [--limit <n>]`
+- **CLI** — `folio search <query> [--type <type>] [--limit <n>]`
 
 ## Architecture
 
@@ -27,13 +27,13 @@ internal/
 ├── model/
 │   └── model.go            # Entity types, SearchResult, SearchResponse
 ├── store/
-│   └── store.go            # Filesystem reader: walk forge/, parse frontmatter
+│   └── store.go            # Filesystem reader: walk folio/, parse frontmatter
 ├── search/
 │   └── search.go           # Search engine: matching, snippets, filtering
 └── server/
     └── search_handler.go   # HTTP handler for GET /api/search
 cmd/
-    └── search.go           # CLI command (Cobra) for `forge search`
+    └── search.go           # CLI command (Cobra) for `folio search`
 ```
 
 ## Implementation Steps
@@ -43,12 +43,12 @@ cmd/
 Define structs for each searchable entity and for search results.
 
 ```go
-// Entity represents any searchable item in the forge/ directory.
+// Entity represents any searchable item in the folio/ directory.
 type Entity struct {
     Type     string            // "feature", "issue", "doc", "sprint", "review"
     Name     string            // from frontmatter `name` or derived from filename
     Slug     string            // directory or filename stem
-    Path     string            // relative path, e.g. "forge/features/auth/FEATURE.md"
+    Path     string            // relative path, e.g. "folio/features/auth/FEATURE.md"
     Status   string            // from frontmatter, empty if N/A
     Assignee string            // from frontmatter, empty if N/A
     Labels   []string          // issues only
@@ -81,17 +81,17 @@ type SearchOptions struct {
 
 ### 2. Filesystem reader (`internal/store/`)
 
-The store walks the `forge/` directory and returns a slice of `Entity` values.
+The store walks the `folio/` directory and returns a slice of `Entity` values.
 
 **File discovery conventions:**
 
 | Entity Type | Path Pattern | Frontmatter Fields |
 |-------------|-------------|-------------------|
-| `feature` | `forge/features/*/FEATURE.md` | `name`, `status`, `assignee`, `points` |
-| `issue` | `forge/issues/*/ISSUE.md` | `name`, `status`, `assignee`, `labels`, `feature` |
-| `sprint` | `forge/sprints/*/SPRINT.md` | `name`, `status`, `start_date`, `end_date`, `goal` |
-| `doc` | `forge/project-docs/*.md` | (none — title derived from filename) |
-| `review` | `forge/reviews/*/REVIEW.md` | (minimal) |
+| `feature` | `folio/features/*/FEATURE.md` | `name`, `status`, `assignee`, `points` |
+| `issue` | `folio/issues/*/ISSUE.md` | `name`, `status`, `assignee`, `labels`, `feature` |
+| `sprint` | `folio/sprints/*/SPRINT.md` | `name`, `status`, `start_date`, `end_date`, `goal` |
+| `doc` | `folio/project-docs/*.md` | (none — title derived from filename) |
+| `review` | `folio/reviews/*/REVIEW.md` | (minimal) |
 
 **Frontmatter parsing:**
 
@@ -171,7 +171,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 Using Cobra:
 
 ```
-forge search <query> [--type feature,issue] [--limit 10] [--json]
+folio search <query> [--type feature,issue] [--limit 10] [--json]
 ```
 
 - Positional argument: search query (required).
@@ -185,15 +185,15 @@ forge search <query> [--type feature,issue] [--limit 10] [--json]
 Found 3 results for "authentication":
 
   [feature] User Authentication (in-progress)
-  forge/features/user-authentication/FEATURE.md:12
+  folio/features/user-authentication/FEATURE.md:12
   ...implement **authentication** using OAuth 2.0...
 
   [issue] Login Timeout on Slow Connections (open)
-  forge/issues/login-timeout-on-slow-connections/ISSUE.md:5
+  folio/issues/login-timeout-on-slow-connections/ISSUE.md:5
   ...users experience **authentication** timeouts...
 
   [doc] Security Architecture
-  forge/project-docs/security-architecture.md:28
+  folio/project-docs/security-architecture.md:28
   ...the **authentication** layer handles all identity...
 ```
 

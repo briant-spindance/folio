@@ -7,11 +7,11 @@ order: 6
 
 ## Purpose
 
-`team.md` lives at `forge/team.md` and defines the team members who can be assigned to features and issues. The `name` field is the canonical identifier used by `--assignee` flags in the CLI and assignee fields in the web UI.
+`team.md` lives at `folio/team.md` and defines the team members who can be assigned to features and issues. The `name` field is the canonical identifier used by `--assignee` flags in the CLI and assignee fields in the web UI.
 
-Forge uses this file for:
+Folio uses this file for:
 
-- **Assignment validation** — `forge doctor` checks that all `assignee` values in feature and issue frontmatter match a `name` defined here.
+- **Assignment validation** — `folio doctor` checks that all `assignee` values in feature and issue frontmatter match a `name` defined here.
 - **Autocomplete** — The CLI and web UI can read this file to offer assignee suggestions.
 - **Team visibility** — Provides a single place to see who is on the project and their roles.
 

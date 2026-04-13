@@ -1,4 +1,4 @@
-project: forge-project
+project: folio-project
 version: "0.1.0"
 workflow:
   states: [draft, deferred, ready, in-progress, review, done]

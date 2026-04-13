@@ -1,6 +1,6 @@
-// Package logging configures log output for the Forge server.
+// Package logging configures log output for the Folio server.
 // In dev mode, logs are written to stderr (console).
-// In production mode, logs are written to ~/.local/forge/logs/forge.log
+// In production mode, logs are written to ~/.local/folio/logs/folio.log
 // unless overridden with --log-dir.
 package logging
 
@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	defaultLogDir = ".local/forge/logs"
-	logFile       = "forge.log"
+	defaultLogDir = ".local/folio/logs"
+	logFile       = "folio.log"
 )
 
 // resolvedLogPath is set by Setup so LogPath can return it later.
@@ -24,7 +24,7 @@ var resolvedLogPath string
 //
 // In dev mode (isDev=true), logs go to stderr.
 // In production mode (isDev=false), logs go to a file. The directory
-// defaults to ~/.local/forge/logs/ but can be overridden with logDirOverride.
+// defaults to ~/.local/folio/logs/ but can be overridden with logDirOverride.
 //
 // Returns the log writer and an optional closer. The caller should defer
 // closer.Close() if it is non-nil.
@@ -57,7 +57,7 @@ func Setup(isDev bool, logDirOverride string) (io.Writer, io.Closer, error) {
 }
 
 // resolveLogDir returns the log directory, using the override if provided,
-// otherwise falling back to ~/.local/forge/logs/.
+// otherwise falling back to ~/.local/folio/logs/.
 func resolveLogDir(override string) (string, error) {
 	if override != "" {
 		abs, err := filepath.Abs(override)

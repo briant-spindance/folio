@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/briantol/forge/internal/model"
-	"github.com/briantol/forge/internal/store"
+	"github.com/briantol/folio/internal/model"
+	"github.com/briantol/folio/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 

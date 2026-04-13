@@ -280,10 +280,10 @@ export function Dashboard() {
         </div>
       </Card>
 
-      {/* ── 6. Forge Health ─────────────────────────────── */}
+      {/* ── 6. Folio Health ─────────────────────────────── */}
       <Card>
         <CardHeader
-          title={<><IconShieldCheck />Forge Health</>}
+          title={<><IconShieldCheck />Folio Health</>}
           action={
             <a className="card-action" href="#">
               Run checks <IconPlay />

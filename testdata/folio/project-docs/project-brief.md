@@ -3,13 +3,13 @@ title: Project Brief
 order: 0
 ---
 
-# Forge — Project Brief
+# Folio — Project Brief
 
 ## Overview
 
-Forge is a lightweight project management tool built for agile teams embracing agentic engineering workflows. It provides a web UI and CLI on top of a filesystem-based project structure, enabling both humans and AI agents to collaborate on project planning, feature development, and delivery.
+Folio is a lightweight project management tool built for agile teams embracing agentic engineering workflows. It provides a web UI and CLI on top of a filesystem-based project structure, enabling both humans and AI agents to collaborate on project planning, feature development, and delivery.
 
-As traditional agile practices evolve alongside AI-augmented development, teams need tooling that preserves agile principles — iterative delivery, continuous feedback, team autonomy — while adapting practices to a world where AI agents are active participants in the workflow. Forge is that tooling.
+As traditional agile practices evolve alongside AI-augmented development, teams need tooling that preserves agile principles — iterative delivery, continuous feedback, team autonomy — while adapting practices to a world where AI agents are active participants in the workflow. Folio is that tooling.
 
 ## Problem
 
@@ -19,7 +19,7 @@ Modern agile teams working with AI agents face a bookkeeping problem. Project do
 - Version-controlled alongside the codebase
 - Structured enough to be machine-readable, flexible enough to be human-friendly
 
-Today this is managed manually — creating directories, editing markdown files, maintaining backlog order by hand. Forge eliminates that friction with a purpose-built interface layer.
+Today this is managed manually — creating directories, editing markdown files, maintaining backlog order by hand. Folio eliminates that friction with a purpose-built interface layer.
 
 ## Solution
 
@@ -32,20 +32,20 @@ Both interfaces read and write the same filesystem structure. The files are the 
 
 ## Core Principles
 
-- **Filesystem is the source of truth.** Forge is an interface layer, not a database. All content lives as markdown files and directories in the project repo.
+- **Filesystem is the source of truth.** Folio is an interface layer, not a database. All content lives as markdown files and directories in the project repo.
 - **Agent-first, not agent-only.** The CLI is designed for AI agents but remains ergonomic for humans.
-- **Local-first, cloud-aware.** Primary use case is local development (`forge serve`), but architecture should not preclude centralized deployment.
-- **VCS-agnostic.** Forge reads and writes files. It does not assume git, and it does not manage version control.
+- **Local-first, cloud-aware.** Primary use case is local development (`folio serve`), but architecture should not preclude centralized deployment.
+- **VCS-agnostic.** Folio reads and writes files. It does not assume git, and it does not manage version control.
 - **Sensible defaults, team-configurable.** Workflow states, review types, and project structure start with good defaults but can be adapted through retrospectives.
 - **Open-source ready.** Clean APIs, good documentation, and a clear separation of concerns from the start.
 
 ## Project Structure
 
-All Forge-managed content lives under a `forge/` directory in the project root:
+All Folio-managed content lives under a `folio/` directory in the project root:
 
 ```
-forge/
-├── forge.yaml                  # Project configuration (workflow states, templates, etc.)
+folio/
+├── folio.yaml                  # Project configuration (workflow states, templates, etc.)
 ├── team.md                     # Team members (names, roles, handles) for assignment
 ├── wiki/                       # Project knowledge base (flat, wikilinked)
 │   ├── project-brief.md
@@ -89,11 +89,11 @@ forge/
 
 Flat markdown files in `wiki/`. Wiki pages support optional YAML frontmatter for titles and aliases, and `[[wikilinks]]` for interconnecting knowledge. Pages are intentionally kept short and consumable so agents can quickly ingest project context. They represent the big picture: goals, personas, architecture, design direction, and roadmap.
 
-Wiki pages can link to each other using `[[slug]]` or `[[slug|display text]]` syntax. When a wikilink references a page that doesn't exist yet, Forge shows a "create this page" prompt, enabling organic growth of the knowledge base. Each page displays a backlinks section listing all pages that reference it, making it easy to discover related knowledge.
+Wiki pages can link to each other using `[[slug]]` or `[[slug|display text]]` syntax. When a wikilink references a page that doesn't exist yet, Folio shows a "create this page" prompt, enabling organic growth of the knowledge base. Each page displays a backlinks section listing all pages that reference it, making it easy to discover related knowledge.
 
 ### Team
 
-`team.md` lives at the root of `forge/` (alongside `forge.yaml`) and defines the team members who participate in the project. Each member has a `name` (used as the canonical identifier for assignment), an optional `role`, and optional external handles (e.g., GitHub username). Forge uses this file for assignee validation (`forge doctor`), autocomplete in the CLI and web UI, and general team visibility.
+`team.md` lives at the root of `folio/` (alongside `folio.yaml`) and defines the team members who participate in the project. Each member has a `name` (used as the canonical identifier for assignment), an optional `role`, and optional external handles (e.g., GitHub username). Folio uses this file for assignee validation (`folio doctor`), autocomplete in the CLI and web UI, and general team visibility.
 
 ### Features
 
@@ -105,12 +105,12 @@ Follow the same directory-per-entity pattern as features. Each issue gets a name
 
 ### Reviews
 
-Guidance documents for periodic reviews. Each review type gets a directory under `reviews/` with a `REVIEW.md` containing instructions and checklists. Review execution is handled by skills/agents, not by Forge directly.
+Guidance documents for periodic reviews. Each review type gets a directory under `reviews/` with a `REVIEW.md` containing instructions and checklists. Review execution is handled by skills/agents, not by Folio directly.
 
 Reviews fall into two categories:
 
 - **Project reviews** — Domain-specific reviews defined by the team (architecture, security, usability, design, etc.).
-- **Forge health reviews** — Built-in reviews shipped with Forge that check the health of the `forge/` directory itself. For example: Is the directory structure valid? Are core wiki pages present and up to date? Are there features missing required metadata? These act as a self-diagnostic for the project's Forge setup.
+- **Folio health reviews** — Built-in reviews shipped with Folio that check the health of the `folio/` directory itself. For example: Is the directory structure valid? Are core wiki pages present and up to date? Are there features missing required metadata? These act as a self-diagnostic for the project's Forge setup.
 
 ### Sprints
 
@@ -207,7 +207,7 @@ Retrospective notes, observations, or other sprint-level content...
 
 The sprint's `features` and `issues` arrays in `SPRINT.md` frontmatter are the **canonical source** for sprint membership. Individual feature and issue files do not store a sprint reference.
 
-When a feature or issue is viewed (via CLI or API), its `sprint` field is computed by scanning all sprint files to find which sprint (if any) contains that entity's slug. CLI convenience flags like `forge feature create --sprint <slug>` write to the target sprint's `SPRINT.md`, not to the feature's frontmatter.
+When a feature or issue is viewed (via CLI or API), its `sprint` field is computed by scanning all sprint files to find which sprint (if any) contains that entity's slug. CLI convenience flags like `folio feature create --sprint <slug>` write to the target sprint's `SPRINT.md`, not to the feature's frontmatter.
 
 ### Wiki Pages
 
@@ -239,7 +239,7 @@ See [[technical-docs]] for implementation details and [[personas|our target user
 
 **Backlinks** (computed at read time):
 
-- When a page is viewed, Forge scans all wiki pages for `[[slug]]` or `[[alias]]` references pointing to the current page.
+- When a page is viewed, Folio scans all wiki pages for `[[slug]]` or `[[alias]]` references pointing to the current page.
 - Backlinks are displayed as a list at the bottom of the page, showing the title and slug of each linking page.
 
 **Derived fields** (not stored, computed at read time):
@@ -283,7 +283,7 @@ The mapping works as follows:
 
 ### Bootstrapping
 
-- `forge init` — Scaffold a new `forge/` directory from a template (pulled from a repo or local filesystem path). If no template is specified, Forge uses a sensible default configuration embedded in the binary itself.
+- `folio init` — Scaffold a new `folio/` directory from a template (pulled from a repo or local filesystem path). If no template is specified, Folio uses a sensible default configuration embedded in the binary itself.
 
 ### Features
 
@@ -308,23 +308,23 @@ The mapping works as follows:
 
 - List available review types
 - View review guidance and checklists
-- Run built-in Forge health checks (`forge doctor` or similar) to validate directory structure and wiki page completeness
+- Run built-in Folio health checks (`folio doctor` or similar) to validate directory structure and wiki page completeness
 
 ## Technical Approach
 
 - **Language:** Go
 - **Binary:** Single binary distribution via Go's `embed` package
 - **Web UI:** SPA (React or Svelte, TBD) embedded in the Go binary, served locally
-- **CLI:** Subcommand-based (e.g., `forge feature create`, `forge issue list`, `forge backlog reorder`)
+- **CLI:** Subcommand-based (e.g., `folio feature create`, `folio issue list`, `folio backlog reorder`)
 - **Data format:** Markdown with YAML frontmatter for metadata
-- **Configuration:** `forge.yaml` at the `forge/` root for project-level settings (workflow states, template source, review types, etc.)
-- **Templating:** `forge init` pulls from a configurable template source (git repo or filesystem path), with a sensible default embedded in the binary
+- **Configuration:** `folio.yaml` at the `folio/` root for project-level settings (workflow states, template source, review types, etc.)
+- **Templating:** `folio init` pulls from a configurable template source (git repo or filesystem path), with a sensible default embedded in the binary
 
 ## Phasing
 
 ### Phase 1 — Core
 
-- `forge init` with template support
+- `folio init` with template support
 - Features: CRUD, backlog management, workflow status
 - Issues: CRUD, basic metadata
 - Wiki: CRUD, wikilinks, backlinks
@@ -341,7 +341,7 @@ The mapping works as follows:
 
 ## Context
 
-Forge is being built by Mutually Human as part of the SE 2.0 / Agentic Development initiative. It will be used internally by delivery teams and may be open-sourced. A companion project will provide skills (e.g., Claude Code skills) that automate workflows on top of Forge's file structure.
+Folio is being built by Mutually Human as part of the SE 2.0 / Agentic Development initiative. It will be used internally by delivery teams and may be open-sourced. A companion project will provide skills (e.g., Claude Code skills) that automate workflows on top of Folio's file structure.
 
 ## License
 

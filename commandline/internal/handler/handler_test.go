@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/briantol/forge/internal/server"
-	"github.com/briantol/forge/internal/store"
+	"github.com/briantol/folio/internal/server"
+	"github.com/briantol/folio/internal/store"
 )
 
 func setupTestServer(t *testing.T) (*httptest.Server, func()) {
@@ -29,7 +29,7 @@ members:
 ---
 `), 0644)
 
-	os.WriteFile(filepath.Join(dir, "forge.yaml"), []byte(`project: test
+	os.WriteFile(filepath.Join(dir, "folio.yaml"), []byte(`project: test
 version: "0.1.0"
 `), 0644)
 
@@ -128,7 +128,7 @@ func TestStatusEndpoint(t *testing.T) {
 	if status != 200 {
 		t.Fatalf("status: got %d", status)
 	}
-	if body["project"] != "forge-project" {
+	if body["project"] != "folio-project" {
 		t.Errorf("project: got %v", body["project"])
 	}
 	if _, ok := body["feature_count"]; !ok {

@@ -34,7 +34,7 @@ Currently, Forge lacks automated build and deployment processes, which leads to:
 
 ## Non-Goals
 
-- Building container images (Forge is a single binary, containerization is optional)
+- Building container images (Folio is a single binary, containerization is optional)
 - Managing infrastructure provisioning (focusing on build/test/deploy only)
 - Implementing custom CI/CD tooling (will use existing solutions like GitHub Actions)
 
@@ -171,7 +171,7 @@ jobs:
       - name: Build Binary
         run: |
           GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
-          go build -o forge-${{ matrix.os }}-${{ matrix.arch }}
+          go build -o folio-${{ matrix.os }}-${{ matrix.arch }}
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
 

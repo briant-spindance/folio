@@ -65,7 +65,7 @@ function buildSystemPrompt(context: ChatContext | null): string {
     .map((f) => `- **${f.title}** [${f.status}]${f.priority ? ` (${f.priority})` : ""}`)
     .join("\n")
 
-  let systemPrompt = `You are an AI assistant embedded in Forge, a project management tool for software teams. You help users read, understand, and author project documentation, plan features, and build roadmaps.
+  let systemPrompt = `You are an AI assistant embedded in Folio, a project management tool for software teams. You help users read, understand, and author project documentation, plan features, and build roadmaps.
 
 ## Project Knowledge Base
 

@@ -10,23 +10,23 @@ order: 5
 ## Getting Started
 
 ```bash
-git clone https://github.com/your-org/forge
-cd forge
+git clone https://github.com/your-org/folio
+cd folio
 pnpm install
 pnpm dev
 ```
 
 This starts:
-- **API server** on `http://localhost:3001` (Hono, reads `testdata/forge/`)
+- **API server** on `http://localhost:3001` (Hono, reads `testdata/folio/`)
 - **Frontend** on `http://localhost:5173` (Vite, proxies `/api` to API server)
 
 ## Project Structure
 
 ```
-forge/
+folio/
 ├── api/          ← Hono dev server (TypeScript)
 ├── frontend/     ← React 19 + Vite + shadcn/ui
-├── testdata/     ← Sample forge project data
+├── testdata/     ← Sample folio project data
 ├── demo/         ← Static HTML mockups (reference)
 └── project-docs/ ← Specifications and planning docs
 ```

@@ -7,12 +7,12 @@ order: 1
 
 # Architecture
 
-Forge is a single Go binary that serves both the web UI and a JSON API.
+Folio is a single Go binary that serves both the web UI and a JSON API.
 
 ## Components
 
 ```
-forge (binary)
+folio (binary)
 ├── cmd/           ← Cobra CLI commands
 ├── internal/
 │   ├── server/    ← HTTP server, routing
@@ -35,8 +35,8 @@ Browser → Go binary (serves both /api/* and static React build)
 ## Filesystem Layout
 
 ```
-forge/
-├── forge.yaml           ← project config
+folio/
+├── folio.yaml           ← project config
 ├── team.md              ← team roster
 ├── features/
 │   └── {slug}/

@@ -12,7 +12,7 @@ interface AppShellProps {
   projectName?: string
 }
 
-export function AppShell({ children, projectName = "forge-project" }: AppShellProps) {
+export function AppShell({ children, projectName = "folio-project" }: AppShellProps) {
   const [collapsed, setCollapsed] = useState<boolean>(
     () => localStorage.getItem(STORAGE_KEY) === "true"
   )

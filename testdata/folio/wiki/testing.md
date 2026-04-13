@@ -7,7 +7,7 @@ order: 6
 
 ## Overview
 
-Forge maintains a comprehensive testing strategy covering the Go backend, TypeScript frontend, and CLI to ensure reliability and quality across the entire stack.
+Folio maintains a comprehensive testing strategy covering the Go backend, TypeScript frontend, and CLI to ensure reliability and quality across the entire stack.
 
 ## Testing Principles
 
@@ -47,7 +47,7 @@ func TestProjectLoader(t *testing.T) {
         path    string
         wantErr bool
     }{
-        {"valid project", "testdata/forge", false},
+        {"valid project", "testdata/folio", false},
         {"missing config", "testdata/empty", true},
     }
     
@@ -115,7 +115,7 @@ npm run test:integration
 ```
 
 These tests:
-- Use the Hono test server with `testdata/forge/` project
+- Use the Hono test server with `testdata/folio/` project
 - Verify JSON API contracts
 - Test authentication flows and permissions
 - Validate error handling
@@ -140,8 +140,8 @@ CLI tests verify:
 
 ```
 testdata/
-└── forge/              # Complete test project
-    ├── .forge/
+└── folio/              # Complete test project
+    ├── .folio/
     │   └── config.yaml
     ├── features/
     ├── wiki/
@@ -150,7 +150,7 @@ testdata/
 
 ### Maintaining Test Data
 
-- Keep `testdata/forge/` synchronized with schema changes
+- Keep `testdata/folio/` synchronized with schema changes
 - Use realistic but minimal data sets
 - Document any special test scenarios in comments
 

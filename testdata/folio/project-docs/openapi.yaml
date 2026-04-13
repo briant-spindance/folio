@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Forge API
+  title: Folio API
   description: |
-    REST API for Forge, a file-system-backed project management tool for software teams.
+    REST API for Folio, a file-system-backed project management tool for software teams.
     All request/response bodies use **snake_case** field names.
     Paginated list endpoints return `{ items, total, page, limit, total_pages }`.
   version: 1.0.0

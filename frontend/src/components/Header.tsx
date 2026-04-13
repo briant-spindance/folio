@@ -13,7 +13,7 @@ export function Header({ projectName, branch, commit, dirty, aiOpen, onAiToggle 
   return (
     <header className="top-header">
       <div className="top-header-left">
-        {/* Forge brand icon — same SVG as mockup */}
+        {/* Folio brand icon — same SVG as mockup */}
         <svg
           className="header-brand-icon"
           width="20"

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/briantol/forge/internal/frontmatter"
-	"github.com/briantol/forge/internal/model"
+	"github.com/briantol/folio/internal/frontmatter"
+	"github.com/briantol/folio/internal/model"
 )
 
 // ProjectDocStore provides read-only access to project documents.

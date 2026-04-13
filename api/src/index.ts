@@ -64,6 +64,6 @@ const port = Number(process.env.PORT ?? 3001)
 serve({ fetch: app.fetch, port }, () => {
   console.log(`  API server running at http://localhost:${port}`)
   console.log(
-    `  Data directory: ${process.env.FORGE_DATA ?? "testdata/forge (default)"}`
+    `  Data directory: ${process.env.FOLIO_DATA ?? "testdata/folio (default)"}`
   )
 })

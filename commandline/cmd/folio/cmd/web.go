@@ -9,14 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/briantol/forge/internal/logging"
-	forgemdns "github.com/briantol/forge/internal/mdns"
-	"github.com/briantol/forge/internal/server"
-	"github.com/briantol/forge/internal/store"
+	"github.com/briantol/folio/internal/logging"
+	foliomdns "github.com/briantol/folio/internal/mdns"
+	"github.com/briantol/folio/internal/server"
+	"github.com/briantol/folio/internal/store"
 	"github.com/spf13/cobra"
 )
 
-const defaultMDNSHost = "forge"
+const defaultMDNSHost = "folio"
 
 var (
 	port      int
@@ -27,7 +27,7 @@ var (
 func init() {
 	webCmd.Flags().IntVar(&port, "port", 2600, "Port to listen on")
 	webCmd.Flags().StringVar(&staticDir, "static", "", "Path to the frontend dist directory (default: embedded)")
-	webCmd.Flags().StringVar(&mdnsHost, "mdns", "", "Enable mDNS discovery with optional hostname (default: forge.local when flag is present)")
+	webCmd.Flags().StringVar(&mdnsHost, "mdns", "", "Enable mDNS discovery with optional hostname (default: folio.local when flag is present)")
 
 	// NoOptDefVal makes --mdns work without a value (bare flag).
 	// When the user passes just --mdns, the value is set to defaultMDNSHost.
@@ -39,8 +39,8 @@ func init() {
 
 var webCmd = &cobra.Command{
 	Use:   "web",
-	Short: "Start the Forge web server",
-	Long:  "Start the Forge web server, serving the API and optional frontend SPA.",
+	Short: "Start the Folio web server",
+	Long:  "Start the Folio web server, serving the API and optional frontend SPA.",
 	RunE:  runWeb,
 }
 
@@ -57,15 +57,15 @@ func runWeb(cmd *cobra.Command, args []string) error {
 
 	// Resolve data directory.
 	if dataDir != "" {
-		os.Setenv("FORGE_DATA", dataDir)
+		os.Setenv("FOLIO_DATA", dataDir)
 	}
 
-	defaultRoot := filepath.Join(".", "forge")
+	defaultRoot := filepath.Join(".", "folio")
 	paths := store.ResolvePaths(defaultRoot)
 
 	// Verify data directory exists.
 	if _, err := os.Stat(paths.Root); os.IsNotExist(err) {
-		return fmt.Errorf("data directory does not exist: %s\nSet FORGE_DATA env var or use --data flag", paths.Root)
+		return fmt.Errorf("data directory does not exist: %s\nSet FOLIO_DATA env var or use --data flag", paths.Root)
 	}
 
 	// Resolve frontend filesystem.
@@ -77,17 +77,17 @@ func runWeb(cmd *cobra.Command, args []string) error {
 	// Start mDNS if requested.
 	if mdnsHost != "" {
 		hostname := normalizeMDNSHost(mdnsHost)
-		shutdown, err := forgemdns.Advertise(hostname, port)
+		shutdown, err := foliomdns.Advertise(hostname, port)
 		if err != nil {
 			log.Printf("Warning: failed to start mDNS: %v", err)
 		} else {
 			defer shutdown()
-			fmt.Printf("  Forge server running at http://%s:%d\n", hostname, port)
+			fmt.Printf("  Folio server running at http://%s:%d\n", hostname, port)
 		}
 	}
 
 	addr := fmt.Sprintf(":%d", port)
-	fmt.Printf("  Forge server running at http://localhost:%d\n", port)
+	fmt.Printf("  Folio server running at http://localhost:%d\n", port)
 	fmt.Printf("  Data directory: %s\n", paths.Root)
 	if IsProduction {
 		fmt.Printf("  Logs: %s\n", logging.LogPath())

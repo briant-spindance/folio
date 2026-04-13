@@ -1,12 +1,12 @@
-# Forge
+# Folio
 
-An experimental, local-first project management tool that stores features, plans, issues, and docs as markdown files on disk — designed for teams working with AI agents. Forge provides a web UI for managing context and a CLI for agent integration.
+An experimental, local-first project management tool that stores features, plans, issues, and docs as markdown files on disk — designed for teams working with AI agents. Folio provides a web UI for managing context and a CLI for agent integration.
 
 ## Philosophy
 
-**Agile for agentic engineering.** Forge shares the principles of Scrum — transparency, inspection, and adaptation — and extends them to a world where AI agents are first-class participants in the development process.
+**Agile for agentic engineering.** Folio shares the principles of Scrum — transparency, inspection, and adaptation — and extends them to a world where AI agents are first-class participants in the development process.
 
-**Features, not user stories.** The core artifact in Forge is the *Feature*, composed of a `FEATURE.md` (what to build) and a `PLAN.md` (how to build it). This is a lightweight form of spec-driven development where each feature is co-owned by product, engineering, and design.
+**Features, not user stories.** The core artifact in Folio is the *Feature*, composed of a `FEATURE.md` (what to build) and a `PLAN.md` (how to build it). This is a lightweight form of spec-driven development where each feature is co-owned by product, engineering, and design.
 
 **Three tiers of context.** Agentic development requires context, and that context should be colocated and versioned with the rest of a project:
 
@@ -16,21 +16,21 @@ An experimental, local-first project management tool that stores features, plans
 
 **Files, not databases.** All project data is stored as plain markdown files with YAML frontmatter. No database to set up, migrate, or back up. The filesystem is the source of truth, and your data is always readable, grep-able, and diffable.
 
-**Orthogonal by design.** Forge is not an IDE, not an agent harness, not version control, and not a communication tool. It is intended to complement these tools — not replace them. It works alongside git, editors, CI/CD, Slack, and whatever agent framework you prefer.
+**Orthogonal by design.** Folio is not an IDE, not an agent harness, not version control, and not a communication tool. It is intended to complement these tools — not replace them. It works alongside git, editors, CI/CD, Slack, and whatever agent framework you prefer.
 
 **A single binary.** One Go binary provides a web interface for managing context documents and is designed to also serve as a CLI tool for agents.
 
-**Opinionated but customizable.** Forge includes sane defaults for organizing context (workflow states, directory structure, frontmatter schemas) but can be customized to fit your team's process.
+**Opinionated but customizable.** Folio includes sane defaults for organizing context (workflow states, directory structure, frontmatter schemas) but can be customized to fit your team's process.
 
-**Skills** *(future)*. Forge will be able to install skills into common agent tools (Claude Code, OpenCode, etc.) to give agents direct access to project context.
+**Skills** *(future)*. Folio will be able to install skills into common agent tools (Claude Code, OpenCode, etc.) to give agents direct access to project context.
 
 ## Data Model
 
-All data lives under a single directory (`./forge` by default) within the overall project:
+All data lives under a single directory (`./folio` by default) within the overall project:
 
 ```
-forge/
-├── forge.yaml              # Project config (workflow states, etc.)
+folio/
+├── folio.yaml              # Project config (workflow states, etc.)
 ├── team.md                 # Team roster (YAML frontmatter)
 ├── roadmap.md              # Kanban board definition
 ├── project-docs/           # Evergreen context
@@ -79,7 +79,7 @@ just install        # Install all dependencies (pnpm + Go modules)
 just dev            # Start Go backend + Vite frontend dev server
 ```
 
-The dev server starts at `http://localhost:5173` (Vite, proxying API to Go on port 2600), using `testdata/forge` for sample data.
+The dev server starts at `http://localhost:5173` (Vite, proxying API to Go on port 2600), using `testdata/folio` for sample data.
 
 ### Common Commands
 
@@ -101,11 +101,11 @@ Individual targets are also available: `just test-go`, `just test-frontend`, `ju
 ### Running
 
 ```bash
-forge web                           # Start on port 2600, data from ./forge
-forge web --port 8080               # Custom port
-forge web --data /path/to/project   # Custom data directory
-forge web --mdns                    # Advertise as forge.local via mDNS
-forge web --mdns=myproject          # Advertise as myproject.local
+folio web                           # Start on port 2600, data from ./folio
+folio web --port 8080               # Custom port
+folio web --data /path/to/project   # Custom data directory
+folio web --mdns                    # Advertise as folio.local via mDNS
+folio web --mdns=myproject          # Advertise as myproject.local
 ```
 
 ### CLI Reference
@@ -114,20 +114,20 @@ forge web --mdns=myproject          # Advertise as myproject.local
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--data` | Path to the Forge data directory | `./forge` (or `FORGE_DATA` env var) |
-| `--log-dir` | Override log file directory | `~/.local/forge/logs` (production only) |
+| `--data` | Path to the Folio data directory | `./folio` (or `FOLIO_DATA` env var) |
+| `--log-dir` | Override log file directory | `~/.local/folio/logs` (production only) |
 
-**`forge web` flags:**
+**`folio web` flags:**
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--port` | Port to listen on | `2600` |
 | `--static` | Path to frontend dist directory | Embedded (production) |
-| `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `forge.local` |
+| `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `folio.local` |
 
 ### Configuration
 
-Create a `forge.yaml` in your data directory:
+Create a `folio.yaml` in your data directory:
 
 ```yaml
 project: my-project
@@ -137,17 +137,17 @@ workflow:
   default: draft
 ```
 
-Set `FORGE_DATA` to point to your project data directory, or use `--data`:
+Set `FOLIO_DATA` to point to your project data directory, or use `--data`:
 
 ```bash
-export FORGE_DATA=/path/to/my-project
-forge web
+export FOLIO_DATA=/path/to/my-project
+folio web
 ```
 
 ### Logging
 
 - **Dev mode** (`just dev`): Logs are written to the console (stderr).
-- **Production builds** (`just build`): The resulting binary logs to `~/.local/forge/logs/forge.log`. Override with `--log-dir`.
+- **Production builds** (`just build`): The resulting binary logs to `~/.local/folio/logs/folio.log`. Override with `--log-dir`.
 
 ## License
 

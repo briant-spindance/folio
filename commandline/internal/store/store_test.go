@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/briantol/forge/internal/model"
+	"github.com/briantol/folio/internal/model"
 )
 
-// setupTestDir creates a temporary directory with basic forge structure.
+// setupTestDir creates a temporary directory with basic folio structure.
 func setupTestDir(t *testing.T) (*Paths, func()) {
 	t.Helper()
 	dir := t.TempDir()

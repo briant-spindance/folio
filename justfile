@@ -1,4 +1,4 @@
-# Forge — project-level task runner
+# Folio — project-level task runner
 # Run `just` with no arguments to see all available recipes.
 
 # Default recipe: list all available commands
@@ -18,9 +18,9 @@ install:
 dev:
     #!/usr/bin/env bash
     set -euo pipefail
-    cd commandline && go build -o forge ./cmd/forge/
+    cd commandline && go build -o folio ./cmd/folio/
     npx concurrently --names go,vite --prefix-colors cyan,magenta \
-        "cd commandline && ./forge web --data ../testdata/forge --static ../frontend/dist" \
+        "cd commandline && ./folio web --data ../testdata/folio --static ../frontend/dist" \
         "cd frontend && pnpm dev"
 
 # Start Node.js API + Vite frontend (legacy, for AI chat development)
@@ -37,14 +37,14 @@ build-frontend:
 
 # Build the Go binary (dev mode, no embedded frontend)
 build-go:
-    cd commandline && go build -o forge ./cmd/forge/
+    cd commandline && go build -o folio ./cmd/folio/
 
 # Full production build: frontend + Go binary with embedded frontend
 build: build-frontend
-    cd commandline && rm -rf cmd/forge/dist
-    cp -r frontend/dist commandline/cmd/forge/dist
-    cd commandline && go build -tags embed -o forge ./cmd/forge/
-    rm -rf commandline/cmd/forge/dist
+    cd commandline && rm -rf cmd/folio/dist
+    cp -r frontend/dist commandline/cmd/folio/dist
+    cd commandline && go build -tags embed -o folio ./cmd/folio/
+    rm -rf commandline/cmd/folio/dist
 
 # ── Testing ───────────────────────────────────────────────────────
 
@@ -80,8 +80,8 @@ lint-go:
 
 # Clean all build artifacts
 clean:
-    rm -f commandline/forge
-    rm -rf commandline/cmd/forge/dist
+    rm -f commandline/folio
+    rm -rf commandline/cmd/folio/dist
     rm -rf frontend/dist
 
 # ── Shortcuts ─────────────────────────────────────────────────────

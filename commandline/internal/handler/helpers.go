@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/briantol/forge/internal/model"
+	"github.com/briantol/folio/internal/model"
 )
 
 // JSON writes a JSON response.

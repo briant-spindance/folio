@@ -3,13 +3,13 @@ title: Web User Interface Specification
 order: 2
 ---
 
-# Forge — Web User Interface Specification
+# Folio — Web User Interface Specification
 
 ## Overview
 
-Forge's web UI is a single-page application embedded in the Go binary and served locally via `forge serve`. It provides the entire team — product owners, designers, engineers — with a visual interface for managing the project wiki, features, issues, and reviews.
+Forge's web UI is a single-page application embedded in the Go binary and served locally via `folio serve`. It provides the entire team — product owners, designers, engineers — with a visual interface for managing the project wiki, features, issues, and reviews.
 
-The UI reads and writes the same filesystem structure as the CLI. There is no database; the filesystem under `forge/` is the source of truth.
+The UI reads and writes the same filesystem structure as the CLI. There is no database; the filesystem under `folio/` is the source of truth.
 
 ### Design Goals
 
@@ -37,9 +37,9 @@ The sidebar is persistent across all views and provides top-level navigation:
 | Issues          | `/issues`        | Issue tracking                       |
 | Reviews         | `/reviews`       | Review guidance and health checks    |
 | Team            | `/team`          | Team members and roles               |
-| Configuration   | `/config`        | Project settings (`forge.yaml`)      |
+| Configuration   | `/config`        | Project settings (`folio.yaml`)      |
 
-The sidebar displays the project name (derived from `forge.yaml` or the parent directory name) at the top.
+The sidebar displays the project name (derived from `folio.yaml` or the parent directory name) at the top.
 
 Below the project name, the sidebar shows a **VCS status indicator** (see [Version Control Status](#version-control-status) below).
 
@@ -72,7 +72,7 @@ A compact display showing:
 | Current branch    | The active branch name (e.g., `main`, `feature/oauth`).           |
 | Dirty indicator   | A small dot or badge when there are uncommitted changes in the working tree. |
 
-- If no VCS is detected (e.g., the project is not a git repo), the indicator is hidden entirely. No error is shown — Forge is VCS-agnostic by principle, and VCS display is informational only.
+- If no VCS is detected (e.g., the project is not a git repo), the indicator is hidden entirely. No error is shown — Folio is VCS-agnostic by principle, and VCS display is informational only.
 - The branch name truncates with an ellipsis if it exceeds the sidebar width. The full name is shown in a tooltip on hover.
 - Clicking the VCS indicator does nothing in Phase 1 — it is display-only. Future phases may open a VCS detail panel.
 
@@ -86,7 +86,7 @@ The Dashboard includes a VCS card (shown only when a VCS provider is detected):
 | Working tree status| Clean / N uncommitted changes.                                    |
 | Last commit        | Short hash, message, author, and relative timestamp (e.g., "2 hours ago"). |
 
-This card is informational. Forge does not perform any VCS operations (no commits, no pushes, no pulls). It reads VCS state to provide situational awareness.
+This card is informational. Folio does not perform any VCS operations (no commits, no pushes, no pulls). It reads VCS state to provide situational awareness.
 
 ### Architecture Note
 
@@ -111,13 +111,13 @@ If no provider is detected, the endpoint returns `null` and the UI hides all VCS
 
 **Route:** `/`
 
-The dashboard is the landing page after launching `forge serve`. It provides a high-level snapshot of the project's current state.
+The dashboard is the landing page after launching `folio serve`. It provides a high-level snapshot of the project's current state.
 
 ### Sections
 
 #### Project Summary
 
-- Project name and a one-line description (from `forge.yaml` or `project-brief.md` if present).
+- Project name and a one-line description (from `folio.yaml` or `project-brief.md` if present).
 - Count of wiki pages, features, and issues.
 
 #### Backlog Snapshot
@@ -152,9 +152,9 @@ When an active sprint exists, the card shows:
 
 Clicking anywhere on the card navigates to the sprint board view (`/sprints/:slug`).
 
-#### Forge Health
+#### Folio Health
 
-- A summary of the last `forge doctor` run (or a prompt to run it if never executed).
+- A summary of the last `folio doctor` run (or a prompt to run it if never executed).
 - Displays pass/warn/fail counts.
 - Link to the full health check view under Reviews.
 
@@ -166,7 +166,7 @@ Clicking anywhere on the card navigates to the sprint board view (`/sprints/:slu
 
 ### List View (`/wiki`)
 
-Displays all markdown files in `forge/wiki/` as a flat list.
+Displays all markdown files in `folio/wiki/` as a flat list.
 
 | Column       | Description                                      |
 |--------------|--------------------------------------------------|
@@ -230,7 +230,7 @@ When navigating to `/wiki/new?slug=<slug>&title=<title>` (e.g., from clicking a 
 
 #### Save Behavior
 
-- **Save** writes the file to `forge/wiki/{slug}.md`. If `title` or `aliases` are provided, they are serialized as YAML frontmatter prepended to the markdown body. If neither is set, the file is written as plain markdown.
+- **Save** writes the file to `folio/wiki/{slug}.md`. If `title` or `aliases` are provided, they are serialized as YAML frontmatter prepended to the markdown body. If neither is set, the file is written as plain markdown.
 - **Cancel** discards changes and returns to the list or detail view.
 - On create, if a file with the same slug already exists, or if any alias conflicts with an existing page slug or alias, display an inline error and prevent save.
 
@@ -242,7 +242,7 @@ When navigating to `/wiki/new?slug=<slug>&title=<title>` (e.g., from clicking a 
 
 **Route:** `/features`
 
-Displays all features found under `forge/features/` (each subdirectory containing a `FEATURE.md`).
+Displays all features found under `folio/features/` (each subdirectory containing a `FEATURE.md`).
 
 | Column       | Description                                                |
 |--------------|------------------------------------------------------------|
@@ -326,11 +326,11 @@ Below the main content, list any additional files in the feature directory (wire
 
 Same split-pane markdown editor as Wiki pages (raw editor + live preview).
 
-The editor pre-populates with a feature template if one is defined in the project's template source or `forge.yaml`.
+The editor pre-populates with a feature template if one is defined in the project's template source or `folio.yaml`.
 
 #### Save Behavior
 
-- On create: creates `forge/features/{slug}/FEATURE.md` with the metadata as YAML frontmatter and the content as the markdown body.
+- On create: creates `folio/features/{slug}/FEATURE.md` with the metadata as YAML frontmatter and the content as the markdown body.
 - On edit: updates the existing `FEATURE.md`, preserving any frontmatter fields not exposed in the form.
 - After creating a new feature, prompt the user: "Add to backlog?" If yes, append the feature to the end of `features/backlog.md`.
 
@@ -361,7 +361,7 @@ An ordered list of features, rendered as draggable cards:
 
 #### Unprioritized Features
 
-Below the backlog list, show a section of features that exist in `forge/features/` but are not listed in `backlog.md`. Each has an "Add to backlog" action.
+Below the backlog list, show a section of features that exist in `folio/features/` but are not listed in `backlog.md`. Each has an "Add to backlog" action.
 
 ---
 
@@ -371,7 +371,7 @@ Below the backlog list, show a section of features that exist in `forge/features
 
 **Route:** `/issues`
 
-Displays all issues found under `forge/issues/` (each subdirectory containing an `ISSUE.md`).
+Displays all issues found under `folio/issues/` (each subdirectory containing an `ISSUE.md`).
 
 | Column         | Description                                              |
 |----------------|----------------------------------------------------------|
@@ -439,19 +439,19 @@ Split-pane markdown editor. Pre-populates with an issue template if defined.
 
 #### Save Behavior
 
-- On create: creates `forge/issues/{slug}/ISSUE.md` with YAML frontmatter and markdown body.
+- On create: creates `folio/issues/{slug}/ISSUE.md` with YAML frontmatter and markdown body.
 - On edit: updates the existing `ISSUE.md`.
 
 ---
 
 ## Sprints
 
-Sprints are time-boxed iterations that group features and issues into a focused delivery cycle. Each sprint is stored as a directory under `forge/sprints/` containing a `SPRINT.md` file with YAML frontmatter for metadata and a markdown body listing assigned work items.
+Sprints are time-boxed iterations that group features and issues into a focused delivery cycle. Each sprint is stored as a directory under `folio/sprints/` containing a `SPRINT.md` file with YAML frontmatter for metadata and a markdown body listing assigned work items.
 
 ### Filesystem Structure
 
 ```
-forge/sprints/
+folio/sprints/
 ├── sprint-1/
 │   └── SPRINT.md
 ├── sprint-2/
@@ -631,7 +631,7 @@ Below the metadata fields, a markdown editor for the sprint body (retrospective 
 
 #### Save Behavior
 
-- On create: creates `forge/sprints/{slug}/SPRINT.md` with metadata as YAML frontmatter and body as markdown.
+- On create: creates `folio/sprints/{slug}/SPRINT.md` with metadata as YAML frontmatter and body as markdown.
 - On edit: updates the existing `SPRINT.md`, preserving the features/issues lists in frontmatter (those are managed via the planning view).
 
 ---
@@ -646,7 +646,7 @@ Displays two sections:
 
 #### Project Reviews
 
-Lists all review types found under `forge/reviews/` (each subdirectory containing a `REVIEW.md`).
+Lists all review types found under `folio/reviews/` (each subdirectory containing a `REVIEW.md`).
 
 | Column       | Description                                              |
 |--------------|----------------------------------------------------------|
@@ -655,11 +655,11 @@ Lists all review types found under `forge/reviews/` (each subdirectory containin
 
 Clicking a review type navigates to the detail view.
 
-#### Forge Health Checks
+#### Folio Health Checks
 
 A dedicated card or section for built-in health diagnostics:
 
-- **Run Health Check** button — Triggers the equivalent of `forge doctor` and displays results.
+- **Run Health Check** button — Triggers the equivalent of `folio doctor` and displays results.
 - **Last Run** — Timestamp of the most recent health check, if available.
 - **Status Summary** — Pass/warn/fail counts from the last run.
 
@@ -682,7 +682,7 @@ Renders the `REVIEW.md` file for the selected review type.
 
 **Route:** `/reviews/health`
 
-Displays the results of a `forge doctor` run.
+Displays the results of a `folio doctor` run.
 
 #### Results Table
 
@@ -696,19 +696,19 @@ Displays the results of a `forge doctor` run.
 
 The health check validates:
 
-- `forge/` directory exists and has the expected structure.
-- `forge.yaml` is present and parseable.
+- `folio/` directory exists and has the expected structure.
+- `folio.yaml` is present and parseable.
 - Core wiki pages are present (e.g., `project-brief.md`).
 - All feature directories contain a `FEATURE.md`.
 - All issue directories contain an `ISSUE.md`.
 - All sprint directories contain a `SPRINT.md` with valid frontmatter.
 - `features/backlog.md` references only existing features.
 - Features have required frontmatter fields (status at minimum).
-- Workflow states in feature frontmatter match those configured in `forge.yaml`.
+- Workflow states in feature frontmatter match those configured in `folio.yaml`.
 - Sprint `SPRINT.md` files reference only existing features and issues.
 - Sprint dates are valid (end date after start date).
 - At most one sprint has status "active".
-- Internal markdown links within `forge/` resolve to existing files (broken link detection).
+- Internal markdown links within `folio/` resolve to existing files (broken link detection).
 - All `assignee` values in features and issues match a `name` defined in `team.md`.
 
 #### Actions
@@ -722,11 +722,11 @@ The health check validates:
 
 **Route:** `/team`
 
-Displays and manages team members defined in `forge/team.md`. This view provides visibility into who is on the project, their roles, and their current assignments.
+Displays and manages team members defined in `folio/team.md`. This view provides visibility into who is on the project, their roles, and their current assignments.
 
 ### Team List (`/team`)
 
-Displays all members from `forge/team.md` as a table.
+Displays all members from `folio/team.md` as a table.
 
 | Column       | Description                                                      |
 |--------------|------------------------------------------------------------------|
@@ -749,14 +749,14 @@ A form (inline row or modal) with the following fields:
 | Role     | Text input | No       | Free-form role text (e.g., `engineer`, `designer`).   |
 | GitHub   | Text input | No       | GitHub username.                                      |
 
-- **Save** appends the member to `forge/team.md` frontmatter.
+- **Save** appends the member to `folio/team.md` frontmatter.
 - **Validation:** If a member with the same name already exists, display an inline error and prevent save.
 
 #### Remove Member
 
 - Each row has a "Remove" action (icon button or context menu).
 - If the member is currently assigned to any features or issues, display a warning dialog listing the affected entities: "This member is assigned to N features and N issues. Their assignments will not be cleared automatically."
-- On confirm, the member is removed from `forge/team.md` frontmatter.
+- On confirm, the member is removed from `folio/team.md` frontmatter.
 
 #### Edit Member
 
@@ -776,7 +776,7 @@ If `team.md` does not exist or has no members:
 
 **Route:** `/config`
 
-Provides a structured editor for `forge.yaml`.
+Provides a structured editor for `folio.yaml`.
 
 ### Sections
 
@@ -789,7 +789,7 @@ Provides a structured editor for `forge.yaml`.
 
 #### Templates
 
-- **Template source** — Display and edit the template source path (git repo URL or filesystem path) used by `forge init`.
+- **Template source** — Display and edit the template source path (git repo URL or filesystem path) used by `folio init`.
 
 #### Review Types
 
@@ -798,11 +798,11 @@ Provides a structured editor for `forge.yaml`.
 
 #### Raw Editor
 
-A fallback tab that shows the raw `forge.yaml` content in a YAML-aware editor, for advanced users who prefer to edit the configuration directly.
+A fallback tab that shows the raw `folio.yaml` content in a YAML-aware editor, for advanced users who prefer to edit the configuration directly.
 
 ### Save Behavior
 
-- Writes changes to `forge/forge.yaml`.
+- Writes changes to `folio/folio.yaml`.
 - Validates YAML syntax before saving. Displays inline errors on invalid YAML.
 - Warns if removing a workflow state that is currently in use by one or more features.
 
@@ -816,7 +816,7 @@ The UI includes a built-in AI chat assistant that provides conversational access
 
 Chat requires LLM API credentials, configured via a local environment file:
 
-**File:** `forge/.env.local`
+**File:** `folio/.env.local`
 
 ```
 # LLM Provider Configuration
@@ -832,12 +832,12 @@ ANTHROPIC_API_KEY=sk-ant-...
 GOOGLE_GENERATIVE_AI_API_KEY=...
 
 # Default model (optional — Forge picks a sensible default if omitted)
-FORGE_CHAT_MODEL=anthropic/claude-sonnet-4-20250514
+FOLIO_CHAT_MODEL=anthropic/claude-sonnet-4-20250514
 ```
 
-- `forge/.env.local` is **never** committed to version control. The default `.gitignore` generated by `forge init` excludes it.
+- `folio/.env.local` is **never** committed to version control. The default `.gitignore` generated by `folio init` excludes it.
 - If no API keys are configured, the chat toggle is hidden and the feature is silently unavailable. No error is shown.
-- The Go backend reads `forge/.env.local` on startup and exposes an `/api/chat` endpoint that proxies requests to the configured LLM provider.
+- The Go backend reads `folio/.env.local` on startup and exposes an `/api/chat` endpoint that proxies requests to the configured LLM provider.
 
 ### Chat Architecture
 
@@ -897,10 +897,10 @@ A scrollable message thread displaying the conversation:
 
 ### Project Context Awareness
 
-The chat assistant automatically has access to the Forge project context:
+The chat assistant automatically has access to the Folio project context:
 
 - **System prompt** includes a summary of the project structure: project name, list of wiki pages, features (with status), issues, and configured workflow states.
-- The system prompt is assembled on each conversation start (or on "Clear conversation") by reading the current state of the `forge/` directory.
+- The system prompt is assembled on each conversation start (or on "Clear conversation") by reading the current state of the `folio/` directory.
 - The system prompt does **not** include full document bodies — only names, statuses, and metadata. The user can ask the assistant to read specific documents, which triggers a backend lookup.
 
 #### Context Injection
@@ -917,14 +917,14 @@ This keeps the base context small while allowing deep dives into specific conten
 
 - Chat does **not** perform write operations. It cannot create, edit, or delete features, issues, or wiki pages. It is read-only and advisory. Write capabilities may be added in a future phase with explicit user confirmation flows.
 - Chat conversations are **not persisted** to the filesystem. They exist only in the browser session.
-- Chat is **local only** — requests go from the browser to the local `forge serve` backend, which proxies to the LLM provider. No conversation data is stored or transmitted beyond the LLM API call.
+- Chat is **local only** — requests go from the browser to the local `folio serve` backend, which proxies to the LLM provider. No conversation data is stored or transmitted beyond the LLM API call.
 
 ### Error States
 
 | Condition                     | Behavior                                                      |
 |-------------------------------|---------------------------------------------------------------|
 | No API keys configured        | Chat toggle is hidden. No error shown.                        |
-| Invalid API key               | Error message displayed in the chat panel: "Authentication failed. Check your API key in forge/.env.local." |
+| Invalid API key               | Error message displayed in the chat panel: "Authentication failed. Check your API key in folio/.env.local." |
 | LLM provider unreachable      | Error message: "Could not reach [provider]. Check your network connection." |
 | Rate limited                  | Error message: "Rate limited by [provider]. Wait a moment and try again." |
 | Mid-stream failure            | Partial response is preserved. An error notice is appended: "Response interrupted. Try sending your message again." |
@@ -995,9 +995,9 @@ All routes use clean URLs that map to the filesystem structure:
 
 | Route                     | Filesystem Path                              |
 |---------------------------|----------------------------------------------|
-| `/wiki/project-brief`     | `forge/wiki/project-brief.md`            |
-| `/features/feature-alpha` | `forge/features/feature-alpha/FEATURE.md`    |
-| `/issues/login-timeout`   | `forge/issues/login-timeout/ISSUE.md`        |
-| `/reviews/architecture`   | `forge/reviews/architecture/REVIEW.md`       |
+| `/wiki/project-brief`     | `folio/wiki/project-brief.md`            |
+| `/features/feature-alpha` | `folio/features/feature-alpha/FEATURE.md`    |
+| `/issues/login-timeout`   | `folio/issues/login-timeout/ISSUE.md`        |
+| `/reviews/architecture`   | `folio/reviews/architecture/REVIEW.md`       |
 
 This makes the URL predictable and debuggable — users can reason about which file a given view represents.
