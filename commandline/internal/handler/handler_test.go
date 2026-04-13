@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/briantol/folio/internal/server"
-	"github.com/briantol/folio/internal/store"
+	"github.com/briant-spindance/folio/internal/server"
+	"github.com/briant-spindance/folio/internal/store"
 )
 
 func setupTestServer(t *testing.T) (*httptest.Server, func()) {

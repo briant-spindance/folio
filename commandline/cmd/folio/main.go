@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/briantol/folio/cmd/folio/cmd"
+	"github.com/briant-spindance/folio/cmd/folio/cmd"
 )
 
 func main() {

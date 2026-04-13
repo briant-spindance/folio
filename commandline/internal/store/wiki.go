@@ -11,9 +11,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/briantol/folio/internal/frontmatter"
-	"github.com/briantol/folio/internal/gitutil"
-	"github.com/briantol/folio/internal/model"
+	"github.com/briant-spindance/folio/internal/frontmatter"
+	"github.com/briant-spindance/folio/internal/gitutil"
+	"github.com/briant-spindance/folio/internal/model"
 )
 
 // WikiStore provides filesystem-backed CRUD for wiki docs.

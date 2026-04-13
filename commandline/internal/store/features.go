@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/briantol/folio/internal/frontmatter"
-	"github.com/briantol/folio/internal/model"
+	"github.com/briant-spindance/folio/internal/frontmatter"
+	"github.com/briant-spindance/folio/internal/model"
 )
 
 // FeatureStore provides filesystem-backed CRUD for features.

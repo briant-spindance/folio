@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/briantol/folio/internal/store"
+	"github.com/briant-spindance/folio/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 

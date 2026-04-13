@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/briantol/folio/internal/frontmatter"
-	"github.com/briantol/folio/internal/model"
+	"github.com/briant-spindance/folio/internal/frontmatter"
+	"github.com/briant-spindance/folio/internal/model"
 )
 
 // RoadmapStore provides filesystem-backed CRUD for the roadmap.

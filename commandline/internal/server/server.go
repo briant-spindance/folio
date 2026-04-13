@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/briantol/folio/internal/handler"
-	"github.com/briantol/folio/internal/store"
+	"github.com/briant-spindance/folio/internal/handler"
+	"github.com/briant-spindance/folio/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"

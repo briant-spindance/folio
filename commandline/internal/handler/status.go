@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/briantol/folio/internal/store"
+	"github.com/briant-spindance/folio/internal/store"
 )
 
 // StatusHandler handles GET /api/status.

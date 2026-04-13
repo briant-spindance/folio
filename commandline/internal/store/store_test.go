@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/briantol/folio/internal/model"
+	"github.com/briant-spindance/folio/internal/model"
 )
 
 // setupTestDir creates a temporary directory with basic folio structure.

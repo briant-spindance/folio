@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/briantol/folio/internal/logging"
-	foliomdns "github.com/briantol/folio/internal/mdns"
-	"github.com/briantol/folio/internal/server"
-	"github.com/briantol/folio/internal/store"
+	"github.com/briant-spindance/folio/internal/logging"
+	foliomdns "github.com/briant-spindance/folio/internal/mdns"
+	"github.com/briant-spindance/folio/internal/server"
+	"github.com/briant-spindance/folio/internal/store"
 	"github.com/spf13/cobra"
 )
 

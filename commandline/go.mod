@@ -1,4 +1,4 @@
-module github.com/briantol/folio
+module github.com/briant-spindance/folio
 
 go 1.25.4
 
