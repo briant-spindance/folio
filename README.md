@@ -1,6 +1,6 @@
 # Forge
 
-A project management tool that stores features, plans, issues, and docs as markdown files on disk — designed for teams working with AI agents. Forge provides a web UI for managing context and a CLI for agent integration.
+An experimental, local-first project management tool that stores features, plans, issues, and docs as markdown files on disk — designed for teams working with AI agents. Forge provides a web UI for managing context and a CLI for agent integration.
 
 ## Philosophy
 
@@ -26,7 +26,7 @@ A project management tool that stores features, plans, issues, and docs as markd
 
 ## Data Model
 
-All data lives under a single project directory (`./forge` by default):
+All data lives under a single directory (`./forge` by default) within the overall project:
 
 ```
 forge/
