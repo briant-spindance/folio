@@ -18,7 +18,7 @@ An experimental, local-first project management tool that stores features, plans
 
 **Files, not databases.** All project data is stored as plain markdown files with YAML frontmatter. No database to set up, migrate, or back up. The filesystem is the source of truth, and your data is always readable, grep-able, and diffable.
 
-**Orthogonal by design.** Folio is not an IDE, not an agent harness, not version control, and not a communication tool. It is intended to complement these tools — not replace them. It works alongside git, editors, CI/CD, Slack, and whatever agent framework you prefer.
+**Complementary, not competing.** Folio is not an IDE, not an agent harness, not version control, and not a communication tool. It is intended to complement these tools — not replace them. It works alongside git, editors, CI/CD, Slack, and whatever agent framework you prefer.
 
 **A single binary.** One Go binary provides a web interface for managing context documents and is designed to also serve as a CLI tool for agents.
 
@@ -51,6 +51,14 @@ folio/
 └── wiki/                   # Rolling knowledge base
     └── page-name.md
 ```
+
+- `folio.yaml` configures the project name, version, and workflow. The workflow defines the set of states a feature moves through (e.g., `draft`, `ready`, `in-progress`, `review`, `done`) and which state new features start in.
+- **Project docs** in `project-docs/` are read-only evergreen documents (project brief, design system, API spec, conventions) that provide stable context for the team and for AI agents.
+- `team.md` is a team roster. Frontmatter lists each member's name, role, and optional GitHub handle. Member names are used when assigning people to features and issues.
+- `roadmap.md` defines a kanban-style roadmap board. Frontmatter describes the board's columns (default: `now`, `next`, `later`), optional swim-lane rows, and cards. Cards can be linked to features so the roadmap stays connected to the backlog.
+- **Features** are the core work artifact. Each feature gets its own directory under `features/`, with a `FEATURE.md` containing YAML frontmatter (title, status, priority, assignees, points, sprint, tags) and a markdown body that serves as the feature spec. An optional `PLAN.md` describes how to build it. The directory can also hold supporting artifacts — diagrams, mockups, JSON fixtures, or any other relevant files.
+- **Issues** follow the same pattern under `issues/`. Each `ISSUE.md` has frontmatter for title, status (`open`, `in-progress`, `closed`), type (`bug`, `task`, `improvement`, `chore`), priority, assignees, and an optional link to a parent feature. The body holds the description, reproduction steps, or analysis.
+- **Wiki pages** are standalone markdown files in `wiki/` for rolling knowledge — architecture decisions, onboarding guides, retrospective notes. Each page has a title, optional icon, and auto-generated description.
 
 ## Frontend
 
