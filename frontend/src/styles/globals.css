@@ -4013,6 +4013,7 @@ body.ai-resizing {
   display: flex;
   align-items: center;
   gap: 4px;
+  order: 3;
 }
 
 .features-pagination-ellipsis {
@@ -4027,6 +4028,7 @@ body.ai-resizing {
 .features-pagination-size {
   font-size: 0.75rem;
   color: var(--foreground-muted);
+  order: 2;
 }
 
 .features-pagination-size label {
