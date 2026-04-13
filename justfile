@@ -54,6 +54,40 @@ test-frontend:
 test-watch:
     cd frontend && pnpm test:watch
 
+# ── Coverage ──────────────────────────────────────────────────────
+
+# Generate combined coverage report (Go + frontend)
+coverage: coverage-go coverage-frontend
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p coverage/combined
+    # Prefix frontend LCOV paths with frontend/ for the combined report
+    sed 's|^SF:src/|SF:frontend/src/|' coverage/frontend/lcov.info > coverage/combined/frontend.lcov
+    cp coverage/go/lcov.info coverage/combined/go.lcov
+    # Merge and generate combined HTML report
+    lcov -a coverage/combined/go.lcov -a coverage/combined/frontend.lcov \
+         -o coverage/combined/merged.lcov --ignore-errors inconsistent
+    genhtml coverage/combined/merged.lcov -o coverage/combined/html \
+            --ignore-errors inconsistent,category
+    echo ""
+    echo "Coverage reports:"
+    echo "  Go:       coverage/go/index.html"
+    echo "  Frontend: coverage/frontend/index.html"
+    echo "  Combined: coverage/combined/html/index.html"
+
+# Generate Go test coverage report
+coverage-go:
+    mkdir -p coverage/go
+    cd commandline && go test ./... -coverprofile=../coverage/go/coverage.out
+    cd commandline && go tool cover -html=../coverage/go/coverage.out -o ../coverage/go/index.html
+    cd commandline && ~/go/bin/gcov2lcov -infile=../coverage/go/coverage.out -outfile=../coverage/go/lcov.info
+    @echo "Go coverage report: coverage/go/index.html"
+
+# Generate frontend test coverage report
+coverage-frontend:
+    cd frontend && pnpm vitest run --coverage
+    @echo "Frontend coverage report: coverage/frontend/index.html"
+
 # ── Linting ───────────────────────────────────────────────────────
 
 # Run all linters
@@ -74,6 +108,7 @@ clean:
     rm -f commandline/folio
     rm -rf commandline/cmd/folio/dist
     rm -rf frontend/dist
+    rm -rf coverage
 
 # ── Shortcuts ─────────────────────────────────────────────────────
 

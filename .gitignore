@@ -9,9 +9,11 @@ dist/
 
 # build outputs
 frontend/dist/
-api/dist/
 commandline/folio
 commandline/cmd/folio/dist/
+
+# coverage reports
+coverage/
 
 # editor
 .DS_Store
