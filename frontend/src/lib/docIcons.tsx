@@ -17,7 +17,7 @@ import type { ReactNode } from "react"
 
 // ── kebab-case → PascalCase ───────────────────────────────────────
 
-function toPascalCase(kebab: string): string {
+export function toPascalCase(kebab: string): string {
   return kebab
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -51,7 +51,7 @@ export function docIcon(name: string | null | undefined, size = 16): ReactNode {
 
 // Build the list once at module init time. Filter to base names only
 // (no *Icon aliases) and convert to kebab-case.
-function pascalToKebab(pascal: string): string {
+export function pascalToKebab(pascal: string): string {
   return pascal
     .replace(/([A-Z])/g, (_, c, i) => (i === 0 ? c.toLowerCase() : "-" + c.toLowerCase()))
 }

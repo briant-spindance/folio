@@ -70,29 +70,33 @@ In development, the frontend runs as a separate Vite dev server and proxies API 
 
 - **Go** 1.21+
 - **Node.js** 20+ and **pnpm** 9+ (for building the frontend)
+- **[just](https://github.com/casey/just)** command runner
 
-### Development
-
-Build and run in dev mode (frontend served from disk, logs to console):
+### Quick Start
 
 ```bash
-cd commandline
-make dev
+just install        # Install all dependencies (pnpm + Go modules)
+just dev            # Start Go backend + Vite frontend dev server
 ```
 
-This builds the Go binary and starts the server at `http://localhost:2600`, pointing at `testdata/forge` for sample data and `frontend/dist` for the UI.
+The dev server starts at `http://localhost:5173` (Vite, proxying API to Go on port 2600), using `testdata/forge` for sample data.
+
+### Common Commands
+
+Run `just` with no arguments to see all available recipes. Key commands:
+
+```bash
+just test           # Run all tests (Go + frontend)
+just lint           # Run all linters (ESLint + go vet)
+just build          # Full production build (frontend + Go binary with embedded SPA)
+just clean          # Clean all build artifacts
+```
+
+Individual targets are also available: `just test-go`, `just test-frontend`, `just build-frontend`, `just build-go`, etc.
 
 ### Production Build
 
-Build a single self-contained binary with the frontend embedded:
-
-```bash
-cd frontend && pnpm install && pnpm build && cd ..
-cd commandline
-make prod
-```
-
-The resulting `forge` binary can be deployed anywhere — no Node.js runtime required.
+`just build` produces a single self-contained Go binary with the frontend embedded. No Node.js runtime required at deploy time.
 
 ### Running
 
@@ -142,8 +146,8 @@ forge web
 
 ### Logging
 
-- **Dev builds** (`make build`): Logs are written to the console (stderr).
-- **Production builds** (`make prod`): Logs are written to `~/.local/forge/logs/forge.log`. Override with `--log-dir`.
+- **Dev mode** (`just dev`): Logs are written to the console (stderr).
+- **Production builds** (`just build`): The resulting binary logs to `~/.local/forge/logs/forge.log`. Override with `--log-dir`.
 
 ## License
 
