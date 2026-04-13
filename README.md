@@ -83,16 +83,34 @@ The dev server starts at `http://localhost:5173` (Vite, proxying API to Go on po
 
 ### Common Commands
 
-Run `just` with no arguments to see all available recipes. Key commands:
+Run `just` with no arguments to see all available recipes.
 
-```bash
-just test           # Run all tests (Go + frontend)
-just lint           # Run all linters (ESLint + go vet)
-just build          # Full production build (frontend + Go binary with embedded SPA)
-just clean          # Clean all build artifacts
-```
-
-Individual targets are also available: `just test-go`, `just test-frontend`, `just build-frontend`, `just build-go`, etc.
+| Recipe | Description |
+|--------|-------------|
+| **Dependencies** | |
+| `just install` | Install all dependencies (pnpm + Go modules) |
+| **Development** | |
+| `just dev` | Start Go backend + Vite frontend dev server |
+| **Building** | |
+| `just build` | Full production build (frontend + Go binary with embedded SPA) |
+| `just build-frontend` | Build the frontend only |
+| `just build-go` | Build the Go binary (dev mode, no embedded frontend) |
+| `just prod` | Full production build from scratch (install + build) |
+| **Testing** | |
+| `just test` | Run all tests (Go + frontend) |
+| `just test-go` | Run Go tests only |
+| `just test-frontend` | Run frontend tests only |
+| `just test-watch` | Run frontend tests in watch mode |
+| **Coverage** | |
+| `just coverage` | Generate combined coverage report (Go + frontend) |
+| `just coverage-go` | Generate Go coverage report only |
+| `just coverage-frontend` | Generate frontend coverage report only |
+| **Linting** | |
+| `just lint` | Run all linters (ESLint + go vet) |
+| `just lint-frontend` | Run frontend ESLint only |
+| `just lint-go` | Run Go vet only |
+| **Cleanup** | |
+| `just clean` | Clean all build artifacts and coverage reports |
 
 ### Production Build
 
