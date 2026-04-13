@@ -184,10 +184,10 @@ export function Dashboard() {
             {data.topFeatures.map((f, i) => (
               <tr key={f.slug}>
                 <td>
-                  <div className="feature-name-cell">
+                  <Link className="feature-name-cell" to={`/features/${f.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
                     <span className="feature-position">{i + 1}</span>
                     <span className="feature-name">{f.title}</span>
-                  </div>
+                  </Link>
                 </td>
                 <td><StatusBadge status={f.status} /></td>
                 <td className="feature-assignee">{f.assignees?.length ? f.assignees.join(", ") : "—"}</td>
@@ -219,7 +219,7 @@ export function Dashboard() {
           <tbody>
             {data.openIssues.map((issue) => (
               <tr key={issue.slug}>
-                <td className="issue-name">{issue.title}</td>
+                <td><Link className="issue-name" to={`/issues/${issue.slug}`} style={{ textDecoration: "none", color: "inherit" }}>{issue.title}</Link></td>
                 <td><StatusBadge status={issue.status} /></td>
                 <td>
                   <div className="issue-labels">
