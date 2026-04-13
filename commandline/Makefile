@@ -15,7 +15,7 @@ build-embed:
 
 # Run in dev mode pointing at testdata
 dev: build
-	./forge --data ../testdata/forge --static ../frontend/dist
+	./forge web --data ../testdata/forge --static ../frontend/dist
 
 # Run tests
 test:
