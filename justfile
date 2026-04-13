@@ -30,18 +30,22 @@ build-frontend:
 version := `git describe --tags --always --dirty 2>/dev/null || echo "dev"`
 commit  := `git rev-parse --short HEAD 2>/dev/null || echo "unknown"`
 date    := `date -u +%Y-%m-%dT%H:%M:%SZ`
-ldflags := "-X github.com/briant-spindance/folio/cmd/folio/cmd.Version=" + version + " -X github.com/briant-spindance/folio/cmd/folio/cmd.Commit=" + commit + " -X github.com/briant-spindance/folio/cmd/folio/cmd.Date=" + date
+ldflags := "-s -w -X github.com/briant-spindance/folio/cmd/folio/cmd.Version=" + version + " -X github.com/briant-spindance/folio/cmd/folio/cmd.Commit=" + commit + " -X github.com/briant-spindance/folio/cmd/folio/cmd.Date=" + date
 
 # Build the Go binary (dev mode, no embedded frontend)
 build-go:
-    cd commandline && go build -ldflags '{{ldflags}}' -o folio ./cmd/folio/
+    cd commandline && CGO_ENABLED=0 go build -trimpath -ldflags '{{ldflags}}' -o folio ./cmd/folio/
 
-# Full production build: frontend + Go binary with embedded frontend
+# Full production build: frontend + skills + commands + Go binary with embedded assets
 build: build-frontend
-    cd commandline && rm -rf cmd/folio/dist
+    cd commandline && rm -rf cmd/folio/dist cmd/folio/skills cmd/folio/commands
     cp -r frontend/dist commandline/cmd/folio/dist
-    cd commandline && go build -tags embed -ldflags '{{ldflags}}' -o folio ./cmd/folio/
-    rm -rf commandline/cmd/folio/dist
+    cp -r skills commandline/cmd/folio/skills
+    cp -r commands commandline/cmd/folio/commands
+    # Pre-compress frontend assets for smaller binary (gzip replaces originals)
+    find commandline/cmd/folio/dist -type f \( -name "*.js" -o -name "*.css" -o -name "*.svg" \) -exec gzip -9 {} \;
+    cd commandline && CGO_ENABLED=0 go build -tags 'embed embed_skills embed_commands' -trimpath -ldflags '{{ldflags}}' -o folio ./cmd/folio/
+    rm -rf commandline/cmd/folio/dist commandline/cmd/folio/skills commandline/cmd/folio/commands
 
 # ── Testing ───────────────────────────────────────────────────────
 
@@ -113,6 +117,8 @@ lint-go:
 clean:
     rm -f commandline/folio
     rm -rf commandline/cmd/folio/dist
+    rm -rf commandline/cmd/folio/skills
+    rm -rf commandline/cmd/folio/commands
     rm -rf frontend/dist
     rm -rf coverage
 
