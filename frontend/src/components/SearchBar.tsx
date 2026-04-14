@@ -13,7 +13,7 @@ const TYPE_LABELS: Record<SearchResult["type"], string> = {
 
 function resultPath(r: SearchResult, query: string): string {
   const q = encodeURIComponent(query)
-  if (r.type === "wiki") return `/docs/${r.slug}?q=${q}`
+  if (r.type === "wiki") return `/wiki/${r.slug}?q=${q}`
   if (r.type === "feature") return `/features/${r.slug}?q=${q}`
   return `/issues/${r.slug}?q=${q}`
 }

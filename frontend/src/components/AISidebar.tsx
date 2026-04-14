@@ -383,9 +383,9 @@ function RoadmapAISidebar({ open, onClose }: { open: boolean; onClose: () => voi
 export function AISidebar({ open, onClose }: AISidebarProps) {
   const location = useLocation()
 
-  // Match /docs/:slug OR /docs/:slug/edit
-  const docMatch = location.pathname.match(/^\/docs\/([^/]+?)(?:\/edit)?$/)
-  const slug = docMatch?.[1]
+  // Match /docs/:slug, /docs/:slug/edit, /wiki/:slug, or /wiki/:slug/edit
+  const docMatch = location.pathname.match(/^\/(docs|wiki)\/([^/]+?)(?:\/edit)?$/)
+  const slug = docMatch?.[2]
   const isRoadmap = location.pathname === "/roadmap"
 
   if (slug) {

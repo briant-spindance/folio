@@ -265,24 +265,28 @@ export function Dashboard() {
             </Link>
           }
         />
-        {data.recent_docs.length === 0 ? (
+        {(!data.recent_wiki || data.recent_wiki.length === 0) ? (
           <div className="dashboard-empty">
             <span>No wiki pages yet.</span>
-            <Link className="dashboard-empty-action" to="/wiki">Create a page</Link>
+            <Link className="dashboard-empty-action" to="/wiki/new">Create a page</Link>
           </div>
         ) : (
           <table className="wiki-table">
             <thead>
               <tr>
                 <th>Page</th>
-                <th>Changed by</th>
+                <th>Description</th>
                 <th style={{ textAlign: "right" }}>Modified</th>
               </tr>
             </thead>
             <tbody>
-              {data.recent_docs.slice(0, 5).map((doc) => (
-                <tr key={doc.slug} onClick={() => {}} style={{ cursor: "pointer" }}>
-                  <td className="wiki-page-name">{doc.title}</td>
+              {data.recent_wiki.slice(0, 5).map((doc) => (
+                <tr key={doc.slug}>
+                  <td className="wiki-page-name">
+                    <Link to={`/wiki/${doc.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                      {doc.title}
+                    </Link>
+                  </td>
                   <td className="wiki-author">{doc.description ?? "—"}</td>
                   <td className="wiki-modified">{formatModified(doc.updated_at)}</td>
                 </tr>

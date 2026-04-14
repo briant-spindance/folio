@@ -49,6 +49,11 @@ func (h *WikiHandler) get(w http.ResponseWriter, r *http.Request) {
 		JSON(w, 404, map[string]interface{}{"error": "Document not found", "slug": slug})
 		return
 	}
+	// Attach backlinks (pages that link to this doc)
+	doc.Backlinks = h.wiki.Backlinks(slug)
+	if doc.Backlinks == nil {
+		doc.Backlinks = []model.BacklinkRef{}
+	}
 	JSON(w, 200, doc)
 }
 

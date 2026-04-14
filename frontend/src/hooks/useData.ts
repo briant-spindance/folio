@@ -108,7 +108,7 @@ export function useCreateWikiDoc() {
       qc.setQueryData(["wiki", doc.slug], doc)
       qc.invalidateQueries({ queryKey: ["wiki"] })
       qc.invalidateQueries({ queryKey: ["status"] })
-      navigate(`/docs/${doc.slug}`)
+      navigate(`/wiki/${doc.slug}`)
     },
   })
 }
@@ -121,7 +121,7 @@ export function useDeleteWikiDoc() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["wiki"] })
       qc.invalidateQueries({ queryKey: ["status"] })
-      navigate("/docs")
+      navigate("/wiki")
     },
   })
 }

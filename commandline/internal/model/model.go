@@ -124,16 +124,24 @@ type PaginatedIssues struct {
 	TotalPages int     `json:"total_pages"`
 }
 
+// BacklinkRef identifies a wiki page that links to the current page.
+type BacklinkRef struct {
+	Slug  string `json:"slug"`
+	Title string `json:"title"`
+}
+
 // WikiDoc represents a wiki document stored on disk.
 type WikiDoc struct {
-	Slug        string  `json:"slug"`
-	Title       string  `json:"title"`
-	Description *string `json:"description"`
-	Icon        *string `json:"icon"`
-	UpdatedAt   string  `json:"updated_at"`
-	Body        string  `json:"body"`
-	Order       int     `json:"order"`
-	Dirty       bool    `json:"dirty"`
+	Slug        string        `json:"slug"`
+	Title       string        `json:"title"`
+	Description *string       `json:"description"`
+	Icon        *string       `json:"icon"`
+	Aliases     []string      `json:"aliases"`
+	UpdatedAt   string        `json:"updated_at"`
+	Body        string        `json:"body"`
+	Order       int           `json:"order"`
+	Dirty       bool          `json:"dirty"`
+	Backlinks   []BacklinkRef `json:"backlinks,omitempty"`
 }
 
 // PaginatedWikiDocs is a paginated list response.

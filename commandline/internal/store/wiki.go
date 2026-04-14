@@ -42,9 +42,13 @@ func (s *WikiStore) readDoc(slug string) (*model.WikiDoc, error) {
 		Slug:      slug,
 		Title:     frontmatter.GetString(doc.Data, "title"),
 		Icon:      frontmatter.GetStringPtr(doc.Data, "icon"),
+		Aliases:   frontmatter.GetStringSlice(doc.Data, "aliases"),
 		UpdatedAt: frontmatter.GetString(doc.Data, "modified"),
 		Body:      doc.Body,
 		Order:     frontmatter.GetInt(doc.Data, "order"),
+	}
+	if d.Aliases == nil {
+		d.Aliases = []string{}
 	}
 
 	// Description: use frontmatter value or auto-generate excerpt
@@ -248,6 +252,45 @@ func (s *WikiStore) Delete(slug string) bool {
 	}
 	os.Remove(mdPath)
 	return true
+}
+
+// wikilinkPattern matches [[slug]] and [[slug|display text]] in markdown.
+var wikilinkPattern = regexp.MustCompile(`\[\[([^\]|]+?)(?:\|[^\]]+?)?\]\]`)
+
+// Backlinks finds all wiki pages that link to the given slug or its aliases.
+func (s *WikiStore) Backlinks(slug string) []model.BacklinkRef {
+	target := s.Get(slug)
+	if target == nil {
+		return nil
+	}
+
+	// Build a set of identifiers for the target page (slug + aliases)
+	targets := make(map[string]bool)
+	targets[slug] = true
+	for _, alias := range target.Aliases {
+		targets[alias] = true
+	}
+
+	all := s.ListAll()
+	var refs []model.BacklinkRef
+
+	for _, doc := range all {
+		if doc.Slug == slug {
+			continue
+		}
+		matches := wikilinkPattern.FindAllStringSubmatch(doc.Body, -1)
+		for _, m := range matches {
+			linkTarget := strings.TrimSpace(m[1])
+			if targets[linkTarget] {
+				refs = append(refs, model.BacklinkRef{
+					Slug:  doc.Slug,
+					Title: doc.Title,
+				})
+				break // only add each page once
+			}
+		}
+	}
+	return refs
 }
 
 // Reorder sets order for the given slugs.

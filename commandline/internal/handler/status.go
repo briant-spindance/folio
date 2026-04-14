@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -37,6 +38,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	issues := h.issues.List(issueListAll())
 	team := h.team.List()
 	roadmap := h.roadmap.Get()
+	wikiDocs := h.wiki.ListAll()
 
 	// by_status
 	byStatus := map[string]int{}
@@ -70,6 +72,36 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			entry["icon"] = nil
 		}
 		recentDocs = append(recentDocs, entry)
+	}
+
+	// recent_wiki (up to 6, sorted by modified date descending)
+	recentWiki := make([]map[string]interface{}, 0)
+	// Sort wiki docs by modified date (most recent first)
+	sort.SliceStable(wikiDocs, func(i, j int) bool {
+		return wikiDocs[i].UpdatedAt > wikiDocs[j].UpdatedAt
+	})
+	wikiLimit := 6
+	if len(wikiDocs) < wikiLimit {
+		wikiLimit = len(wikiDocs)
+	}
+	for _, d := range wikiDocs[:wikiLimit] {
+		entry := map[string]interface{}{
+			"slug":       d.Slug,
+			"title":      d.Title,
+			"updated_at": d.UpdatedAt,
+		}
+		if d.Description != nil {
+			entry["description"] = *d.Description
+		} else {
+			entry["description"] = nil
+		}
+		if d.Icon != nil {
+			entry["icon"] = *d.Icon
+		} else {
+			entry["icon"] = nil
+		}
+		entry["dirty"] = d.Dirty
+		recentWiki = append(recentWiki, entry)
 	}
 
 	// top_features (up to 10)
@@ -156,6 +188,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"by_status":     byStatus,
 		"active_sprint": activeSprint,
 		"recent_docs":   recentDocs,
+		"recent_wiki":   recentWiki,
 		"top_features":  topFeatures,
 		"open_issues":   openIssues,
 		"team":          teamResult,

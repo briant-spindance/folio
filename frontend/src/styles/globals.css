@@ -5454,3 +5454,120 @@ body.ai-resizing {
     display: none;
   }
 }
+
+/* ================================================================
+   WIKI — wikilinks, backlinks, modal, delete button
+   ================================================================ */
+
+/* Wikilinks — rendered as internal links */
+.wikilink {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.wikilink:hover {
+  text-decoration-color: var(--primary);
+  opacity: 0.8;
+}
+
+/* Broken wikilinks — target page doesn't exist */
+.wikilink--broken {
+  color: var(--status-error);
+  text-decoration-style: dashed;
+  text-decoration-color: var(--status-error);
+  opacity: 0.75;
+}
+
+.wikilink--broken:hover {
+  opacity: 1;
+}
+
+/* Backlinks section at bottom of wiki detail */
+.backlinks-section {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.backlinks-heading {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.backlinks-heading svg {
+  opacity: 0.6;
+}
+
+.backlinks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.backlinks-list li {
+  margin: 0;
+}
+
+.backlinks-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: background 100ms, border-color 100ms;
+}
+
+.backlinks-link:hover {
+  background: var(--accent);
+  border-color: var(--border-strong);
+}
+
+/* Delete confirmation modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+  padding: 20px 24px;
+  width: 400px;
+  max-width: 90vw;
+}
+
+/* Danger outline button variant */
+.btn-danger-outline {
+  color: var(--status-error);
+  border-color: var(--border);
+}
+
+.btn-danger-outline:hover:not(:disabled) {
+  border-color: var(--status-error);
+  background: hsla(0, 70%, 50%, 0.05);
+}

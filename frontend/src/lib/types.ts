@@ -39,15 +39,22 @@ export interface DocSummary {
   dirty?: boolean
 }
 
+export interface BacklinkRef {
+  slug: string
+  title: string
+}
+
 export interface WikiDocDetail {
   slug: string
   title: string
   description: string | null
   icon: string | null
+  aliases: string[]
   updated_at: string | null
   body: string
   order?: number
   dirty?: boolean
+  backlinks?: BacklinkRef[]
 }
 
 export interface PaginatedDocs {
@@ -224,6 +231,7 @@ export interface StatusResponse {
   by_status: Record<string, number>
   active_sprint?: string
   recent_docs: DocSummary[]
+  recent_wiki: DocSummary[]
   top_features: FeatureSummary[]
   open_issues: IssueSummary[]
   team: TeamMember[]

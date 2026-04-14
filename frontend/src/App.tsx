@@ -18,6 +18,10 @@ const IssuesDetail = lazy(() => import("@/pages/IssuesDetail").then(m => ({ defa
 const IssuesEdit = lazy(() => import("@/pages/IssuesEdit").then(m => ({ default: m.IssuesEdit })))
 const IssuesNew = lazy(() => import("@/pages/IssuesNew").then(m => ({ default: m.IssuesNew })))
 const IssueArtifactView = lazy(() => import("@/pages/IssueArtifactView").then(m => ({ default: m.IssueArtifactView })))
+const WikiList = lazy(() => import("@/pages/WikiList").then(m => ({ default: m.WikiList })))
+const WikiDetail = lazy(() => import("@/pages/WikiDetail").then(m => ({ default: m.WikiDetail })))
+const WikiEdit = lazy(() => import("@/pages/WikiEdit").then(m => ({ default: m.WikiEdit })))
+const WikiNew = lazy(() => import("@/pages/WikiNew").then(m => ({ default: m.WikiNew })))
 const StubPage = lazy(() => import("@/pages/StubPage").then(m => ({ default: m.StubPage })))
 const HelpIndex = lazy(() => import("@/pages/HelpIndex").then(m => ({ default: m.HelpIndex })))
 const HelpArticle = lazy(() => import("@/pages/HelpArticle").then(m => ({ default: m.HelpArticle })))
@@ -54,7 +58,10 @@ export default function App() {
               <Route path="/issues/:slug/artifacts/:filename" element={<IssueArtifactView />} />
               <Route path="/issues/:slug" element={<IssuesDetail />} />
               <Route path="/sprints" element={<StubPage title="Sprints" />} />
-              <Route path="/wiki" element={<StubPage title="Wiki" />} />
+              <Route path="/wiki/new" element={<WikiNew />} />
+              <Route path="/wiki/:slug/edit" element={<WikiEdit />} />
+              <Route path="/wiki/:slug" element={<WikiDetail />} />
+              <Route path="/wiki" element={<WikiList />} />
               <Route path="/review" element={<StubPage title="Review Tools" />} />
               <Route path="/configuration" element={<StubPage title="Configuration" />} />
               <Route path="/help" element={<HelpIndex />} />
