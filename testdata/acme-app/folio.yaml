@@ -1,0 +1,5 @@
+project: Acme App
+version: "0.1.0"
+workflow:
+  states: [backlog, todo, in-progress, review, done]
+  default: backlog

@@ -4,6 +4,12 @@ import { DefaultChatTransport } from "ai"
 import type { UIMessage } from "ai"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { getActiveProjectSlug } from "@/lib/api"
+
+function aiApiPrefix(): string {
+  const slug = getActiveProjectSlug()
+  return slug ? `/api/projects/${slug}` : "/api"
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,7 +66,7 @@ interface Session {
 
 async function apiFetchSessions(contextKey: string): Promise<Session[]> {
   try {
-    const res = await fetch(`/api/ai-sessions/${encodeURIComponent(contextKey)}`)
+    const res = await fetch(`${aiApiPrefix()}/ai-sessions/${encodeURIComponent(contextKey)}`)
     if (!res.ok) return []
     return res.json()
   } catch {
@@ -71,7 +77,7 @@ async function apiFetchSessions(contextKey: string): Promise<Session[]> {
 async function apiSaveSession(contextKey: string, session: Omit<Session, "id"> & { id?: string }): Promise<string> {
   const id = session.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
   try {
-    await fetch(`/api/ai-sessions/${encodeURIComponent(contextKey)}`, {
+    await fetch(`${aiApiPrefix()}/ai-sessions/${encodeURIComponent(contextKey)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...session, id }),
@@ -84,7 +90,7 @@ async function apiSaveSession(contextKey: string, session: Omit<Session, "id"> &
 
 async function apiDeleteSession(contextKey: string, id: string): Promise<void> {
   try {
-    await fetch(`/api/ai-sessions/${encodeURIComponent(contextKey)}/${encodeURIComponent(id)}`, {
+    await fetch(`${aiApiPrefix()}/ai-sessions/${encodeURIComponent(contextKey)}/${encodeURIComponent(id)}`, {
       method: "DELETE",
     })
   } catch {
@@ -160,7 +166,7 @@ export function AIChatPanel({
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: "/api/chat",
+        api: `${aiApiPrefix()}/chat`,
         body: { context, model: selectedModel },
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps

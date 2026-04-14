@@ -67,6 +67,8 @@ folio web
 
 This starts the Folio web server on port 2600. Open [http://localhost:2600](http://localhost:2600) in your browser to see the dashboard.
 
+If this is your first time running Folio, it will create `~/.local/folio/` and offer to register the local `./folio` directory in your project list. Folio can manage multiple projects from a single server -- see [CLI Reference](/help/cli) for the `folio projects` commands.
+
 You can customize the port or data directory:
 
 ```bash

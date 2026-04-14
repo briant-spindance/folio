@@ -36,12 +36,13 @@ folio init --json                   # JSON output
 
 ## folio web
 
-Starts the web server, serving the API and the embedded frontend SPA.
+Starts the web server, serving the API and the embedded frontend SPA. On first run, Folio creates `~/.local/folio/` and an empty `project-list.yaml` if they don't exist. If a `./folio` directory is found in the current working directory that isn't already registered, Folio will prompt to add it to the project list.
 
 ```bash
 folio web                           # Start on port 2600, data from ./folio
 folio web --port 8080               # Custom port
-folio web --data /path/to/project   # Custom data directory
+folio web --data /path/to/project   # Custom data directory (single-project mode)
+folio web --projects /path/to/list  # Custom project-list.yaml (skips ~/.local/folio)
 folio web --mdns                    # Advertise as folio.local via mDNS
 folio web --mdns=myproject          # Advertise as myproject.local
 ```
@@ -50,7 +51,53 @@ folio web --mdns=myproject          # Advertise as myproject.local
 |------|-------------|---------|
 | `--port` | Port to listen on | `2600` |
 | `--static` | Path to frontend dist directory | Embedded (production) |
+| `--projects` | Path to a custom project-list.yaml | `~/.local/folio/project-list.yaml` |
 | `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `folio.local` |
+
+## folio projects
+
+Commands for managing the project list. Alias: `folio project`.
+
+Folio supports multiple projects from a single server. Projects are tracked in `~/.local/folio/project-list.yaml` (or a custom path via `--projects`). The web UI shows a project switcher dropdown when two or more projects are registered.
+
+### List
+
+```bash
+folio projects list                 # List all registered projects
+folio projects --json list          # JSON output
+```
+
+Output shows each project's name, slug, path, and which is active (marked with `*`).
+
+### Add
+
+```bash
+folio projects add /path/to/folio          # Register a project
+folio projects add /path --name "My App"   # Register with a custom name
+folio projects --json add /path/to/folio   # JSON output
+```
+
+The path must be a directory containing a `folio.yaml` file. The project name is read from `folio.yaml` unless overridden with `--name`.
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `--name` | string | Override the project name (default: read from folio.yaml) |
+
+### Remove
+
+```bash
+folio projects remove <slug>
+```
+
+Removes a project from the project list. You cannot remove the currently active project -- activate a different project first.
+
+### Activate
+
+```bash
+folio projects activate <slug>
+```
+
+Sets the active project. The active project is the default project loaded when the web UI starts.
 
 ## folio features
 

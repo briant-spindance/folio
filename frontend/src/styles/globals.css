@@ -106,6 +106,89 @@ body {
   color: var(--foreground);
 }
 
+/* ── Project Switcher ──────────────────────────────────────────────────── */
+
+.project-switcher {
+  position: relative;
+}
+
+.project-switcher-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: var(--foreground);
+  transition: background 0.15s;
+}
+
+.project-switcher-trigger:hover {
+  background: var(--surface);
+}
+
+.project-switcher-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.project-switcher-chevron {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.project-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  max-width: 320px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.project-switcher-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s;
+}
+
+.project-switcher-item:hover {
+  background: var(--surface);
+}
+
+.project-switcher-item.active {
+  background: var(--surface-inset);
+  font-weight: 500;
+}
+
+.project-switcher-item svg {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
 .top-header-right {
   display: flex;
   align-items: center;

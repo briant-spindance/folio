@@ -58,21 +58,69 @@ Note that issue statuses (`open`, `in-progress`, `closed`) are separate and not 
 
 Folio looks for project data in a `folio/` directory. The location is determined by (in order of precedence):
 
-1. **`--data` flag** -- Pass explicitly on any command
-2. **`FOLIO_DATA` environment variable** -- Set once for your session or shell profile
-3. **Default** -- `./folio` relative to the current working directory
+1. **`--data` flag** -- Pass explicitly on any command (single-project mode)
+2. **`FOLIO_DATA` environment variable** -- Set once for your session or shell profile (single-project mode)
+3. **Project list** -- `~/.local/folio/project-list.yaml` for managing multiple projects
+4. **Default** -- `./folio` relative to the current working directory
 
 ```bash
-# Using the flag
+# Using the flag (single-project mode)
 folio web --data /path/to/my-project/folio
 
-# Using the environment variable
+# Using the environment variable (single-project mode)
 export FOLIO_DATA=/path/to/my-project/folio
 folio web
 
 # Using the default (./folio)
 cd /path/to/my-project
 folio web
+```
+
+## Multi-Project Support
+
+Folio can serve multiple projects from a single server. Projects are tracked in `~/.local/folio/project-list.yaml`:
+
+```yaml
+active: my-project
+projects:
+  - name: my-project
+    path: /path/to/my-project/folio
+  - name: another-project
+    path: /other/path/folio
+```
+
+### Managing Projects
+
+Use `folio projects` to manage the project list:
+
+```bash
+folio projects list                      # Show all registered projects
+folio projects add /path/to/folio        # Register a project
+folio projects add /path --name "My App" # Register with a custom name
+folio projects remove my-project         # Remove a project
+folio projects activate my-project       # Set the active project
+```
+
+### Discovery
+
+When `folio web` starts:
+
+1. It checks for a `./folio` directory in the current working directory
+2. It reads projects from `~/.local/folio/project-list.yaml`
+3. If a local `./folio` directory is found that isn't already registered, Folio prompts to add it (or logs a suggestion in non-interactive mode)
+
+On first run, `~/.local/folio/` is created automatically.
+
+### Project Switcher
+
+When two or more projects are registered, the web UI header shows a project switcher dropdown. Selecting a different project hot-swaps all data and navigates to the dashboard. The active project selection is persisted in `project-list.yaml`.
+
+### Custom Project List Path
+
+Use `--projects` to specify an alternative project list file. When this flag is set, `~/.local/folio/project-list.yaml` is ignored entirely:
+
+```bash
+folio web --projects /path/to/my-list.yaml
 ```
 
 ## Team Roster
@@ -135,8 +183,9 @@ This is useful when running Folio on a shared development machine or NAS.
 |------|-------------|---------|
 | `--port` | Port to listen on | `2600` |
 | `--static` | Path to frontend dist directory (overrides embedded) | Embedded frontend |
+| `--projects` | Path to a custom project-list.yaml | `~/.local/folio/project-list.yaml` |
 | `--mdns` | Enable mDNS with optional hostname | Disabled |
-| `--data` | Path to Folio data directory | `./folio` |
+| `--data` | Path to Folio data directory (single-project mode) | `./folio` |
 | `--log-dir` | Override log file directory | `~/.local/folio/logs` |
 
 ## Production Build

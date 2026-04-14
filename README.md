@@ -52,6 +52,23 @@ folio/
     └── page-name.md
 ```
 
+Folio supports managing multiple projects from a single server. Projects are discovered from two sources:
+
+1. **Local directory** — A `./folio` directory relative to where `folio web` is run
+2. **Project list** — `~/.local/folio/project-list.yaml`, a persistent registry of known projects
+
+```yaml
+# ~/.local/folio/project-list.yaml
+active: my-project
+projects:
+  - name: my-project
+    path: /path/to/my-project/folio
+  - name: another-project
+    path: /other/path/folio
+```
+
+When multiple projects are registered, the web UI shows a project switcher dropdown in the header. Use `folio projects` to manage the project list from the CLI.
+
 - `folio.yaml` configures the project name, version, and workflow. The workflow defines the set of states a feature moves through (e.g., `draft`, `ready`, `in-progress`, `review`, `done`) and which state new features start in.
 - **Project docs** in `project-docs/` are read-only evergreen documents (project brief, design system, API spec, conventions) that provide stable context for the team and for AI agents.
 - `team.md` is a team roster. Frontmatter lists each member's name, role, and optional GitHub handle. Member names are used when assigning people to features and issues.
@@ -82,12 +99,13 @@ folio init --data /path/to/project  # Create at a specific path
 
 ### `folio web`
 
-Starts the web server, serving the API and the embedded frontend SPA.
+Starts the web server, serving the API and the embedded frontend SPA. On first run, Folio creates `~/.local/folio/` and an empty `project-list.yaml` if they don't exist. If a `./folio` directory is found in the current working directory that isn't already registered, Folio will prompt to add it to the project list (or log a message in non-interactive mode).
 
 ```bash
 folio web                           # Start on port 2600, data from ./folio
 folio web --port 8080               # Custom port
-folio web --data /path/to/project   # Custom data directory
+folio web --data /path/to/project   # Custom data directory (single-project mode)
+folio web --projects /path/to/list  # Custom project-list.yaml (skips ~/.local/folio)
 folio web --mdns                    # Advertise as folio.local via mDNS
 folio web --mdns=myproject          # Advertise as myproject.local
 ```
@@ -96,7 +114,21 @@ folio web --mdns=myproject          # Advertise as myproject.local
 |------|-------------|---------|
 | `--port` | Port to listen on | `2600` |
 | `--static` | Path to frontend dist directory | Embedded (production) |
+| `--projects` | Path to a custom project-list.yaml | `~/.local/folio/project-list.yaml` |
 | `--mdns` | Enable mDNS with optional hostname | Disabled; default hostname `folio.local` |
+
+### `folio projects`
+
+Commands for managing the project list. Alias: `folio project`. Projects are stored in `~/.local/folio/project-list.yaml` (or a custom path via `--projects`).
+
+```bash
+folio projects                       # List all registered projects
+folio projects list                  # Same as above
+folio projects add /path/to/folio    # Register a project directory
+folio projects add /path --name "My Project"  # Register with a custom name
+folio projects remove my-project     # Remove a project (cannot remove active)
+folio projects activate my-project   # Set the active project
+```
 
 ### `folio features`
 

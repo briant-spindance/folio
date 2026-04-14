@@ -10,9 +10,18 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/briant-spindance/folio/internal/registry"
 	"github.com/briant-spindance/folio/internal/server"
 	"github.com/briant-spindance/folio/internal/store"
 )
+
+// testProjectSlug is the slug used in test URLs.
+const testProjectSlug = "test"
+
+// apiPrefix returns the project-scoped API prefix for tests.
+func apiPrefix() string {
+	return "/api/projects/" + testProjectSlug
+}
 
 func setupTestServer(t *testing.T) (*httptest.Server, func()) {
 	t.Helper()
@@ -34,7 +43,16 @@ version: "0.1.0"
 `), 0644)
 
 	paths := store.NewPaths(dir)
-	router := server.New(paths, nil)
+	mgr := store.NewManager(paths)
+
+	// Create a registry with this single project.
+	// Use envDataDir to force single-project mode.
+	reg, err := registry.New("", dir)
+	if err != nil {
+		t.Fatalf("failed to create registry: %v", err)
+	}
+
+	router := server.New(reg, mgr, nil)
 	ts := httptest.NewServer(router)
 
 	return ts, func() { ts.Close() }
@@ -118,13 +136,32 @@ func doPatch(t *testing.T, ts *httptest.Server, path string, payload interface{}
 	return resp.StatusCode, result
 }
 
+// ── Projects ──────────────────────────────────────────────────────────────
+
+func TestProjectsEndpoint(t *testing.T) {
+	ts, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	status, body := doGet(t, ts, "/api/projects")
+	if status != 200 {
+		t.Fatalf("status: got %d", status)
+	}
+	projects, ok := body["projects"].([]interface{})
+	if !ok || len(projects) == 0 {
+		t.Fatal("expected at least one project")
+	}
+	if body["active"] == nil {
+		t.Error("missing active field")
+	}
+}
+
 // ── Status ─────────────────────────────────────────────────────────────────
 
 func TestStatusEndpoint(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
-	status, body := doGet(t, ts, "/api/status")
+	status, body := doGet(t, ts, apiPrefix()+"/status")
 	if status != 200 {
 		t.Fatalf("status: got %d", status)
 	}
@@ -151,8 +188,10 @@ func TestFeatureEndpoints(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
+	prefix := apiPrefix()
+
 	// Create
-	status, body := doPost(t, ts, "/api/features", map[string]interface{}{
+	status, body := doPost(t, ts, prefix+"/features", map[string]interface{}{
 		"title":    "Test Feature",
 		"body":     "Description",
 		"priority": "high",
@@ -168,7 +207,7 @@ func TestFeatureEndpoints(t *testing.T) {
 	}
 
 	// Get
-	status, body = doGet(t, ts, "/api/features/test-feature")
+	status, body = doGet(t, ts, prefix+"/features/test-feature")
 	if status != 200 {
 		t.Fatalf("get status: got %d", status)
 	}
@@ -177,7 +216,7 @@ func TestFeatureEndpoints(t *testing.T) {
 	}
 
 	// List
-	status, body = doGet(t, ts, "/api/features")
+	status, body = doGet(t, ts, prefix+"/features")
 	if status != 200 {
 		t.Fatalf("list status: got %d", status)
 	}
@@ -189,7 +228,7 @@ func TestFeatureEndpoints(t *testing.T) {
 	}
 
 	// Update
-	status, body = doPut(t, ts, "/api/features/test-feature", map[string]interface{}{
+	status, body = doPut(t, ts, prefix+"/features/test-feature", map[string]interface{}{
 		"status": "in-progress",
 		"tags":   []string{"api"},
 	})
@@ -201,13 +240,13 @@ func TestFeatureEndpoints(t *testing.T) {
 	}
 
 	// 404
-	status, _ = doGet(t, ts, "/api/features/nonexistent")
+	status, _ = doGet(t, ts, prefix+"/features/nonexistent")
 	if status != 404 {
 		t.Errorf("404 status: got %d", status)
 	}
 
 	// Delete
-	status, body = doDelete(t, ts, "/api/features/test-feature")
+	status, body = doDelete(t, ts, prefix+"/features/test-feature")
 	if status != 200 {
 		t.Fatalf("delete status: got %d", status)
 	}
@@ -216,7 +255,7 @@ func TestFeatureEndpoints(t *testing.T) {
 	}
 
 	// Verify deleted
-	status, _ = doGet(t, ts, "/api/features/test-feature")
+	status, _ = doGet(t, ts, prefix+"/features/test-feature")
 	if status != 404 {
 		t.Errorf("after delete: got %d", status)
 	}
@@ -227,7 +266,7 @@ func TestFeatureValidation(t *testing.T) {
 	defer cleanup()
 
 	// Empty title
-	status, body := doPost(t, ts, "/api/features", map[string]interface{}{"title": ""})
+	status, body := doPost(t, ts, apiPrefix()+"/features", map[string]interface{}{"title": ""})
 	if status != 422 {
 		t.Errorf("empty title status: got %d", status)
 	}
@@ -242,8 +281,10 @@ func TestIssueEndpoints(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
+	prefix := apiPrefix()
+
 	// Create
-	status, body := doPost(t, ts, "/api/issues", map[string]interface{}{
+	status, body := doPost(t, ts, prefix+"/issues", map[string]interface{}{
 		"title":    "Test Bug",
 		"type":     "bug",
 		"priority": "critical",
@@ -259,13 +300,13 @@ func TestIssueEndpoints(t *testing.T) {
 	}
 
 	// Get
-	status, body = doGet(t, ts, "/api/issues/test-bug")
+	status, body = doGet(t, ts, prefix+"/issues/test-bug")
 	if status != 200 {
 		t.Fatalf("get status: got %d", status)
 	}
 
 	// List
-	status, body = doGet(t, ts, "/api/issues")
+	status, body = doGet(t, ts, prefix+"/issues")
 	if status != 200 {
 		t.Fatalf("list status: got %d", status)
 	}
@@ -274,7 +315,7 @@ func TestIssueEndpoints(t *testing.T) {
 	}
 
 	// Update
-	status, body = doPut(t, ts, "/api/issues/test-bug", map[string]interface{}{
+	status, body = doPut(t, ts, prefix+"/issues/test-bug", map[string]interface{}{
 		"status": "closed",
 	})
 	if status != 200 {
@@ -282,7 +323,7 @@ func TestIssueEndpoints(t *testing.T) {
 	}
 
 	// Delete
-	status, _ = doDelete(t, ts, "/api/issues/test-bug")
+	status, _ = doDelete(t, ts, prefix+"/issues/test-bug")
 	if status != 200 {
 		t.Fatalf("delete status: got %d", status)
 	}
@@ -294,8 +335,10 @@ func TestWikiEndpoints(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
+	prefix := apiPrefix()
+
 	// Create with POST (auto slug)
-	status, body := doPost(t, ts, "/api/wiki", map[string]interface{}{
+	status, body := doPost(t, ts, prefix+"/wiki", map[string]interface{}{
 		"title": "Test Doc",
 		"body":  "Hello world",
 	})
@@ -307,7 +350,7 @@ func TestWikiEndpoints(t *testing.T) {
 	}
 
 	// Get
-	status, body = doGet(t, ts, "/api/wiki/test-doc")
+	status, body = doGet(t, ts, prefix+"/wiki/test-doc")
 	if status != 200 {
 		t.Fatalf("get status: got %d", status)
 	}
@@ -316,7 +359,7 @@ func TestWikiEndpoints(t *testing.T) {
 	}
 
 	// PUT (update)
-	status, body = doPut(t, ts, "/api/wiki/test-doc", map[string]interface{}{
+	status, body = doPut(t, ts, prefix+"/wiki/test-doc", map[string]interface{}{
 		"title": "Updated Doc",
 		"body":  "Updated body",
 	})
@@ -328,7 +371,7 @@ func TestWikiEndpoints(t *testing.T) {
 	}
 
 	// List (paginated)
-	status, body = doGet(t, ts, "/api/wiki")
+	status, body = doGet(t, ts, prefix+"/wiki")
 	if status != 200 {
 		t.Fatalf("list status: got %d", status)
 	}
@@ -343,7 +386,7 @@ func TestWikiEndpoints(t *testing.T) {
 	}
 
 	// Delete
-	status, _ = doDelete(t, ts, "/api/wiki/test-doc")
+	status, _ = doDelete(t, ts, prefix+"/wiki/test-doc")
 	if status != 200 {
 		t.Fatalf("delete status: got %d", status)
 	}
@@ -355,8 +398,10 @@ func TestRoadmapEndpoints(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
+	prefix := apiPrefix()
+
 	// Get default
-	status, body := doGet(t, ts, "/api/roadmap")
+	status, body := doGet(t, ts, prefix+"/roadmap")
 	if status != 200 {
 		t.Fatalf("get status: got %d", status)
 	}
@@ -366,7 +411,7 @@ func TestRoadmapEndpoints(t *testing.T) {
 	}
 
 	// Create card
-	status, body = doPost(t, ts, "/api/roadmap/cards", map[string]interface{}{
+	status, body = doPost(t, ts, prefix+"/roadmap/cards", map[string]interface{}{
 		"title":  "Test Card",
 		"notes":  "Some notes",
 		"column": "now",
@@ -384,7 +429,7 @@ func TestRoadmapEndpoints(t *testing.T) {
 	}
 
 	// Update card
-	status, body = doPut(t, ts, "/api/roadmap/cards/"+cardID, map[string]interface{}{
+	status, body = doPut(t, ts, prefix+"/roadmap/cards/"+cardID, map[string]interface{}{
 		"title": "Updated Card",
 	})
 	if status != 200 {
@@ -395,7 +440,7 @@ func TestRoadmapEndpoints(t *testing.T) {
 	}
 
 	// Add row
-	status, _ = doPost(t, ts, "/api/roadmap/rows", map[string]interface{}{
+	status, _ = doPost(t, ts, prefix+"/roadmap/rows", map[string]interface{}{
 		"label": "Backend",
 		"color": "#f0faf4",
 	})
@@ -404,7 +449,7 @@ func TestRoadmapEndpoints(t *testing.T) {
 	}
 
 	// Add column
-	status, body = doPost(t, ts, "/api/roadmap/columns", map[string]interface{}{
+	status, body = doPost(t, ts, prefix+"/roadmap/columns", map[string]interface{}{
 		"name": "backlog",
 	})
 	if status != 201 {
@@ -412,13 +457,13 @@ func TestRoadmapEndpoints(t *testing.T) {
 	}
 
 	// Delete card
-	status, _ = doDelete(t, ts, "/api/roadmap/cards/"+cardID)
+	status, _ = doDelete(t, ts, prefix+"/roadmap/cards/"+cardID)
 	if status != 200 {
 		t.Fatalf("delete card status: got %d", status)
 	}
 
 	// Card 404
-	status, _ = doPut(t, ts, "/api/roadmap/cards/nonexistent", map[string]interface{}{"title": "x"})
+	status, _ = doPut(t, ts, prefix+"/roadmap/cards/nonexistent", map[string]interface{}{"title": "x"})
 	if status != 404 {
 		t.Errorf("card 404: got %d", status)
 	}
@@ -430,11 +475,13 @@ func TestSearchEndpoint(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
-	// Create test data
-	doPost(t, ts, "/api/features", map[string]interface{}{"title": "Dashboard Analytics"})
-	doPost(t, ts, "/api/wiki", map[string]interface{}{"title": "Architecture", "body": "Dashboard design"})
+	prefix := apiPrefix()
 
-	status, body := doGet(t, ts, "/api/search?q=dashboard")
+	// Create test data
+	doPost(t, ts, prefix+"/features", map[string]interface{}{"title": "Dashboard Analytics"})
+	doPost(t, ts, prefix+"/wiki", map[string]interface{}{"title": "Architecture", "body": "Dashboard design"})
+
+	status, body := doGet(t, ts, prefix+"/search?q=dashboard")
 	if status != 200 {
 		t.Fatalf("search status: got %d", status)
 	}
@@ -447,7 +494,7 @@ func TestSearchEndpoint(t *testing.T) {
 	}
 
 	// Missing query
-	status, _ = doGet(t, ts, "/api/search")
+	status, _ = doGet(t, ts, prefix+"/search")
 	if status != 400 {
 		t.Errorf("missing query status: got %d", status)
 	}
@@ -459,7 +506,7 @@ func TestGitEndpoint(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
-	status, body := doGet(t, ts, "/api/git")
+	status, body := doGet(t, ts, apiPrefix()+"/git")
 	if status != 200 {
 		t.Fatalf("git status: got %d", status)
 	}
@@ -475,8 +522,10 @@ func TestSessionEndpoints(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
+	prefix := apiPrefix()
+
 	// List empty
-	resp, err := http.Get(ts.URL + "/api/ai-sessions/test-key")
+	resp, err := http.Get(ts.URL + prefix + "/ai-sessions/test-key")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -492,7 +541,7 @@ func TestSessionEndpoints(t *testing.T) {
 	}
 
 	// Upsert
-	status, result := doPut(t, ts, "/api/ai-sessions/test-key", map[string]interface{}{
+	status, result := doPut(t, ts, prefix+"/ai-sessions/test-key", map[string]interface{}{
 		"id":       "sess-1",
 		"name":     "Test Session",
 		"saved_at": 1234567890,
@@ -506,7 +555,7 @@ func TestSessionEndpoints(t *testing.T) {
 	}
 
 	// List again
-	resp, err = http.Get(ts.URL + "/api/ai-sessions/test-key")
+	resp, err = http.Get(ts.URL + prefix + "/ai-sessions/test-key")
 	if err != nil {
 		t.Fatalf("list after upsert: %v", err)
 	}
@@ -518,7 +567,7 @@ func TestSessionEndpoints(t *testing.T) {
 	}
 
 	// Delete
-	status, _ = doDelete(t, ts, "/api/ai-sessions/test-key/sess-1")
+	status, _ = doDelete(t, ts, prefix+"/ai-sessions/test-key/sess-1")
 	if status != 200 {
 		t.Fatalf("delete status: got %d", status)
 	}
@@ -545,7 +594,7 @@ func TestChatNotImplemented(t *testing.T) {
 	ts, cleanup := setupTestServer(t)
 	defer cleanup()
 
-	status, body := doPost(t, ts, "/api/chat", map[string]interface{}{
+	status, body := doPost(t, ts, apiPrefix()+"/chat", map[string]interface{}{
 		"messages": []interface{}{},
 	})
 	if status != 501 {

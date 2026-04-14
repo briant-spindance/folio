@@ -1,7 +1,12 @@
 import { SearchBar } from "./SearchBar"
+import { ProjectSwitcher } from "./ProjectSwitcher"
+import type { Project } from "@/lib/types"
 
 interface HeaderProps {
   projectName: string
+  projects?: Project[]
+  activeProjectSlug?: string
+  onProjectSwitch?: (slug: string) => void
   branch?: string
   commit?: string
   dirty?: boolean
@@ -9,7 +14,17 @@ interface HeaderProps {
   onAiToggle?: () => void
 }
 
-export function Header({ projectName, branch, commit, dirty, aiOpen, onAiToggle }: HeaderProps) {
+export function Header({
+  projectName,
+  projects,
+  activeProjectSlug,
+  onProjectSwitch,
+  branch,
+  commit,
+  dirty,
+  aiOpen,
+  onAiToggle,
+}: HeaderProps) {
   return (
     <header className="top-header">
       <div className="top-header-left">
@@ -31,7 +46,15 @@ export function Header({ projectName, branch, commit, dirty, aiOpen, onAiToggle 
           <circle cx="11" cy="11" r="2" />
         </svg>
         <div className="header-brand-divider" />
-        <span className="header-project-name">{projectName}</span>
+        {projects && activeProjectSlug && onProjectSwitch ? (
+          <ProjectSwitcher
+            projects={projects}
+            activeSlug={activeProjectSlug}
+            onSwitch={onProjectSwitch}
+          />
+        ) : (
+          <span className="header-project-name">{projectName}</span>
+        )}
       </div>
 
       <div className="top-header-center">

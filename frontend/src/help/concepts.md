@@ -65,7 +65,7 @@ Evolving documentation that captures decisions, learnings, and processes. Wiki p
 
 ## Data Model
 
-All data lives under a single directory (`./folio` by default) within your project:
+All data lives under a single directory (`./folio` by default) within your project. Folio can manage multiple such directories as separate projects via `~/.local/folio/project-list.yaml` -- see [Configuration](/help/configuration) for details.
 
 ```
 folio/

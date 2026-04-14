@@ -1,4 +1,40 @@
-import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail, ProjectDocList, ProjectDoc } from "./types"
+import type { StatusResponse, WikiDocDetail, PaginatedDocs, SaveDocPayload, GitStatus, SearchResponse, Roadmap, RoadmapCard, RoadmapRow, FeatureDetail, SaveFeaturePayload, FeatureArtifact, PaginatedFeatures, ArtifactDetail, IssueDetail, PaginatedIssues, SaveIssuePayload, IssueArtifact, IssueArtifactDetail, ProjectDocList, ProjectDoc, ProjectListResponse } from "./types"
+
+// ---------------------------------------------------------------------------
+// Active project slug management
+// ---------------------------------------------------------------------------
+
+const PROJECT_SLUG_KEY = "folio-active-project"
+
+let _activeProjectSlug: string | null = null
+
+/** Get the current active project slug. */
+export function getActiveProjectSlug(): string | null {
+  if (_activeProjectSlug) return _activeProjectSlug
+  const stored = localStorage.getItem(PROJECT_SLUG_KEY)
+  if (stored) {
+    _activeProjectSlug = stored
+    return stored
+  }
+  return null
+}
+
+/** Set the active project slug (also persists to localStorage). */
+export function setActiveProjectSlug(slug: string) {
+  _activeProjectSlug = slug
+  localStorage.setItem(PROJECT_SLUG_KEY, slug)
+}
+
+/** Build the project-scoped API prefix. */
+function projectPrefix(): string {
+  const slug = getActiveProjectSlug()
+  if (!slug) throw new Error("No active project set")
+  return `/api/projects/${slug}`
+}
+
+// ---------------------------------------------------------------------------
+// Core fetch helpers
+// ---------------------------------------------------------------------------
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(path)
@@ -21,46 +57,66 @@ async function apiMutate<T>(path: string, method: string, body?: unknown): Promi
   return res.json() as Promise<T>
 }
 
+// ---------------------------------------------------------------------------
+// Projects (top-level, not project-scoped)
+// ---------------------------------------------------------------------------
+
+export function fetchProjects(): Promise<ProjectListResponse> {
+  return apiFetch<ProjectListResponse>("/api/projects")
+}
+
+export function activateProject(slug: string): Promise<{ ok: boolean; active: string }> {
+  return apiMutate(`/api/projects/${slug}/activate`, "POST")
+}
+
+// ---------------------------------------------------------------------------
+// Status
+// ---------------------------------------------------------------------------
+
 export function fetchStatus(): Promise<StatusResponse> {
-  return apiFetch<StatusResponse>("/api/status")
+  return apiFetch<StatusResponse>(`${projectPrefix()}/status`)
 }
 
 export function fetchGitStatus(): Promise<GitStatus> {
-  return apiFetch<GitStatus>("/api/git")
+  return apiFetch<GitStatus>(`${projectPrefix()}/git`)
 }
+
+// ---------------------------------------------------------------------------
+// Wiki
+// ---------------------------------------------------------------------------
 
 export function fetchWikiDocs(params: { page?: number; limit?: number } = {}): Promise<PaginatedDocs> {
   const qs = new URLSearchParams()
   if (params.page) qs.set("page", String(params.page))
   if (params.limit) qs.set("limit", String(params.limit))
   const query = qs.toString()
-  return apiFetch<PaginatedDocs>(`/api/wiki${query ? `?${query}` : ""}`)
+  return apiFetch<PaginatedDocs>(`${projectPrefix()}/wiki${query ? `?${query}` : ""}`)
 }
 
 export function fetchWikiDoc(slug: string): Promise<WikiDocDetail> {
-  return apiFetch<WikiDocDetail>(`/api/wiki/${slug}`)
+  return apiFetch<WikiDocDetail>(`${projectPrefix()}/wiki/${slug}`)
 }
 
 export function saveWikiDoc(slug: string, payload: SaveDocPayload): Promise<WikiDocDetail> {
-  return apiMutate<WikiDocDetail>(`/api/wiki/${slug}`, "PUT", payload)
+  return apiMutate<WikiDocDetail>(`${projectPrefix()}/wiki/${slug}`, "PUT", payload)
 }
 
 export function createWikiDoc(payload: SaveDocPayload): Promise<WikiDocDetail> {
-  return apiMutate<WikiDocDetail>("/api/wiki", "POST", payload)
+  return apiMutate<WikiDocDetail>(`${projectPrefix()}/wiki`, "POST", payload)
 }
 
 export function deleteWikiDoc(slug: string): Promise<{ ok: boolean; slug: string }> {
-  return apiMutate(`/api/wiki/${slug}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/wiki/${slug}`, "DELETE")
 }
 
 export function fetchSearch(q: string, type?: string): Promise<SearchResponse> {
   const params = new URLSearchParams({ q })
   if (type) params.set("type", type)
-  return apiFetch<SearchResponse>(`/api/search?${params.toString()}`)
+  return apiFetch<SearchResponse>(`${projectPrefix()}/search?${params.toString()}`)
 }
 
 export function reorderWikiDocs(slugs: string[]): Promise<{ ok: boolean }> {
-  return apiMutate<{ ok: boolean }>("/api/wiki/reorder", "PATCH", { slugs })
+  return apiMutate<{ ok: boolean }>(`${projectPrefix()}/wiki/reorder`, "PATCH", { slugs })
 }
 
 // ---------------------------------------------------------------------------
@@ -68,11 +124,11 @@ export function reorderWikiDocs(slugs: string[]): Promise<{ ok: boolean }> {
 // ---------------------------------------------------------------------------
 
 export function fetchProjectDocs(): Promise<ProjectDocList> {
-  return apiFetch<ProjectDocList>("/api/project-docs")
+  return apiFetch<ProjectDocList>(`${projectPrefix()}/project-docs`)
 }
 
 export function fetchProjectDoc(slug: string): Promise<ProjectDoc> {
-  return apiFetch<ProjectDoc>(`/api/project-docs/${slug}`)
+  return apiFetch<ProjectDoc>(`${projectPrefix()}/project-docs/${slug}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -80,11 +136,11 @@ export function fetchProjectDoc(slug: string): Promise<ProjectDoc> {
 // ---------------------------------------------------------------------------
 
 export function fetchRoadmap(): Promise<Roadmap> {
-  return apiFetch<Roadmap>("/api/roadmap")
+  return apiFetch<Roadmap>(`${projectPrefix()}/roadmap`)
 }
 
 export function saveRoadmap(roadmap: Roadmap): Promise<Roadmap> {
-  return apiMutate<Roadmap>("/api/roadmap", "PUT", roadmap)
+  return apiMutate<Roadmap>(`${projectPrefix()}/roadmap`, "PUT", roadmap)
 }
 
 export function createRoadmapCard(card: {
@@ -94,65 +150,65 @@ export function createRoadmapCard(card: {
   row: string
   order?: number
 }): Promise<RoadmapCard> {
-  return apiMutate<RoadmapCard>("/api/roadmap/cards", "POST", card)
+  return apiMutate<RoadmapCard>(`${projectPrefix()}/roadmap/cards`, "POST", card)
 }
 
 export function updateRoadmapCard(
   id: string,
   updates: Partial<Omit<RoadmapCard, "id">>
 ): Promise<RoadmapCard> {
-  return apiMutate<RoadmapCard>(`/api/roadmap/cards/${id}`, "PUT", updates)
+  return apiMutate<RoadmapCard>(`${projectPrefix()}/roadmap/cards/${id}`, "PUT", updates)
 }
 
 export function deleteRoadmapCard(id: string): Promise<{ ok: boolean; id: string }> {
-  return apiMutate(`/api/roadmap/cards/${id}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/roadmap/cards/${id}`, "DELETE")
 }
 
 export function moveRoadmapCard(
   id: string,
   target: { column?: string; row?: string; order?: number }
 ): Promise<RoadmapCard> {
-  return apiMutate<RoadmapCard>(`/api/roadmap/cards/${id}/move`, "PATCH", target)
+  return apiMutate<RoadmapCard>(`${projectPrefix()}/roadmap/cards/${id}/move`, "PATCH", target)
 }
 
 export function addRoadmapRow(label: string, color?: string | null): Promise<RoadmapRow> {
-  return apiMutate("/api/roadmap/rows", "POST", { label, color })
+  return apiMutate(`${projectPrefix()}/roadmap/rows`, "POST", { label, color })
 }
 
 export function updateRoadmapRow(
   oldLabel: string,
   updates: { label?: string; color?: string | null }
 ): Promise<RoadmapRow> {
-  return apiMutate<RoadmapRow>(`/api/roadmap/rows/${encodeURIComponent(oldLabel)}`, "PUT", updates)
+  return apiMutate<RoadmapRow>(`${projectPrefix()}/roadmap/rows/${encodeURIComponent(oldLabel)}`, "PUT", updates)
 }
 
 export function deleteRoadmapRow(label: string): Promise<{ ok: boolean }> {
-  return apiMutate(`/api/roadmap/rows/${encodeURIComponent(label)}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/roadmap/rows/${encodeURIComponent(label)}`, "DELETE")
 }
 
 export function reorderRoadmapRows(labels: string[]): Promise<{ ok: boolean }> {
-  return apiMutate("/api/roadmap/rows/reorder", "PATCH", { labels })
+  return apiMutate(`${projectPrefix()}/roadmap/rows/reorder`, "PATCH", { labels })
 }
 
 // Column operations
 
 export function addRoadmapColumn(name: string): Promise<{ columns: string[] }> {
-  return apiMutate("/api/roadmap/columns", "POST", { name })
+  return apiMutate(`${projectPrefix()}/roadmap/columns`, "POST", { name })
 }
 
 export function updateRoadmapColumn(
   oldName: string,
   newName: string
 ): Promise<{ columns: string[] }> {
-  return apiMutate(`/api/roadmap/columns/${encodeURIComponent(oldName)}`, "PUT", { name: newName })
+  return apiMutate(`${projectPrefix()}/roadmap/columns/${encodeURIComponent(oldName)}`, "PUT", { name: newName })
 }
 
 export function deleteRoadmapColumn(name: string): Promise<{ ok: boolean }> {
-  return apiMutate(`/api/roadmap/columns/${encodeURIComponent(name)}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/roadmap/columns/${encodeURIComponent(name)}`, "DELETE")
 }
 
 export function reorderRoadmapColumns(names: string[]): Promise<{ ok: boolean }> {
-  return apiMutate("/api/roadmap/columns/reorder", "PATCH", { names })
+  return apiMutate(`${projectPrefix()}/roadmap/columns/reorder`, "PATCH", { names })
 }
 
 // ---------------------------------------------------------------------------
@@ -187,15 +243,15 @@ export function fetchFeatures(params: FetchFeaturesParams = {}): Promise<Paginat
   if (params.sort) qs.set("sort", params.sort)
   if (params.dir) qs.set("dir", params.dir)
   const query = qs.toString()
-  return apiFetch<PaginatedFeatures>(`/api/features${query ? `?${query}` : ""}`)
+  return apiFetch<PaginatedFeatures>(`${projectPrefix()}/features${query ? `?${query}` : ""}`)
 }
 
 export function reorderFeatures(slugs: string[], offset: number = 0): Promise<{ ok: boolean }> {
-  return apiMutate<{ ok: boolean }>("/api/features/reorder", "PATCH", { slugs, offset })
+  return apiMutate<{ ok: boolean }>(`${projectPrefix()}/features/reorder`, "PATCH", { slugs, offset })
 }
 
 export function fetchFeature(slug: string): Promise<FeatureDetail> {
-  return apiFetch<FeatureDetail>(`/api/features/${slug}`)
+  return apiFetch<FeatureDetail>(`${projectPrefix()}/features/${slug}`)
 }
 
 export function createFeature(data: {
@@ -204,23 +260,23 @@ export function createFeature(data: {
   priority?: string
   roadmap_card_id?: string
 }): Promise<FeatureDetail> {
-  return apiMutate<FeatureDetail>("/api/features", "POST", data)
+  return apiMutate<FeatureDetail>(`${projectPrefix()}/features`, "POST", data)
 }
 
 export function updateFeature(slug: string, payload: SaveFeaturePayload): Promise<FeatureDetail> {
-  return apiMutate<FeatureDetail>(`/api/features/${slug}`, "PUT", payload)
+  return apiMutate<FeatureDetail>(`${projectPrefix()}/features/${slug}`, "PUT", payload)
 }
 
 export function deleteFeature(slug: string): Promise<{ ok: boolean; slug: string }> {
-  return apiMutate(`/api/features/${slug}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/features/${slug}`, "DELETE")
 }
 
 export function fetchFeatureArtifacts(slug: string): Promise<FeatureArtifact[]> {
-  return apiFetch<FeatureArtifact[]>(`/api/features/${slug}/artifacts`)
+  return apiFetch<FeatureArtifact[]>(`${projectPrefix()}/features/${slug}/artifacts`)
 }
 
 export function fetchArtifactContent(slug: string, filename: string): Promise<ArtifactDetail> {
-  return apiFetch<ArtifactDetail>(`/api/features/${slug}/artifacts/${encodeURIComponent(filename)}`)
+  return apiFetch<ArtifactDetail>(`${projectPrefix()}/features/${slug}/artifacts/${encodeURIComponent(filename)}`)
 }
 
 export function saveArtifactContent(
@@ -229,7 +285,7 @@ export function saveArtifactContent(
   content: string
 ): Promise<FeatureArtifact> {
   return apiMutate<FeatureArtifact>(
-    `/api/features/${slug}/artifacts/${encodeURIComponent(filename)}`,
+    `${projectPrefix()}/features/${slug}/artifacts/${encodeURIComponent(filename)}`,
     "PUT",
     { content }
   )
@@ -239,13 +295,13 @@ export function deleteArtifact(
   slug: string,
   filename: string
 ): Promise<{ ok: boolean; slug: string; filename: string }> {
-  return apiMutate(`/api/features/${slug}/artifacts/${encodeURIComponent(filename)}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/features/${slug}/artifacts/${encodeURIComponent(filename)}`, "DELETE")
 }
 
 export async function uploadArtifact(slug: string, file: File): Promise<FeatureArtifact> {
   const formData = new FormData()
   formData.append("file", file)
-  const res = await fetch(`/api/features/${slug}/artifacts/upload`, {
+  const res = await fetch(`${projectPrefix()}/features/${slug}/artifacts/upload`, {
     method: "POST",
     body: formData,
   })
@@ -257,11 +313,11 @@ export async function uploadArtifact(slug: string, file: File): Promise<FeatureA
 }
 
 export async function createArtifact(slug: string, filename: string): Promise<FeatureArtifact> {
-  return apiMutate<FeatureArtifact>(`/api/features/${slug}/artifacts/create`, "POST", { filename })
+  return apiMutate<FeatureArtifact>(`${projectPrefix()}/features/${slug}/artifacts/create`, "POST", { filename })
 }
 
 export function getArtifactRawUrl(slug: string, filename: string): string {
-  return `/api/features/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
+  return `${projectPrefix()}/features/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
 }
 
 // ---------------------------------------------------------------------------
@@ -302,15 +358,15 @@ export function fetchIssues(params: FetchIssuesParams = {}): Promise<PaginatedIs
   if (params.sort) qs.set("sort", params.sort)
   if (params.dir) qs.set("dir", params.dir)
   const query = qs.toString()
-  return apiFetch<PaginatedIssues>(`/api/issues${query ? `?${query}` : ""}`)
+  return apiFetch<PaginatedIssues>(`${projectPrefix()}/issues${query ? `?${query}` : ""}`)
 }
 
 export function reorderIssues(slugs: string[], offset: number = 0): Promise<{ ok: boolean }> {
-  return apiMutate<{ ok: boolean }>("/api/issues/reorder", "PATCH", { slugs, offset })
+  return apiMutate<{ ok: boolean }>(`${projectPrefix()}/issues/reorder`, "PATCH", { slugs, offset })
 }
 
 export function fetchIssue(slug: string): Promise<IssueDetail> {
-  return apiFetch<IssueDetail>(`/api/issues/${slug}`)
+  return apiFetch<IssueDetail>(`${projectPrefix()}/issues/${slug}`)
 }
 
 export function createIssue(data: {
@@ -320,23 +376,23 @@ export function createIssue(data: {
   priority?: string
   feature?: string
 }): Promise<IssueDetail> {
-  return apiMutate<IssueDetail>("/api/issues", "POST", data)
+  return apiMutate<IssueDetail>(`${projectPrefix()}/issues`, "POST", data)
 }
 
 export function updateIssue(slug: string, payload: SaveIssuePayload): Promise<IssueDetail> {
-  return apiMutate<IssueDetail>(`/api/issues/${slug}`, "PUT", payload)
+  return apiMutate<IssueDetail>(`${projectPrefix()}/issues/${slug}`, "PUT", payload)
 }
 
 export function deleteIssue(slug: string): Promise<{ ok: boolean; slug: string }> {
-  return apiMutate(`/api/issues/${slug}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/issues/${slug}`, "DELETE")
 }
 
 export function fetchIssueArtifacts(slug: string): Promise<IssueArtifact[]> {
-  return apiFetch<IssueArtifact[]>(`/api/issues/${slug}/artifacts`)
+  return apiFetch<IssueArtifact[]>(`${projectPrefix()}/issues/${slug}/artifacts`)
 }
 
 export function fetchIssueArtifactContent(slug: string, filename: string): Promise<IssueArtifactDetail> {
-  return apiFetch<IssueArtifactDetail>(`/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}`)
+  return apiFetch<IssueArtifactDetail>(`${projectPrefix()}/issues/${slug}/artifacts/${encodeURIComponent(filename)}`)
 }
 
 export function saveIssueArtifactContent(
@@ -345,7 +401,7 @@ export function saveIssueArtifactContent(
   content: string
 ): Promise<IssueArtifact> {
   return apiMutate<IssueArtifact>(
-    `/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}`,
+    `${projectPrefix()}/issues/${slug}/artifacts/${encodeURIComponent(filename)}`,
     "PUT",
     { content }
   )
@@ -355,13 +411,13 @@ export function deleteIssueArtifact(
   slug: string,
   filename: string
 ): Promise<{ ok: boolean; slug: string; filename: string }> {
-  return apiMutate(`/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}`, "DELETE")
+  return apiMutate(`${projectPrefix()}/issues/${slug}/artifacts/${encodeURIComponent(filename)}`, "DELETE")
 }
 
 export async function uploadIssueArtifact(slug: string, file: File): Promise<IssueArtifact> {
   const formData = new FormData()
   formData.append("file", file)
-  const res = await fetch(`/api/issues/${slug}/artifacts/upload`, {
+  const res = await fetch(`${projectPrefix()}/issues/${slug}/artifacts/upload`, {
     method: "POST",
     body: formData,
   })
@@ -373,9 +429,9 @@ export async function uploadIssueArtifact(slug: string, file: File): Promise<Iss
 }
 
 export async function createIssueArtifact(slug: string, filename: string): Promise<IssueArtifact> {
-  return apiMutate<IssueArtifact>(`/api/issues/${slug}/artifacts/create`, "POST", { filename })
+  return apiMutate<IssueArtifact>(`${projectPrefix()}/issues/${slug}/artifacts/create`, "POST", { filename })
 }
 
 export function getIssueArtifactRawUrl(slug: string, filename: string): string {
-  return `/api/issues/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
+  return `${projectPrefix()}/issues/${slug}/artifacts/${encodeURIComponent(filename)}?raw`
 }

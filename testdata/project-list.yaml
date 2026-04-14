@@ -1,0 +1,6 @@
+active: folio-project
+projects:
+    - name: folio-project
+      path: /Users/briantol/projects/folio/testdata/folio
+    - name: Acme App
+      path: /Users/briantol/projects/folio/testdata/acme-app

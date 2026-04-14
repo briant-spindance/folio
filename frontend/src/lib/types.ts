@@ -1,3 +1,19 @@
+// ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
+export interface Project {
+  slug: string
+  name: string
+  path: string
+  active: boolean
+}
+
+export interface ProjectListResponse {
+  projects: Project[]
+  active: string
+}
+
 export type FeatureStatus = "draft" | "deferred" | "ready" | "in-progress" | "review" | "done"
 export type IssueStatus = "open" | "in-progress" | "closed"
 export type IssueType = "bug" | "task" | "improvement" | "chore"

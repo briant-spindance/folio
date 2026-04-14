@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"io/fs"
 	"log"
@@ -12,23 +13,27 @@ import (
 	"github.com/briant-spindance/folio/internal/banner"
 	"github.com/briant-spindance/folio/internal/logging"
 	foliomdns "github.com/briant-spindance/folio/internal/mdns"
+	"github.com/briant-spindance/folio/internal/registry"
 	"github.com/briant-spindance/folio/internal/server"
 	"github.com/briant-spindance/folio/internal/store"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 const defaultMDNSHost = "folio"
 
 var (
-	port      int
-	staticDir string
-	mdnsHost  string
+	port        int
+	staticDir   string
+	mdnsHost    string
+	projectList string
 )
 
 func init() {
 	webCmd.Flags().IntVar(&port, "port", 2600, "Port to listen on")
 	webCmd.Flags().StringVar(&staticDir, "static", "", "Path to the frontend dist directory (default: embedded)")
 	webCmd.Flags().StringVar(&mdnsHost, "mdns", "", "Enable mDNS discovery with optional hostname (default: folio.local when flag is present)")
+	webCmd.Flags().StringVar(&projectList, "projects", "", "Path to a project-list.yaml file (default: ~/.local/folio/project-list.yaml)")
 
 	// NoOptDefVal makes --mdns work without a value (bare flag).
 	// When the user passes just --mdns, the value is set to defaultMDNSHost.
@@ -58,24 +63,52 @@ func runWeb(cmd *cobra.Command, args []string) error {
 		defer logCloser.Close()
 	}
 
-	// Resolve data directory.
-	if dataDir != "" {
-		os.Setenv("FOLIO_DATA", dataDir)
+	// Resolve data directory override from flag / env.
+	envDataDir := dataDir
+	if envDataDir == "" {
+		envDataDir = os.Getenv("FOLIO_DATA")
 	}
 
+	// Discover projects via the registry.
 	defaultRoot := filepath.Join(".", "folio")
-	paths := store.ResolvePaths(defaultRoot)
-
-	// Verify data directory exists.
-	if _, err := os.Stat(paths.Root); os.IsNotExist(err) {
-		return fmt.Errorf("data directory does not exist: %s\nSet FOLIO_DATA env var or use --data flag", paths.Root)
+	var regOpts []registry.Option
+	if projectList != "" {
+		regOpts = append(regOpts, registry.WithProjectListPath(projectList))
 	}
+	reg, err := registry.New(defaultRoot, envDataDir, regOpts...)
+	if err != nil {
+		return fmt.Errorf("project discovery failed: %w\nSet FOLIO_DATA env var, use --data flag, or add projects to ~/.local/folio/project-list.yaml", err)
+	}
+
+	// Eagerly create ~/.local/folio/ and project-list.yaml on first run.
+	if err := reg.EnsureConfigDir(); err != nil {
+		log.Printf("Warning: %v", err)
+	}
+
+	// If a local ./folio directory was discovered that isn't in the project list,
+	// offer to register it.
+	if discovered := reg.NewlyDiscovered(); discovered != nil {
+		if isInteractive() {
+			promptRegisterProject(reg, discovered)
+		} else {
+			fmt.Printf("  Local project %q found at %s. Run 'folio projects add %s' to register it.\n",
+				discovered.Name, discovered.Path, discovered.Path)
+		}
+	}
+
+	// Build the store manager for the active project.
+	activeProj := reg.Get(reg.Active())
+	if activeProj == nil {
+		return fmt.Errorf("no active project found")
+	}
+	paths := store.NewPaths(activeProj.Path)
+	mgr := store.NewManager(paths)
 
 	// Resolve frontend filesystem.
 	frontendFS := resolveFrontendFS()
 
 	// Build the router with the configured log writer.
-	r := server.New(paths, frontendFS, logWriter)
+	r := server.New(reg, mgr, frontendFS, logWriter)
 
 	// Start mDNS if requested.
 	if mdnsHost != "" {
@@ -91,7 +124,17 @@ func runWeb(cmd *cobra.Command, args []string) error {
 
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("  Folio server running at http://localhost:%d\n", port)
-	fmt.Printf("  Data directory: %s\n", paths.Root)
+
+	projects := reg.Projects()
+	fmt.Printf("  Projects: %d\n", len(projects))
+	for _, p := range projects {
+		marker := "  "
+		if p.Slug == reg.Active() {
+			marker = "* "
+		}
+		fmt.Printf("    %s%s (%s)\n", marker, p.Name, p.Path)
+	}
+
 	if IsProduction {
 		fmt.Printf("  Logs: %s\n", logging.LogPath())
 	}
@@ -142,4 +185,28 @@ func resolveFrontendFS() fs.FS {
 	fmt.Println("  Warning: No frontend files found. API-only mode.")
 	fmt.Println("  Use --static flag to specify the frontend dist directory.")
 	return nil
+}
+
+// isInteractive returns true if stdin is connected to a terminal.
+func isInteractive() bool {
+	return term.IsTerminal(int(os.Stdin.Fd()))
+}
+
+// promptRegisterProject asks the user whether to add a discovered local
+// project to the project-list.yaml.
+func promptRegisterProject(reg *registry.Registry, p *registry.Project) {
+	fmt.Printf("  Found local project %q at %s\n", p.Name, p.Path)
+	fmt.Print("  Add to project list? [Y/n] ")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	if scanner.Scan() {
+		answer := strings.TrimSpace(strings.ToLower(scanner.Text()))
+		if answer == "" || answer == "y" || answer == "yes" {
+			if err := reg.Add(*p); err != nil {
+				fmt.Printf("  Warning: failed to register project: %v\n", err)
+			} else {
+				fmt.Printf("  Registered %q in %s\n", p.Name, reg.FilePath())
+			}
+		}
+	}
 }
