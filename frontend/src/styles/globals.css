@@ -1144,8 +1144,14 @@ body {
   margin-bottom: 1em;
 }
 
-.docs-prose-body ul,
+.docs-prose-body ul {
+  list-style-type: disc;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
 .docs-prose-body ol {
+  list-style-type: decimal;
   margin-bottom: 1em;
   padding-left: 1.5em;
 }
@@ -1156,6 +1162,29 @@ body {
 
 .docs-prose-body li > ul,
 .docs-prose-body li > ol {
+  margin-top: 0.25em;
+  margin-bottom: 0;
+}
+
+/* Artifact markdown viewer */
+.doc-body ul {
+  list-style-type: disc;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.doc-body ol {
+  list-style-type: decimal;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.doc-body li {
+  margin-bottom: 0.25em;
+}
+
+.doc-body li > ul,
+.doc-body li > ol {
   margin-top: 0.25em;
   margin-bottom: 0;
 }
@@ -1418,8 +1447,14 @@ body {
   margin-bottom: 1em;
 }
 
-.doc-editor-body .ProseMirror ul,
+.doc-editor-body .ProseMirror ul {
+  list-style-type: disc;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
 .doc-editor-body .ProseMirror ol {
+  list-style-type: decimal;
   margin-bottom: 1em;
   padding-left: 1.5em;
 }
@@ -2450,7 +2485,8 @@ body.ai-resizing {
 /* Prose inside assistant bubbles */
 .ai-chat-bubble p { margin: 0 0 6px; }
 .ai-chat-bubble p:last-child { margin-bottom: 0; }
-.ai-chat-bubble ul, .ai-chat-bubble ol { padding-left: 16px; margin: 4px 0 6px; }
+.ai-chat-bubble ul { list-style-type: disc; padding-left: 16px; margin: 4px 0 6px; }
+.ai-chat-bubble ol { list-style-type: decimal; padding-left: 16px; margin: 4px 0 6px; }
 .ai-chat-bubble li { margin-bottom: 2px; }
 .ai-chat-bubble code {
   font-family: 'JetBrains Mono', monospace;
